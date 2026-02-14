@@ -83,10 +83,10 @@ npx playwright test tests/e2e/welcome.spec.js
 - [x] Phase 4: Model selection
 - [x] Phase 5: Model download & caching
 - [x] Phase 6: Inference provider (browser)
-- [ ] Phase 7: Chat interface
-- [ ] Phase 8: Chat history
-- [ ] Phase 9: Settings
-- [ ] Phase 10: Multi-model management
-- [ ] Phase 11: Query parameter support
-- [ ] Phase 12: PWA setup
-- [ ] Phase 13: Electron integration
+- [x] Phase 7: Chat interface
+- [x] Phase 8: Chat history
+- [x] Phase 9: Settings
+- [x] Phase 10: Multi-model management
+- [x] Phase 11: Query parameter support
+- [x] Phase 12: PWA setup
+- [x] Phase 13: Electron integration

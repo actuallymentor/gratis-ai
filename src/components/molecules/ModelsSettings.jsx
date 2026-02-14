@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { format_file_size } from '../../providers/model_registry'
 import use_model_manager from '../../hooks/use_model_manager'
-import { clear_all_data } from '../../stores/db'
+import { clear_all_data, get_db } from '../../stores/db'
+import { export_conversation } from '../../utils/export'
 
 const Section = styled.div`
     margin-bottom: ${ ( { theme } ) => theme.spacing.lg };
@@ -194,6 +195,26 @@ export default function ModelsSettings( { on_close, on_model_switch } ) {
         if( on_close ) on_close()
     }
 
+    const handle_export_all = async () => {
+
+        try {
+            const db = await get_db()
+            const conversations = await db.getAll( `conversations` )
+            if( conversations.length === 0 ) {
+                toast( `No conversations to export` )
+                return
+            }
+            for( const conv of conversations ) {
+                const messages = await db.getAllFromIndex( `messages`, `conversation_id`, conv.id )
+                export_conversation( conv, messages )
+            }
+            toast.success( `Exported ${ conversations.length } conversation${ conversations.length !== 1 ? `s` : `` }` )
+        } catch ( err ) {
+            toast.error( `Export failed: ${ err.message }` )
+        }
+
+    }
+
     const handle_clear_all = async () => {
 
         const confirmed = confirm( `This will delete all conversations, cached models, and settings. This cannot be undone.` )
@@ -280,6 +301,19 @@ export default function ModelsSettings( { on_close, on_model_switch } ) {
                     onClick={ handle_add_preset }
                 >
                     Download from Presets
+                </Button>
+            </ButtonRow>
+        </Section>
+
+        { /* Export all conversations */ }
+        <Section>
+            <SectionTitle>Data</SectionTitle>
+            <ButtonRow>
+                <Button
+                    data-testid="export-all-btn"
+                    onClick={ handle_export_all }
+                >
+                    Export All Conversations
                 </Button>
             </ButtonRow>
         </Section>

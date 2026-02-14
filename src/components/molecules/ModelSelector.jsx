@@ -184,12 +184,12 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
 
                 <Divider />
 
-                <ActionOption onClick={ handle_add }>
+                <ActionOption data-testid="model-add-btn" onClick={ handle_add }>
                     <Plus size={ 14 } />
                     Add Model
                 </ActionOption>
 
-                <ActionOption onClick={ handle_manage }>
+                <ActionOption data-testid="model-manage-btn" onClick={ handle_manage }>
                     <Settings size={ 14 } />
                     Manage Models
                 </ActionOption>
