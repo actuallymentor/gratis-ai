@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import styled from 'styled-components'
 import TopBar from './TopBar'
 import Sidebar from './Sidebar'
+import SettingsModal from './SettingsModal'
 
 const LayoutContainer = styled.div`
     display: flex;
@@ -39,10 +40,10 @@ const ContentArea = styled.main`
  */
 export default function AppLayout( { children, theme_preference, theme_mode, on_theme_toggle, on_new_chat, conversations, on_export, on_delete } ) {
 
-    // Detect mobile viewport for initial sidebar state
     const [ sidebar_collapsed, set_sidebar_collapsed ] = useState( () =>
         typeof window !== `undefined` && window.innerWidth < 768
     )
+    const [ settings_open, set_settings_open ] = useState( false )
 
     // Respond to viewport changes
     useEffect( () => {
@@ -56,7 +57,17 @@ export default function AppLayout( { children, theme_preference, theme_mode, on_
 
     }, [] )
 
+    // Listen for global open-settings event (Ctrl+,)
+    useEffect( () => {
+
+        const handle_open = () => set_settings_open( true )
+        window.addEventListener( `locallm:open-settings`, handle_open )
+        return () => window.removeEventListener( `locallm:open-settings`, handle_open )
+
+    }, [] )
+
     const toggle_sidebar = () => set_sidebar_collapsed( prev => !prev )
+    const close_settings = useCallback( () => set_settings_open( false ), [] )
 
     return <LayoutContainer>
 
@@ -64,7 +75,7 @@ export default function AppLayout( { children, theme_preference, theme_mode, on_
             theme_preference={ theme_preference }
             theme_mode={ theme_mode }
             on_theme_toggle={ on_theme_toggle }
-            on_settings_open={ () => {} }
+            on_settings_open={ () => set_settings_open( true ) }
         />
 
         <MainArea>
@@ -80,6 +91,13 @@ export default function AppLayout( { children, theme_preference, theme_mode, on_
                 { children }
             </ContentArea>
         </MainArea>
+
+        <SettingsModal
+            is_open={ settings_open }
+            on_close={ close_settings }
+            theme_preference={ theme_preference }
+            on_theme_change={ on_theme_toggle }
+        />
 
     </LayoutContainer>
 
