@@ -36,9 +36,9 @@ test.describe( `Welcome Page`, () => {
         await page.goto( `/select-model` )
         await expect( page.getByText( `Select a Model` ) ).toBeVisible()
 
-        // Download page
+        // Download page redirects to model select when no model in state
         await page.goto( `/download` )
-        await expect( page.getByText( `Downloading` ) ).toBeVisible()
+        await expect( page ).toHaveURL( /\/select-model/ )
 
         // Chat page
         await page.goto( `/chat` )
