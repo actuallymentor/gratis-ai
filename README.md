@@ -82,7 +82,7 @@ npx playwright test tests/e2e/welcome.spec.js
 - [x] Phase 3: Welcome & device detection
 - [x] Phase 4: Model selection
 - [x] Phase 5: Model download & caching
-- [ ] Phase 6: Inference provider (browser)
+- [x] Phase 6: Inference provider (browser)
 - [ ] Phase 7: Chat interface
 - [ ] Phase 8: Chat history
 - [ ] Phase 9: Settings
