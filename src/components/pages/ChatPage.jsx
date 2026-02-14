@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import styled from 'styled-components'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { v4 as uuid } from 'uuid'
+import toast from 'react-hot-toast'
 import AppLayout from '../molecules/AppLayout'
 import MessageList from '../molecules/MessageList'
 import ChatInput from '../molecules/ChatInput'
@@ -9,6 +10,7 @@ import use_llm from '../../hooks/use_llm'
 import use_chat_history from '../../hooks/use_chat_history'
 import use_model_manager from '../../hooks/use_model_manager'
 import { export_conversation } from '../../utils/export'
+import { parse_model_param, resolve_cached_model } from '../../utils/model_param_resolver'
 
 const Container = styled.div`
     display: flex;
@@ -56,11 +58,13 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
     const { id: conversation_id } = useParams()
     const navigate = useNavigate()
+    const [ search_params, set_search_params ] = useSearchParams()
 
     const [ messages, set_messages ] = useState( [] )
     const [ model_loaded, set_model_loaded ] = useState( false )
     const [ current_conversation_id, set_current_conversation_id ] = useState( conversation_id || null )
     const is_generating_ref = useRef( false )
+    const query_processed_ref = useRef( false )
 
     const { load_model, chat_stream, abort, is_generating, loaded_model_id } = use_llm()
     const {
@@ -273,6 +277,56 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         }
 
     }, [ messages, chat_stream, current_conversation_id, create_conversation, save_message, navigate, refresh ] )
+
+    // Process query parameters (?q= and ?model=)
+    useEffect( () => {
+
+        if( query_processed_ref.current ) return
+
+        const q_param = search_params.get( `q` )
+        const model_param = search_params.get( `model` )
+
+        // No query params to process
+        if( !q_param && !model_param ) return
+
+        const process_params = async () => {
+
+            // Handle ?model= parameter
+            if( model_param ) {
+                const parsed = parse_model_param( model_param )
+                if( parsed ) {
+                    const match = resolve_cached_model( parsed, cached_models )
+                    if( match ) {
+                        try {
+                            await load_model( match.id )
+                            set_model_loaded( true )
+                            localStorage.setItem( `locallm:settings:active_model_id`, match.id )
+                        } catch {
+                            toast.error( `Failed to load model` )
+                        }
+                    } else if( parsed.type === `local` ) {
+                        toast.error( `Model not found: ${ parsed.value }` )
+                    }
+                }
+            }
+
+            // Handle ?q= parameter — auto-send message
+            if( q_param && ( model_loaded || loaded_model_id ) ) {
+                query_processed_ref.current = true
+                set_search_params( {}, { replace: true } )
+                setTimeout( () => send_message( q_param ), 100 )
+                return
+            }
+
+            // Clean up URL
+            query_processed_ref.current = true
+            set_search_params( {}, { replace: true } )
+
+        }
+
+        process_params()
+
+    }, [ search_params, cached_models, model_loaded, loaded_model_id, load_model, set_search_params, send_message ] )
 
     /**
      * Edit a message and resend from that point
