@@ -1,11 +1,12 @@
 import styled from 'styled-components'
+import AppLayout from '../molecules/AppLayout'
 
-const Container = styled.div`
+const EmptyState = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    flex: 1;
     padding: ${ ( { theme } ) => theme.spacing.xl };
     text-align: center;
 `
@@ -21,14 +22,24 @@ const Subtitle = styled.p`
 `
 
 /**
- * Main chat interface page
+ * Main chat interface page with layout shell
+ * @param {Object} props
+ * @param {string} props.theme_preference - Current theme preference
+ * @param {string} props.theme_mode - Resolved theme mode
+ * @param {Function} props.on_theme_toggle - Handler for theme cycling
  * @returns {JSX.Element}
  */
-export default function ChatPage() {
+export default function ChatPage( { theme_preference, theme_mode, on_theme_toggle } ) {
 
-    return <Container>
-        <Title>localLM</Title>
-        <Subtitle>Ask me anything.</Subtitle>
-    </Container>
+    return <AppLayout
+        theme_preference={ theme_preference }
+        theme_mode={ theme_mode }
+        on_theme_toggle={ on_theme_toggle }
+    >
+        <EmptyState>
+            <Title>localLM</Title>
+            <Subtitle>Ask me anything.</Subtitle>
+        </EmptyState>
+    </AppLayout>
 
 }

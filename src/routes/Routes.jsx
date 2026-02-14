@@ -10,17 +10,24 @@ const ChatPage = lazy( prefetch( () => import( '../components/pages/ChatPage' ) 
 
 /**
  * Application route definitions
- * @returns {JSX.Element} Route configuration
+ * @param {Object} props
+ * @param {string} props.theme_preference - Current theme preference
+ * @param {string} props.theme_mode - Resolved theme mode
+ * @param {Function} props.on_theme_toggle - Handler for theme cycling
+ * @returns {JSX.Element}
  */
-export default function Routes() {
+export default function Routes( { theme_preference, theme_mode, on_theme_toggle } ) {
+
+    // Shared props passed to pages that use AppLayout
+    const layout_props = { theme_preference, theme_mode, on_theme_toggle }
 
     return <Suspense fallback={ <div /> }>
         <RouterRoutes>
             <Route path="/" element={ <WelcomePage /> } />
             <Route path="/select-model" element={ <ModelSelectPage /> } />
             <Route path="/download" element={ <DownloadPage /> } />
-            <Route path="/chat" element={ <ChatPage /> } />
-            <Route path="/chat/:id" element={ <ChatPage /> } />
+            <Route path="/chat" element={ <ChatPage { ...layout_props } /> } />
+            <Route path="/chat/:id" element={ <ChatPage { ...layout_props } /> } />
         </RouterRoutes>
     </Suspense>
 

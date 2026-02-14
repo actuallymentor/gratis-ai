@@ -78,7 +78,7 @@ npx playwright test tests/e2e/welcome.spec.js
 
 - [x] Phase 0: Git configuration
 - [x] Phase 1: Project scaffolding
-- [ ] Phase 2: Layout & chrome
+- [x] Phase 2: Layout & chrome
 - [ ] Phase 3: Welcome & device detection
 - [ ] Phase 4: Model selection
 - [ ] Phase 5: Model download & caching
