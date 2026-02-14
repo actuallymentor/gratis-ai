@@ -1,0 +1,139 @@
+/**
+ * Electron IPC-based LLM provider
+ * Forwards LLMProvider interface calls over IPC to the main process
+ * where node-llama-cpp runs natively
+ */
+export default class ElectronIPCProvider {
+
+    constructor() {
+        this._loaded_model_id = null
+    }
+
+    /**
+     * Load a model via IPC
+     * @param {string} model_id - The model ID to load
+     * @param {Function} [on_progress] - Progress callback
+     * @returns {Promise<void>}
+     */
+    async load_model( model_id, on_progress ) {
+
+        if( on_progress ) on_progress( { progress: 0, status: `Loading model...` } )
+
+        await window.electronAPI.load_model( model_id )
+        this._loaded_model_id = model_id
+
+        if( on_progress ) on_progress( { progress: 1, status: `Model ready` } )
+
+    }
+
+    /**
+     * Single-shot chat completion via IPC
+     * @param {Array} messages - Chat messages
+     * @param {Object} [opts] - Generation options
+     * @returns {Promise<string>}
+     */
+    async chat( messages, opts = {} ) {
+        return window.electronAPI.chat( messages, opts )
+    }
+
+    /**
+     * Streaming chat completion via IPC
+     * Tokens arrive as IPC events from the main process
+     * @param {Array} messages - Chat messages
+     * @param {Object} [opts] - Generation options
+     * @returns {AsyncGenerator<string>}
+     */
+    async *chat_stream( messages, opts = {} ) {
+
+        // Set up token listener before starting stream
+        const token_queue = []
+        let resolve_next = null
+        let stream_done = false
+
+        const token_handler = ( token ) => {
+            if( resolve_next ) {
+                const r = resolve_next
+                resolve_next = null
+                r( token )
+            } else {
+                token_queue.push( token )
+            }
+        }
+
+        // Listen for stream completion
+        const done_handler = () => {
+            stream_done = true
+            if( resolve_next ) {
+                const r = resolve_next
+                resolve_next = null
+                r( null )
+            }
+        }
+
+        window.electronAPI.on_stream_token( token_handler )
+
+        // Start the stream
+        await window.electronAPI.start_stream( messages, opts )
+
+        // Yield tokens as they arrive
+        try {
+
+            while( !stream_done ) {
+                if( token_queue.length > 0 ) {
+                    yield token_queue.shift()
+                } else {
+                    const token = await new Promise( ( r ) => {
+                        resolve_next = r
+                    } )
+                    if( token === null ) break
+                    yield token
+                }
+            }
+
+            // Drain remaining tokens
+            while( token_queue.length > 0 ) {
+                yield token_queue.shift()
+            }
+
+        } finally {
+            // Clean up listener
+            done_handler()
+        }
+
+    }
+
+    /**
+     * Abort current generation via IPC
+     */
+    abort() {
+        window.electronAPI.abort()
+    }
+
+    /**
+     * Unload model via IPC
+     * @returns {Promise<void>}
+     */
+    async unload_model() {
+
+        await window.electronAPI.unload_model()
+        this._loaded_model_id = null
+
+    }
+
+    /**
+     * Get the loaded model ID
+     * @returns {string|null}
+     */
+    get_loaded_model() {
+        return this._loaded_model_id
+    }
+
+    /**
+     * Check if a model is loaded
+     * @returns {boolean}
+     */
+    is_ready() {
+        return !!this._loaded_model_id
+    }
+
+}

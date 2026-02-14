@@ -16,14 +16,20 @@ export default function use_llm() {
     const [ stats, set_stats ] = useState( null )
     const [ error, set_error ] = useState( null )
 
+    /**
+     * Ensure the provider is initialised (handles async creation)
+     */
+    const ensure_provider = useCallback( async () => {
+        if( !provider_ref.current ) {
+            provider_ref.current = await create_provider()
+        }
+        return provider_ref.current
+    }, [] )
+
     // Initialize provider on mount
     useEffect( () => {
-
-        if( !provider_ref.current ) {
-            provider_ref.current = create_provider()
-        }
-
-    }, [] )
+        ensure_provider()
+    }, [ ensure_provider ] )
 
     /**
      * Load a model by ID from IndexedDB
@@ -32,13 +38,13 @@ export default function use_llm() {
      */
     const load_model = useCallback( async ( model_id, on_progress ) => {
 
-        if( !provider_ref.current ) provider_ref.current = create_provider()
+        const provider = await ensure_provider()
 
         set_is_loading( true )
         set_error( null )
 
         try {
-            await provider_ref.current.load_model( model_id, on_progress )
+            await provider.load_model( model_id, on_progress )
             set_loaded_model_id( model_id )
         } catch ( err ) {
             set_error( err.message )
@@ -47,7 +53,7 @@ export default function use_llm() {
             set_is_loading( false )
         }
 
-    }, [] )
+    }, [ ensure_provider ] )
 
     /**
      * Send a chat message with streaming, returns full response text
