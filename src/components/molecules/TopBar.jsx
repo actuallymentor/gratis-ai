@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import { Sun, Moon, Monitor, Settings } from 'lucide-react'
+import ModelSelector from './ModelSelector'
 
 const Bar = styled.header`
     display: flex;
@@ -42,12 +43,6 @@ const IconButton = styled.button`
     }
 `
 
-const ModelPlaceholder = styled.div`
-    font-size: 0.9rem;
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
-    padding: ${ ( { theme } ) => `${ theme.spacing.xs } ${ theme.spacing.sm }` };
-`
-
 // Cycle: system → light → dark → system
 const CYCLE = [ `system`, `light`, `dark` ]
 
@@ -70,9 +65,22 @@ const get_theme_icon = ( preference, mode ) => {
  * @param {string} props.theme_mode - Resolved theme mode
  * @param {Function} props.on_theme_toggle - Handler for theme cycling
  * @param {Function} props.on_settings_open - Handler for opening settings
+ * @param {Array} props.cached_models - Array of cached model metadata
+ * @param {string} props.active_model_id - Currently active model ID
+ * @param {boolean} props.is_model_switching - Whether a model switch is in progress
+ * @param {Function} props.on_model_switch - Handler for model switching
  * @returns {JSX.Element}
  */
-export default function TopBar( { theme_preference, theme_mode, on_theme_toggle, on_settings_open } ) {
+export default function TopBar( {
+    theme_preference,
+    theme_mode,
+    on_theme_toggle,
+    on_settings_open,
+    cached_models,
+    active_model_id,
+    is_model_switching,
+    on_model_switch,
+} ) {
 
     const cycle_theme = () => {
         const current_index = CYCLE.indexOf( theme_preference )
@@ -82,11 +90,15 @@ export default function TopBar( { theme_preference, theme_mode, on_theme_toggle,
 
     return <Bar>
 
-        { /* Left: model selector placeholder */ }
+        { /* Left: model selector */ }
         <LeftSection>
-            <ModelPlaceholder data-testid="model-selector-dropdown">
-                No model loaded
-            </ModelPlaceholder>
+            <ModelSelector
+                cached_models={ cached_models }
+                active_model_id={ active_model_id }
+                is_switching={ is_model_switching }
+                on_switch={ on_model_switch }
+                on_open_settings={ on_settings_open }
+            />
         </LeftSection>
 
         { /* Right: theme toggle + settings */ }

@@ -36,9 +36,17 @@ const ContentArea = styled.main`
  * @param {Array} props.conversations - Array of conversation objects for sidebar
  * @param {Function} props.on_export - Handler for exporting a conversation
  * @param {Function} props.on_delete - Handler for deleting a conversation
+ * @param {Array} props.cached_models - Cached model metadata for model selector
+ * @param {string} props.active_model_id - Currently active model ID
+ * @param {boolean} props.is_model_switching - Whether model switch is in progress
+ * @param {Function} props.on_model_switch - Handler for switching models
  * @returns {JSX.Element}
  */
-export default function AppLayout( { children, theme_preference, theme_mode, on_theme_toggle, on_new_chat, conversations, on_export, on_delete } ) {
+export default function AppLayout( {
+    children, theme_preference, theme_mode, on_theme_toggle, on_new_chat,
+    conversations, on_export, on_delete,
+    cached_models, active_model_id, is_model_switching, on_model_switch,
+} ) {
 
     const [ sidebar_collapsed, set_sidebar_collapsed ] = useState( () =>
         typeof window !== `undefined` && window.innerWidth < 768
@@ -76,6 +84,10 @@ export default function AppLayout( { children, theme_preference, theme_mode, on_
             theme_mode={ theme_mode }
             on_theme_toggle={ on_theme_toggle }
             on_settings_open={ () => set_settings_open( true ) }
+            cached_models={ cached_models }
+            active_model_id={ active_model_id }
+            is_model_switching={ is_model_switching }
+            on_model_switch={ on_model_switch }
         />
 
         <MainArea>

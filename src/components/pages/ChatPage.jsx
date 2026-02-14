@@ -7,6 +7,7 @@ import MessageList from '../molecules/MessageList'
 import ChatInput from '../molecules/ChatInput'
 import use_llm from '../../hooks/use_llm'
 import use_chat_history from '../../hooks/use_chat_history'
+import use_model_manager from '../../hooks/use_model_manager'
 import { export_conversation } from '../../utils/export'
 
 const Container = styled.div`
@@ -71,6 +72,11 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         replace_messages,
         refresh,
     } = use_chat_history()
+    const {
+        cached_models,
+        is_loading: is_model_switching,
+        refresh_models,
+    } = use_model_manager()
 
     // Try loading the active model on mount
     useEffect( () => {
@@ -319,6 +325,22 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
     }, [ delete_conversation, current_conversation_id, navigate ] )
 
+    /**
+     * Switch to a different cached model
+     */
+    const handle_model_switch = useCallback( async ( model_id ) => {
+
+        try {
+            await load_model( model_id )
+            set_model_loaded( true )
+            localStorage.setItem( `locallm:settings:active_model_id`, model_id )
+            await refresh_models()
+        } catch ( err ) {
+            console.error( `Failed to switch model:`, err )
+        }
+
+    }, [ load_model, refresh_models ] )
+
     const has_messages = messages.length > 0
 
     return <AppLayout
@@ -329,6 +351,10 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         conversations={ conversations }
         on_export={ handle_export }
         on_delete={ handle_delete }
+        cached_models={ cached_models }
+        active_model_id={ loaded_model_id }
+        is_model_switching={ is_model_switching }
+        on_model_switch={ handle_model_switch }
     >
         <Container>
 
