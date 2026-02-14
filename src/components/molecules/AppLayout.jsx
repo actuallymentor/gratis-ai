@@ -32,9 +32,12 @@ const ContentArea = styled.main`
  * @param {string} props.theme_mode - Resolved theme mode
  * @param {Function} props.on_theme_toggle - Handler for theme cycling
  * @param {Function} props.on_new_chat - Handler for new chat creation
+ * @param {Array} props.conversations - Array of conversation objects for sidebar
+ * @param {Function} props.on_export - Handler for exporting a conversation
+ * @param {Function} props.on_delete - Handler for deleting a conversation
  * @returns {JSX.Element}
  */
-export default function AppLayout( { children, theme_preference, theme_mode, on_theme_toggle, on_new_chat } ) {
+export default function AppLayout( { children, theme_preference, theme_mode, on_theme_toggle, on_new_chat, conversations, on_export, on_delete } ) {
 
     // Detect mobile viewport for initial sidebar state
     const [ sidebar_collapsed, set_sidebar_collapsed ] = useState( () =>
@@ -69,6 +72,9 @@ export default function AppLayout( { children, theme_preference, theme_mode, on_
                 collapsed={ sidebar_collapsed }
                 on_toggle={ toggle_sidebar }
                 on_new_chat={ on_new_chat }
+                conversations={ conversations }
+                on_export={ on_export }
+                on_delete={ on_delete }
             />
             <ContentArea>
                 { children }

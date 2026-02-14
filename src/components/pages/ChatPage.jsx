@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import styled from 'styled-components'
+import { useParams, useNavigate } from 'react-router-dom'
 import { v4 as uuid } from 'uuid'
 import AppLayout from '../molecules/AppLayout'
 import MessageList from '../molecules/MessageList'
 import ChatInput from '../molecules/ChatInput'
 import use_llm from '../../hooks/use_llm'
+import use_chat_history from '../../hooks/use_chat_history'
+import { export_conversation } from '../../utils/export'
 
 const Container = styled.div`
     display: flex;
@@ -50,10 +53,24 @@ const NoModelBanner = styled.div`
  */
 export default function ChatPage( { theme_preference, theme_mode, on_theme_toggle } ) {
 
+    const { id: conversation_id } = useParams()
+    const navigate = useNavigate()
+
     const [ messages, set_messages ] = useState( [] )
     const [ model_loaded, set_model_loaded ] = useState( false )
+    const [ current_conversation_id, set_current_conversation_id ] = useState( conversation_id || null )
     const is_generating_ref = useRef( false )
+
     const { load_model, chat_stream, abort, is_generating, loaded_model_id } = use_llm()
+    const {
+        conversations,
+        create_conversation,
+        save_message,
+        load_messages,
+        delete_conversation,
+        replace_messages,
+        refresh,
+    } = use_chat_history()
 
     // Try loading the active model on mount
     useEffect( () => {
@@ -67,10 +84,108 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
     }, [] )
 
+    // Load conversation messages when navigating to /chat/:id
+    useEffect( () => {
+
+        if( conversation_id && conversation_id !== current_conversation_id ) {
+            set_current_conversation_id( conversation_id )
+            load_messages( conversation_id ).then( ( msgs ) => {
+                set_messages( msgs.map( ( m ) => ( {
+                    id: m.id,
+                    role: m.role,
+                    content: m.content,
+                    stats: m.stats,
+                } ) ) )
+            } )
+        }
+
+        // Reset state when navigating to /chat (no id)
+        if( !conversation_id && current_conversation_id ) {
+            set_current_conversation_id( null )
+            set_messages( [] )
+        }
+
+    }, [ conversation_id, current_conversation_id, load_messages ] )
+
     // Track is_generating in a ref for stable closures
     useEffect( () => {
         is_generating_ref.current = is_generating
     }, [ is_generating ] )
+
+    /**
+     * Persist the current messages to IndexedDB
+     */
+    const persist_messages = useCallback( async ( conv_id, msgs ) => {
+
+        await replace_messages( conv_id, msgs )
+        await refresh()
+
+    }, [ replace_messages, refresh ] )
+
+    /**
+     * Re-send from existing message history (used by regenerate)
+     */
+    const send_message_from_history = useCallback( async ( history_msgs, conv_id ) => {
+
+        const assistant_msg = { id: uuid(), role: `assistant`, content: `` }
+        const new_messages = [ ...history_msgs, assistant_msg ]
+        set_messages( new_messages )
+
+        const system_prompt = localStorage.getItem( `locallm:settings:system_prompt` )
+            || import.meta.env.VITE_DEFAULT_SYSTEM_PROMPT
+            || ``
+        const history = history_msgs.map( ( { role, content } ) => ( { role, content } ) )
+        if( system_prompt ) history.unshift( { role: `system`, content: system_prompt } )
+
+        const opts = {
+            temperature: parseFloat( localStorage.getItem( `locallm:settings:temperature` ) ) || 0.7,
+            max_tokens: parseInt( localStorage.getItem( `locallm:settings:max_tokens` ) ) || 2048,
+        }
+
+        try {
+
+            const result = await chat_stream( history, opts, ( full_text ) => {
+                set_messages( prev => {
+                    const updated = [ ...prev ]
+                    updated[ updated.length - 1 ] = { ...updated[ updated.length - 1 ], content: full_text }
+                    return updated
+                } )
+            } )
+
+            // Final update with stats
+            set_messages( prev => {
+                const updated = [ ...prev ]
+                updated[ updated.length - 1 ] = {
+                    ...updated[ updated.length - 1 ],
+                    content: result.text,
+                    stats: result.stats,
+                }
+                // Persist final state
+                if( conv_id ) persist_messages( conv_id, updated )
+                return updated
+            } )
+
+        } catch {
+            // Error handling done in use_llm
+        }
+
+    }, [ chat_stream, persist_messages ] )
+
+    /**
+     * Regenerate the last assistant message
+     */
+    const handle_regenerate = useCallback( () => {
+
+        set_messages( prev => {
+            const without_last_assistant = prev.slice( 0, -1 )
+            const last_user = without_last_assistant[ without_last_assistant.length - 1 ]
+            if( last_user?.role === `user` ) {
+                setTimeout( () => send_message_from_history( without_last_assistant, current_conversation_id ), 0 )
+            }
+            return without_last_assistant
+        } )
+
+    }, [ send_message_from_history, current_conversation_id ] )
 
     /**
      * Send a message and generate a response
@@ -78,8 +193,18 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const send_message = useCallback( async ( text ) => {
 
         const user_msg = { id: uuid(), role: `user`, content: text }
-
         set_messages( prev => [ ...prev, user_msg ] )
+
+        // Create conversation if this is the first message
+        let conv_id = current_conversation_id
+        if( !conv_id ) {
+            conv_id = await create_conversation( text )
+            set_current_conversation_id( conv_id )
+            navigate( `/chat/${ conv_id }`, { replace: true } )
+        }
+
+        // Save user message to IndexedDB
+        await save_message( conv_id, user_msg )
 
         // Add placeholder assistant message
         const assistant_msg = { id: uuid(), role: `assistant`, content: `` }
@@ -104,7 +229,6 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         try {
 
             const result = await chat_stream( history, opts, ( full_text ) => {
-                // Update the assistant message content in real-time
                 set_messages( prev => {
                     const updated = [ ...prev ]
                     updated[ updated.length - 1 ] = { ...updated[ updated.length - 1 ], content: full_text }
@@ -112,16 +236,22 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                 } )
             } )
 
-            // Final update with stats
+            // Final update with stats and persist
+            const final_assistant = {
+                ...assistant_msg,
+                content: result.text,
+                stats: result.stats,
+            }
+
             set_messages( prev => {
                 const updated = [ ...prev ]
-                updated[ updated.length - 1 ] = {
-                    ...updated[ updated.length - 1 ],
-                    content: result.text,
-                    stats: result.stats,
-                }
+                updated[ updated.length - 1 ] = final_assistant
                 return updated
             } )
+
+            // Save assistant message to IndexedDB
+            await save_message( conv_id, final_assistant )
+            await refresh()
 
         } catch ( err ) {
             if( err.name !== `AbortError` ) {
@@ -136,70 +266,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             }
         }
 
-    }, [ messages, chat_stream ] )
-
-    /**
-     * Re-send from existing message history
-     */
-    const send_message_from_history = useCallback( async ( history_msgs ) => {
-
-        const assistant_msg = { id: uuid(), role: `assistant`, content: `` }
-        set_messages( [ ...history_msgs, assistant_msg ] )
-
-        const system_prompt = localStorage.getItem( `locallm:settings:system_prompt` )
-            || import.meta.env.VITE_DEFAULT_SYSTEM_PROMPT
-            || ``
-        const history = history_msgs.map( ( { role, content } ) => ( { role, content } ) )
-        if( system_prompt ) history.unshift( { role: `system`, content: system_prompt } )
-
-        const opts = {
-            temperature: parseFloat( localStorage.getItem( `locallm:settings:temperature` ) ) || 0.7,
-            max_tokens: parseInt( localStorage.getItem( `locallm:settings:max_tokens` ) ) || 2048,
-        }
-
-        try {
-
-            const result = await chat_stream( history, opts, ( full_text ) => {
-                set_messages( prev => {
-                    const updated = [ ...prev ]
-                    updated[ updated.length - 1 ] = { ...updated[ updated.length - 1 ], content: full_text }
-                    return updated
-                } )
-            } )
-
-            set_messages( prev => {
-                const updated = [ ...prev ]
-                updated[ updated.length - 1 ] = {
-                    ...updated[ updated.length - 1 ],
-                    content: result.text,
-                    stats: result.stats,
-                }
-                return updated
-            } )
-
-        } catch {
-            // Error handling done in use_llm
-        }
-
-    }, [ chat_stream ] )
-
-    /**
-     * Regenerate the last assistant message
-     */
-    const handle_regenerate = useCallback( () => {
-
-        // Remove the last assistant message and re-send the last user message
-        set_messages( prev => {
-            const without_last_assistant = prev.slice( 0, -1 )
-            const last_user = without_last_assistant[ without_last_assistant.length - 1 ]
-            if( last_user?.role === `user` ) {
-                // Re-trigger send with the existing user message
-                setTimeout( () => send_message_from_history( without_last_assistant ), 0 )
-            }
-            return without_last_assistant
-        } )
-
-    }, [ send_message_from_history ] )
+    }, [ messages, chat_stream, current_conversation_id, create_conversation, save_message, navigate, refresh ] )
 
     /**
      * Edit a message and resend from that point
@@ -220,28 +287,64 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         abort()
     }, [ abort ] )
 
+    /**
+     * Handle new chat — clear messages and navigate
+     */
+    const handle_new_chat = useCallback( () => {
+        set_current_conversation_id( null )
+        set_messages( [] )
+    }, [] )
+
+    /**
+     * Handle exporting a conversation from sidebar
+     */
+    const handle_export = useCallback( async ( conversation ) => {
+        const msgs = await load_messages( conversation.id )
+        export_conversation( conversation, msgs )
+    }, [ load_messages ] )
+
+    /**
+     * Handle deleting a conversation from sidebar
+     */
+    const handle_delete = useCallback( async ( id ) => {
+
+        await delete_conversation( id )
+
+        // If we deleted the active conversation, navigate to empty chat
+        if( id === current_conversation_id ) {
+            set_current_conversation_id( null )
+            set_messages( [] )
+            navigate( `/chat` )
+        }
+
+    }, [ delete_conversation, current_conversation_id, navigate ] )
+
     const has_messages = messages.length > 0
 
     return <AppLayout
         theme_preference={ theme_preference }
         theme_mode={ theme_mode }
         on_theme_toggle={ on_theme_toggle }
+        on_new_chat={ handle_new_chat }
+        conversations={ conversations }
+        on_export={ handle_export }
+        on_delete={ handle_delete }
     >
         <Container>
 
-            { !model_loaded && !loaded_model_id && 
+            { !model_loaded && !loaded_model_id &&
                 <NoModelBanner>
                     No model loaded. Go to the welcome page to download a model.
                 </NoModelBanner> }
 
-            { has_messages ? 
+            { has_messages ?
                 <MessageList
                     messages={ messages }
                     is_streaming={ is_generating }
                     on_regenerate={ handle_regenerate }
                     on_edit={ handle_edit }
                 />
-                : 
+                :
                 <EmptyState>
                     <Title>localLM</Title>
                     <Subtitle>Ask me anything.</Subtitle>

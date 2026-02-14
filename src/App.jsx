@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter, HashRouter } from 'react-router-dom'
 import { ThemeProvider } from 'styled-components'
 import { QueryParamProvider } from 'use-query-params'
@@ -6,6 +7,7 @@ import { Toaster } from 'react-hot-toast'
 import GlobalStyle from './styles/GlobalStyle'
 import use_theme from './hooks/use_theme'
 import Routes from './routes/Routes'
+import { register_shortcuts } from './utils/keyboard_shortcuts'
 
 // Choose router based on runtime environment
 const is_electron = typeof window !== `undefined` && window.electronAPI?.native_inference
@@ -19,6 +21,17 @@ const Router = is_electron ? HashRouter : BrowserRouter
 export default function App() {
 
     const { theme, theme_preference, set_theme_preference } = use_theme()
+
+    // Register global keyboard shortcuts
+    useEffect( () => {
+
+        return register_shortcuts( {
+            new_chat: () => window.dispatchEvent( new CustomEvent( `locallm:new-chat` ) ),
+            open_settings: () => window.dispatchEvent( new CustomEvent( `locallm:open-settings` ) ),
+            close_modal: () => window.dispatchEvent( new CustomEvent( `locallm:close-modal` ) ),
+        } )
+
+    }, [] )
 
     return <ThemeProvider theme={ theme }>
         <GlobalStyle />
