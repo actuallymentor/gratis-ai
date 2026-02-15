@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { v4 as uuid } from 'uuid'
 import toast from 'react-hot-toast'
-import { ArrowRight, MessageSquare } from 'lucide-react'
+import { ArrowRight, MessageSquare, Loader } from 'lucide-react'
 import AppLayout from '../molecules/AppLayout'
 import MessageList from '../molecules/MessageList'
 import ChatInput from '../molecules/ChatInput'
@@ -125,6 +125,37 @@ const SetupButton = styled.button`
     &:hover { opacity: 0.85; }
 `
 
+// Loading state while model initializes
+const LoadingContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: ${ ( { theme } ) => theme.spacing.xl };
+    text-align: center;
+`
+
+const LoadingText = styled.p`
+    color: ${ ( { theme } ) => theme.colors.text_secondary };
+    margin-top: ${ ( { theme } ) => theme.spacing.md };
+    font-size: 0.95rem;
+`
+
+const spin = keyframes`
+    from { transform: rotate( 0deg ); }
+    to { transform: rotate( 360deg ); }
+`
+
+const SpinnerIcon = styled.div`
+    color: ${ ( { theme } ) => theme.colors.accent };
+    animation: ${ spin } 1.2s linear infinite;
+
+    @media ( prefers-reduced-motion: reduce ) {
+        animation: none;
+    }
+`
+
 // Conversation starter prompts
 const SUGGESTIONS = [
     `Explain something complex in simple terms`,
@@ -148,12 +179,13 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const [ search_params, set_search_params ] = useSearchParams()
 
     const [ messages, set_messages ] = useState( [] )
-    const [ model_loaded, set_model_loaded ] = useState( false )
+    // Initialize as null = "haven't tried loading yet" to distinguish from "tried and failed"
+    const [ model_loaded, set_model_loaded ] = useState( null )
     const [ current_conversation_id, set_current_conversation_id ] = useState( conversation_id || null )
     const is_generating_ref = useRef( false )
     const query_processed_ref = useRef( false )
 
-    const { load_model, chat_stream, abort, is_generating, loaded_model_id } = use_llm()
+    const { load_model, chat_stream, abort, is_generating, is_loading: is_model_loading, loaded_model_id } = use_llm()
     const {
         conversations,
         create_conversation,
@@ -191,7 +223,11 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const [ voice_text, set_voice_text ] = useState( null )
 
     // Whether a model is available for inference
-    const has_model = model_loaded || !!loaded_model_id
+    const has_model = model_loaded === true || !!loaded_model_id
+
+    // Whether we're in the process of loading a model (includes the initial mount gap)
+    const has_pending_model = !!localStorage.getItem( `locallm:settings:active_model_id` )
+    const is_loading_model = is_model_loading ||  model_loaded === null && has_pending_model 
 
     // Try loading the active model on mount
     useEffect( () => {
@@ -201,6 +237,9 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             load_model( active_id )
                 .then( () => set_model_loaded( true ) )
                 .catch( () => set_model_loaded( false ) )
+        } else if( !active_id ) {
+            // No model configured — transition from null (unknown) to false (no model)
+            set_model_loaded( false )
         }
 
     }, [] )
@@ -567,7 +606,15 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     // Render the main content area based on state
     const render_content = () => {
 
-        // No model loaded — show a helpful, actionable CTA instead of dismissive banner
+        // Model is loading — show a friendly loading state instead of the "no model" CTA
+        if( !has_model && is_loading_model ) {
+            return <LoadingContainer data-testid="model-loading">
+                <SpinnerIcon><Loader size={ 32 } /></SpinnerIcon>
+                <LoadingText>Loading your model...</LoadingText>
+            </LoadingContainer>
+        }
+
+        // No model loaded — show a helpful, actionable CTA
         if( !has_model ) {
             return <NoModelContainer>
                 <NoModelTitle>Let's get you set up</NoModelTitle>
