@@ -169,6 +169,9 @@ export default function DownloadPage() {
     // Track download speed for ETA calculation
     const speed_ref = useRef( { start_time: null, samples: [] } )
 
+    // Guard against StrictMode double-mount starting two downloads
+    const download_started_ref = useRef( false )
+
     // Throttle progress updates to ~4fps to prevent jitter from rapid re-renders
     const last_update_ref = useRef( 0 )
     const pending_progress_ref = useRef( null )
@@ -193,6 +196,10 @@ export default function DownloadPage() {
             navigate( `/select-model`, { replace: true } )
             return
         }
+
+        // Prevent StrictMode double-mount from starting two concurrent downloads
+        if( download_started_ref.current ) return
+        download_started_ref.current = true
 
         // Check if already cached
         is_model_cached( model.id ).then( cached => {
