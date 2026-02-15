@@ -1,10 +1,10 @@
 import { Wllama } from '@wllama/wllama'
 import { get_db } from '../stores/db'
 
-// WASM paths relative to public/esm directory — wllama ships these
+// WASM paths — served from public/wasm/ (copied there by postinstall script)
 const CONFIG_PATHS = {
-    'single-thread/wllama.wasm': new URL( `@wllama/wllama/esm/single-thread/wllama.wasm`, import.meta.url ).href,
-    'multi-thread/wllama.wasm': new URL( `@wllama/wllama/esm/multi-thread/wllama.wasm`, import.meta.url ).href,
+    'single-thread/wllama.wasm': `/wasm/single-thread/wllama.wasm`,
+    'multi-thread/wllama.wasm': `/wasm/multi-thread/wllama.wasm`,
 }
 
 /**
@@ -48,10 +48,16 @@ export default class WllamaProvider {
             on_progress( { progress: 0, status: `Loading model into memory...` } )
         }
 
-        // Load from blob
+        // Use half the available cores for inference threads (wllama default)
+        // On single-core devices this falls back to 1 thread gracefully
+        const hw_threads = navigator.hardwareConcurrency || 1
+        const n_threads = Math.max( 1, Math.floor( hw_threads / 2 ) )
+
+        // Load from blob — larger batch size improves throughput in multi-threaded mode
         await this._wllama.loadModel( [ cached.blob ], {
             n_ctx: cached.context_length || 2048,
-            n_batch: 512,
+            n_batch: n_threads > 1 ? 1024 : 512,
+            n_threads,
         } )
 
         this._loaded_model_id = model_id
@@ -83,6 +89,7 @@ export default class WllamaProvider {
             nPredict: opts.max_tokens || 2048,
             sampling,
             stream: false,
+            ... opts.stop?.length ? { stopStrings: opts.stop } : {},
         } )
 
         return response
@@ -111,6 +118,7 @@ export default class WllamaProvider {
             sampling,
             stream: true,
             abortSignal: this._abort_controller.signal,
+            ... opts.stop?.length ? { stopStrings: opts.stop } : {},
         } )
 
         try {
@@ -186,7 +194,8 @@ export default class WllamaProvider {
      * @returns {Object} Wllama SamplingConfig
      */
     _build_sampling( opts ) {
-        return {
+
+        const sampling = {
             temp: opts.temperature ?? 0.7,
             top_p: opts.top_p ?? 0.95,
             top_k: opts.top_k ?? 40,
@@ -196,6 +205,12 @@ export default class WllamaProvider {
             penalty_freq: opts.frequency_penalty ?? 0,
             penalty_present: opts.presence_penalty ?? 0,
         }
+
+        // Wire seed for reproducible outputs (-1 means random, omit it)
+        if( opts.seed !== undefined && opts.seed !== -1 ) sampling.seed = opts.seed
+
+        return sampling
+
     }
 
 }

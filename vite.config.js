@@ -48,5 +48,16 @@ export default defineConfig( {
     },
     server: {
         port: 5173,
+        // COOP + COEP headers enable SharedArrayBuffer, required for multi-threaded WASM inference
+        headers: {
+            'Cross-Origin-Opener-Policy': `same-origin`,
+            'Cross-Origin-Embedder-Policy': `require-corp`,
+        },
+    },
+    preview: {
+        headers: {
+            'Cross-Origin-Opener-Policy': `same-origin`,
+            'Cross-Origin-Embedder-Policy': `require-corp`,
+        },
     },
 } )
