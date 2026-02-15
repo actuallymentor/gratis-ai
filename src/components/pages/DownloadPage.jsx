@@ -57,6 +57,7 @@ const ProgressDetails = styled.div`
     margin-top: ${ ( { theme } ) => theme.spacing.sm };
     font-size: 0.8rem;
     color: ${ ( { theme } ) => theme.colors.text_muted };
+    font-variant-numeric: tabular-nums;
 `
 
 const PercentText = styled.span`
@@ -64,12 +65,16 @@ const PercentText = styled.span`
     font-size: 1.5rem;
     color: ${ ( { theme } ) => theme.colors.text };
     margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+    font-variant-numeric: tabular-nums;
+    min-width: 4.5ch;
+    text-align: center;
 `
 
 const ETAText = styled.p`
     font-size: 0.85rem;
     color: ${ ( { theme } ) => theme.colors.text_muted };
     margin-bottom: ${ ( { theme } ) => theme.spacing.lg };
+    min-height: 1.3em;
 `
 
 const CancelButton = styled.button`
@@ -164,6 +169,11 @@ export default function DownloadPage() {
     // Track download speed for ETA calculation
     const speed_ref = useRef( { start_time: null, samples: [] } )
 
+    // Throttle progress updates to ~4fps to prevent jitter from rapid re-renders
+    const last_update_ref = useRef( 0 )
+    const pending_progress_ref = useRef( null )
+    const raf_ref = useRef( null )
+
     const on_complete = useCallback( () => {
 
         // Save active model ID to localStorage
@@ -197,24 +207,40 @@ export default function DownloadPage() {
             abort_ref.current = controller
             speed_ref.current.start_time = Date.now()
 
+            // Throttled progress handler — updates state at most every 250ms
             const on_progress = ( prog ) => {
-                set_progress( prog )
 
-                // Track speed samples for ETA
+                // Always track speed samples in the ref (no re-render)
                 if( prog.bytes_loaded > 0 ) {
                     speed_ref.current.samples.push( {
                         time: Date.now(),
                         bytes: prog.bytes_loaded,
                     } )
-                    // Keep last 10 samples for smoothing
                     if( speed_ref.current.samples.length > 10 ) {
                         speed_ref.current.samples.shift()
                     }
                 }
+
+                // Stash latest progress, only flush to state at throttled intervals
+                pending_progress_ref.current = prog
+                const now = Date.now()
+                if( now - last_update_ref.current < 250 ) return
+
+                last_update_ref.current = now
+                if( raf_ref.current ) cancelAnimationFrame( raf_ref.current )
+                raf_ref.current = requestAnimationFrame( () => {
+                    if( pending_progress_ref.current ) {
+                        set_progress( pending_progress_ref.current )
+                    }
+                } )
             }
 
             download_model( model, on_progress, controller.signal )
-                .then( on_complete )
+                .then( () => {
+                    // Flush final progress so the bar shows 100% before transitioning
+                    if( pending_progress_ref.current ) set_progress( pending_progress_ref.current )
+                    on_complete()
+                } )
                 .catch( err => {
                     if( err.name !== `AbortError` ) {
                         set_error( err.message )
@@ -225,6 +251,7 @@ export default function DownloadPage() {
 
         return () => {
             if( abort_ref.current ) abort_ref.current.abort()
+            if( raf_ref.current ) cancelAnimationFrame( raf_ref.current )
         }
 
     }, [ model, navigate, on_complete ] )
@@ -297,7 +324,8 @@ export default function DownloadPage() {
             </ProgressDetails>
         </ProgressContainer>
 
-        { eta && <ETAText>{ eta }</ETAText> }
+        { /* Always render to reserve space and avoid layout shift */ }
+        <ETAText>{ eta }</ETAText>
 
         <CancelButton onClick={ handle_cancel }>
             <X size={ 16 } />
