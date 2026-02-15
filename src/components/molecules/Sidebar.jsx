@@ -123,8 +123,9 @@ const ConversationTitle = styled.span`
 
 const ConversationActions = styled.div`
     display: flex;
+    align-items: center;
     gap: 4px;
-    opacity: 0;
+    opacity: ${ ( { $visible } ) => $visible ? 1 : 0 };
     transition: opacity 0.15s;
 `
 
@@ -132,23 +133,19 @@ const ActionIcon = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 4px;
     min-width: 2rem;
     min-height: 2rem;
     border-radius: ${ ( { theme } ) => theme.border_radius.sm };
     color: ${ ( { theme, $confirming } ) => $confirming ? theme.colors.error : theme.colors.text_muted };
+    font-size: 0.7rem;
+    white-space: nowrap;
     transition: color 0.15s, background 0.15s;
 
     &:hover {
         color: ${ ( { theme, $confirming } ) => $confirming ? theme.colors.error : theme.colors.text };
         background: ${ ( { theme } ) => theme.colors.code_background };
     }
-`
-
-// Confirmation label that appears alongside the trash icon
-const ConfirmLabel = styled.span`
-    font-size: 0.7rem;
-    color: ${ ( { theme } ) => theme.colors.error };
-    white-space: nowrap;
 `
 
 /**
@@ -192,8 +189,8 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
         } else {
             // First click — ask to confirm
             set_confirming_delete( id )
-            // Reset after 3 seconds if not confirmed
-            setTimeout( () => set_confirming_delete( null ), 3000 )
+            // Reset after 5 seconds if not confirmed
+            setTimeout( () => set_confirming_delete( null ), 5000 )
         }
     }
 
@@ -242,17 +239,18 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                                 { truncate( conv.title, 40 ) }
                             </ConversationTitle>
 
-                            <ConversationActions className="conv-actions">
-                                <ActionIcon
+                            <ConversationActions
+                                className="conv-actions"
+                                $visible={ confirming_delete === conv.id }
+                            >
+                                { confirming_delete !== conv.id && <ActionIcon
                                     data-testid={ `sidebar-export-${ conv.id }` }
                                     onClick={ ( e ) => handle_export( e, conv ) }
                                     aria-label="Export conversation"
                                     title="Export"
                                 >
                                     <Download size={ 14 } />
-                                </ActionIcon>
-                                { confirming_delete === conv.id &&
-                                    <ConfirmLabel>Delete?</ConfirmLabel> }
+                                </ActionIcon> }
                                 <ActionIcon
                                     data-testid={ `sidebar-delete-${ conv.id }` }
                                     onClick={ ( e ) => handle_delete( e, conv.id ) }
@@ -261,6 +259,7 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                                     $confirming={ confirming_delete === conv.id }
                                 >
                                     <Trash2 size={ 14 } />
+                                    { confirming_delete === conv.id && `Delete?` }
                                 </ActionIcon>
                             </ConversationActions>
                         </ConversationItem>
