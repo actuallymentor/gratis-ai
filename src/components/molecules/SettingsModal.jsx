@@ -9,7 +9,7 @@ import use_settings from '../../hooks/use_settings'
 const Overlay = styled.div`
     position: fixed;
     inset: 0;
-    background: rgba( 0, 0, 0, 0.5 );
+    background: ${ ( { theme } ) => theme.colors.modal_overlay };
     display: flex;
     align-items: center;
     justify-content: center;
@@ -20,6 +20,9 @@ const Modal = styled.div`
     background: ${ ( { theme } ) => theme.colors.background };
     border-radius: ${ ( { theme } ) => theme.border_radius.lg };
     border: 1px solid ${ ( { theme } ) => theme.colors.border };
+    box-shadow: ${ ( { theme } ) => theme.mode === `dark`
+        ? `0 4px 24px rgba( 0, 0, 0, 0.4 )`
+        : `0 4px 24px rgba( 0, 0, 0, 0.1 )` };
     width: min( 560px, 90vw );
     max-height: 80vh;
     display: flex;
@@ -32,7 +35,6 @@ const Header = styled.div`
     align-items: center;
     justify-content: space-between;
     padding: ${ ( { theme } ) => theme.spacing.md };
-    border-bottom: 1px solid ${ ( { theme } ) => theme.colors.border };
 `
 
 const Title = styled.h2`
@@ -44,30 +46,27 @@ const CloseButton = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    transition: color 0.15s;
 
-    &:hover {
-        background: ${ ( { theme } ) => theme.colors.surface_hover };
-        color: ${ ( { theme } ) => theme.colors.text };
-    }
+    &:hover { color: ${ ( { theme } ) => theme.colors.text }; }
 `
 
 const TabBar = styled.div`
     display: flex;
-    border-bottom: 1px solid ${ ( { theme } ) => theme.colors.border };
+    padding: ${ ( { theme } ) => `0 ${ theme.spacing.md }` };
 `
 
 const Tab = styled.button`
     flex: 1;
     padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
     font-size: 0.85rem;
-    font-weight: 500;
-    color: ${ ( { theme, $active } ) => $active ? theme.colors.primary : theme.colors.text_secondary };
-    border-bottom: 2px solid ${ ( { theme, $active } ) => $active ? theme.colors.primary : `transparent` };
-    transition: all 0.2s;
+    font-weight: ${ ( { $active } ) => $active ? `600` : `400` };
+    color: ${ ( { theme, $active } ) => $active ? theme.colors.text : theme.colors.text_muted };
+    transition: color 0.15s;
 
     &:hover {
         color: ${ ( { theme } ) => theme.colors.text };
@@ -93,9 +92,10 @@ const TABS = [
  * @param {Function} props.on_close - Handler for closing the modal
  * @param {string} props.theme_preference - Current theme preference
  * @param {Function} props.on_theme_change - Handler for theme changes
+ * @param {Function} [props.on_model_switch] - Handler for switching models
  * @returns {JSX.Element|null}
  */
-export default function SettingsModal( { is_open, on_close, theme_preference, on_theme_change } ) {
+export default function SettingsModal( { is_open, on_close, theme_preference, on_theme_change, on_model_switch } ) {
 
     const [ active_tab, set_active_tab ] = useState( `basic` )
     const { settings, update_setting } = use_settings()
@@ -146,10 +146,6 @@ export default function SettingsModal( { is_open, on_close, theme_preference, on
                     <BasicSettings
                         theme_preference={ theme_preference }
                         on_theme_change={ on_theme_change }
-                        temperature={ settings.temperature }
-                        on_temperature_change={ ( v ) => update_setting( `temperature`, v ) }
-                        max_tokens={ settings.max_tokens }
-                        on_max_tokens_change={ ( v ) => update_setting( `max_tokens`, v ) }
                         system_prompt={ settings.system_prompt }
                         on_system_prompt_change={ ( v ) => update_setting( `system_prompt`, v ) }
                     /> }
@@ -161,7 +157,7 @@ export default function SettingsModal( { is_open, on_close, theme_preference, on
                     /> }
 
                 { active_tab === `models` &&
-                    <ModelsSettings on_close={ on_close } /> }
+                    <ModelsSettings on_close={ on_close } on_model_switch={ on_model_switch } /> }
             </Body>
 
         </Modal>

@@ -13,15 +13,13 @@ const Trigger = styled.button`
     align-items: center;
     gap: ${ ( { theme } ) => theme.spacing.xs };
     padding: ${ ( { theme } ) => `${ theme.spacing.xs } ${ theme.spacing.sm }` };
-    border-radius: ${ ( { theme } ) => theme.border_radius.md };
     font-size: 0.85rem;
     color: ${ ( { theme } ) => theme.colors.text };
-    transition: background 0.15s;
     max-width: 200px;
+    transition: opacity 0.15s;
+    min-height: 2.75rem;
 
-    &:hover {
-        background: ${ ( { theme } ) => theme.colors.surface_hover };
-    }
+    &:hover { opacity: 0.7; }
 `
 
 const ModelName = styled.span`
@@ -35,13 +33,15 @@ const Dropdown = styled.div`
     top: 100%;
     left: 0;
     margin-top: 4px;
-    min-width: 260px;
+    min-width: 220px;
     max-height: 400px;
     overflow-y: auto;
-    background: ${ ( { theme } ) => theme.colors.surface };
+    background: ${ ( { theme } ) => theme.colors.background };
     border: 1px solid ${ ( { theme } ) => theme.colors.border };
-    border-radius: ${ ( { theme } ) => theme.border_radius.md };
-    box-shadow: 0 4px 12px rgba( 0, 0, 0, 0.15 );
+    border-radius: ${ ( { theme } ) => theme.border_radius.lg };
+    box-shadow: ${ ( { theme } ) => theme.mode === `dark`
+        ? `0 2px 8px rgba( 0, 0, 0, 0.3 )`
+        : `0 2px 8px rgba( 0, 0, 0, 0.08 )` };
     z-index: 500;
 `
 
@@ -55,6 +55,7 @@ const ModelOption = styled.button`
     font-size: 0.85rem;
     color: ${ ( { theme } ) => theme.colors.text };
     transition: background 0.15s;
+    min-height: 2.75rem;
 
     &:hover {
         background: ${ ( { theme } ) => theme.colors.surface_hover };
@@ -80,7 +81,7 @@ const ModelMeta = styled.div`
 
 const Divider = styled.div`
     height: 1px;
-    background: ${ ( { theme } ) => theme.colors.border };
+    background: ${ ( { theme } ) => theme.colors.border_subtle };
     margin: ${ ( { theme } ) => `${ theme.spacing.xs } 0` };
 `
 
@@ -89,8 +90,18 @@ const ActionOption = styled( ModelOption )`
     font-size: 0.8rem;
 `
 
+const NoModelHint = styled.div`
+    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    text-align: center;
+    line-height: 1.4;
+`
+
 /**
- * Model selector dropdown in the TopBar
+ * Model selector dropdown in the TopBar.
+ * Shows just model name and download size — technical details
+ * (quantization, parameters) are hidden to keep it clean.
  * @param {Object} props
  * @param {Array} props.cached_models - Array of cached model metadata objects
  * @param {string} props.active_model_id - Currently active model ID
@@ -123,7 +134,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
 
     // Find the active model's display name
     const active_model = cached_models.find( ( m ) => m.id === active_model_id )
-    const display_name = is_switching ? `Loading...` : active_model?.name || `No model loaded`
+    const display_name = is_switching ? `Loading...` : active_model?.name || `No model`
 
     const handle_select = ( model_id ) => {
         set_is_open( false )
@@ -157,11 +168,9 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
             <Dropdown>
 
                 { cached_models.length === 0 ?
-                    <ModelOption disabled style={ { cursor: `default` } }>
-                        <ModelInfo>
-                            <ModelLabel>No models cached</ModelLabel>
-                        </ModelInfo>
-                    </ModelOption>
+                    <NoModelHint>
+                        No models downloaded yet. Add one to get started.
+                    </NoModelHint>
                     :
                     cached_models.map( ( model ) =>
                         <ModelOption
@@ -175,9 +184,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                                 <div style={ { width: 14 } } /> }
                             <ModelInfo>
                                 <ModelLabel>{ model.name }</ModelLabel>
-                                <ModelMeta>
-                                    { [ model.parameters_label, model.quantization, format_file_size( model.file_size_bytes ) ].filter( Boolean ).join( ` · ` ) }
-                                </ModelMeta>
+                                <ModelMeta>{ format_file_size( model.file_size_bytes ) }</ModelMeta>
                             </ModelInfo>
                         </ModelOption>
                     ) }

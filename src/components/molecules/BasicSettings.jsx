@@ -30,36 +30,16 @@ const ThemeButton = styled.button`
     padding: ${ ( { theme } ) => `${ theme.spacing.xs } ${ theme.spacing.md }` };
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
     font-size: 0.85rem;
-    border: 1px solid ${ ( { theme, $active } ) => $active ? theme.colors.primary : theme.colors.border };
-    background: ${ ( { theme, $active } ) => $active ? theme.colors.primary + `20` : `transparent` };
-    color: ${ ( { theme, $active } ) => $active ? theme.colors.primary : theme.colors.text_secondary };
-    transition: all 0.2s;
+    font-weight: ${ ( { $active } ) => $active ? `600` : `400` };
+    border: 1px solid ${ ( { theme, $active } ) => $active ? theme.colors.text : theme.colors.border };
+    background: transparent;
+    color: ${ ( { theme, $active } ) => $active ? theme.colors.text : theme.colors.text_secondary };
+    transition: all 0.15s;
+    min-height: 2.75rem;
 
     &:hover {
-        border-color: ${ ( { theme } ) => theme.colors.primary };
+        border-color: ${ ( { theme } ) => theme.colors.text_secondary };
     }
-`
-
-const SliderRow = styled.div`
-    display: flex;
-    align-items: center;
-    gap: ${ ( { theme } ) => theme.spacing.sm };
-`
-
-const Slider = styled.input`
-    flex: 1;
-    accent-color: ${ ( { theme } ) => theme.colors.primary };
-`
-
-const NumberInput = styled.input`
-    width: 70px;
-    padding: ${ ( { theme } ) => theme.spacing.xs };
-    background: ${ ( { theme } ) => theme.colors.input_background };
-    color: ${ ( { theme } ) => theme.colors.text };
-    border: 1px solid ${ ( { theme } ) => theme.colors.border };
-    border-radius: ${ ( { theme } ) => theme.border_radius.sm };
-    text-align: center;
-    font-size: 0.85rem;
 `
 
 const Textarea = styled.textarea`
@@ -77,7 +57,7 @@ const Textarea = styled.textarea`
 `
 
 const ShortcutsSection = styled.div`
-    border-top: 1px solid ${ ( { theme } ) => theme.colors.border };
+    border-top: 1px solid ${ ( { theme } ) => theme.colors.border_subtle };
     padding-top: ${ ( { theme } ) => theme.spacing.md };
     margin-top: ${ ( { theme } ) => theme.spacing.md };
 `
@@ -93,19 +73,17 @@ const ShortcutKey = styled.code`
     font-family: ${ ( { theme } ) => theme.fonts.mono };
     background: ${ ( { theme } ) => theme.colors.code_background };
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: ${ ( { theme } ) => theme.border_radius.sm };
     font-size: 0.75rem;
 `
 
 /**
- * Basic settings tab content
+ * Basic settings tab — simple, non-intimidating options only.
+ * Temperature and Max Tokens have been moved to the Advanced tab
+ * to reduce cognitive load for non-technical users.
  * @param {Object} props
  * @param {string} props.theme_preference - Current theme preference
  * @param {Function} props.on_theme_change - Handler for theme changes
- * @param {number} props.temperature - Current temperature
- * @param {Function} props.on_temperature_change - Handler for temperature changes
- * @param {number} props.max_tokens - Current max tokens
- * @param {Function} props.on_max_tokens_change - Handler for max tokens changes
  * @param {string} props.system_prompt - Current system prompt
  * @param {Function} props.on_system_prompt_change - Handler for system prompt changes
  * @returns {JSX.Element}
@@ -113,10 +91,6 @@ const ShortcutKey = styled.code`
 export default function BasicSettings( {
     theme_preference,
     on_theme_change,
-    temperature,
-    on_temperature_change,
-    max_tokens,
-    on_max_tokens_change,
     system_prompt,
     on_system_prompt_change,
 } ) {
@@ -125,7 +99,8 @@ export default function BasicSettings( {
 
         { /* Theme */ }
         <Section>
-            <Label>Theme</Label>
+            <Label>Appearance</Label>
+            <Description>Choose how the app looks.</Description>
             <ThemeToggleGroup>
                 <ThemeButton
                     $active={ theme_preference === `light` }
@@ -148,57 +123,18 @@ export default function BasicSettings( {
             </ThemeToggleGroup>
         </Section>
 
-        { /* Temperature */ }
-        <Section>
-            <Label>Temperature</Label>
-            <Description>Controls randomness. Lower is more deterministic.</Description>
-            <SliderRow>
-                <Slider
-                    data-testid="temperature-slider"
-                    type="range"
-                    min="0"
-                    max="2"
-                    step="0.1"
-                    value={ temperature }
-                    onChange={ ( e ) => on_temperature_change( parseFloat( e.target.value ) ) }
-                />
-                <NumberInput
-                    data-testid="temperature-input"
-                    type="number"
-                    min="0"
-                    max="2"
-                    step="0.1"
-                    value={ temperature }
-                    onChange={ ( e ) => on_temperature_change( parseFloat( e.target.value ) || 0 ) }
-                />
-            </SliderRow>
-        </Section>
-
-        { /* Max Tokens */ }
-        <Section>
-            <Label>Max Tokens</Label>
-            <Description>Maximum number of tokens to generate.</Description>
-            <NumberInput
-                data-testid="max-tokens-input"
-                type="number"
-                min="64"
-                max="32768"
-                step="64"
-                value={ max_tokens }
-                onChange={ ( e ) => on_max_tokens_change( parseInt( e.target.value ) || 64 ) }
-                style={ { width: `120px` } }
-            />
-        </Section>
-
         { /* System Prompt */ }
         <Section>
-            <Label>System Prompt</Label>
-            <Description>Instructions given to the model before each conversation.</Description>
+            <Label>Custom Instructions</Label>
+            <Description>
+                Tell the AI how to behave. For example: "Always reply in French"
+                or "Explain things simply".
+            </Description>
             <Textarea
                 data-testid="system-prompt-input"
                 value={ system_prompt }
                 onChange={ ( e ) => on_system_prompt_change( e.target.value ) }
-                placeholder="You are a helpful assistant..."
+                placeholder="e.g. You are a friendly assistant who explains things simply..."
             />
         </Section>
 
@@ -210,12 +146,16 @@ export default function BasicSettings( {
                 <ShortcutKey>Ctrl+N</ShortcutKey>
             </ShortcutRow>
             <ShortcutRow>
-                <span>Export Chat</span>
+                <span>Toggle Sidebar</span>
                 <ShortcutKey>Ctrl+Shift+S</ShortcutKey>
             </ShortcutRow>
             <ShortcutRow>
                 <span>Settings</span>
                 <ShortcutKey>Ctrl+,</ShortcutKey>
+            </ShortcutRow>
+            <ShortcutRow>
+                <span>Stop Generation</span>
+                <ShortcutKey>Ctrl+Shift+Backspace</ShortcutKey>
             </ShortcutRow>
             <ShortcutRow>
                 <span>Close Modal</span>

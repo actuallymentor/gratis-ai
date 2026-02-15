@@ -16,16 +16,35 @@ test.describe( `Settings Modal`, () => {
         await expect( page.getByTestId( `settings-tab-models` ) ).toBeVisible()
     } )
 
-    test( `basic tab shows temperature slider`, async ( { page } ) => {
-        await page.goto( `/chat` )
-        await page.getByTestId( `settings-btn` ).click()
-        await expect( page.getByTestId( `temperature-slider` ) ).toBeVisible()
-    } )
-
-    test( `basic tab shows system prompt input`, async ( { page } ) => {
+    test( `basic tab shows system prompt (renamed to Custom Instructions)`, async ( { page } ) => {
         await page.goto( `/chat` )
         await page.getByTestId( `settings-btn` ).click()
         await expect( page.getByTestId( `system-prompt-input` ) ).toBeVisible()
+    } )
+
+    test( `basic tab does NOT show temperature slider (moved to advanced)`, async ( { page } ) => {
+        await page.goto( `/chat` )
+        await page.getByTestId( `settings-btn` ).click()
+        // Temperature slider should not be visible in basic tab
+        await expect( page.getByTestId( `temperature-slider` ) ).not.toBeVisible()
+    } )
+
+    test( `advanced tab shows temperature slider (Creativity)`, async ( { page } ) => {
+        await page.goto( `/chat` )
+        await page.getByTestId( `settings-btn` ).click()
+        await page.getByTestId( `settings-tab-advanced` ).click()
+        await expect( page.getByTestId( `temperature-slider` ) ).toBeVisible()
+        // Should use friendly label "Creativity" instead of "Temperature"
+        await expect( page.getByText( `Creativity` ) ).toBeVisible()
+    } )
+
+    test( `advanced tab shows response length (max tokens)`, async ( { page } ) => {
+        await page.goto( `/chat` )
+        await page.getByTestId( `settings-btn` ).click()
+        await page.getByTestId( `settings-tab-advanced` ).click()
+        await expect( page.getByTestId( `max-tokens-input` ) ).toBeVisible()
+        // Should use friendly label "Response Length"
+        await expect( page.getByText( `Response Length` ) ).toBeVisible()
     } )
 
     test( `closes settings on escape key`, async ( { page } ) => {
@@ -42,11 +61,11 @@ test.describe( `Settings Modal`, () => {
 
         // Click Advanced tab
         await page.getByTestId( `settings-tab-advanced` ).click()
-        await expect( page.getByText( `Top P`, { exact: true } ) ).toBeVisible()
+        await expect( page.getByText( `Top P` ) ).toBeVisible()
 
         // Click Models tab
         await page.getByTestId( `settings-tab-models` ).click()
-        await expect( page.getByTestId( `clear-all-data-btn` ) ).toBeVisible()
+        await expect( page.getByTestId( `add-model-preset-btn` ) ).toBeVisible()
     } )
 
     test( `models tab shows add model preset button`, async ( { page } ) => {
@@ -54,6 +73,21 @@ test.describe( `Settings Modal`, () => {
         await page.getByTestId( `settings-btn` ).click()
         await page.getByTestId( `settings-tab-models` ).click()
         await expect( page.getByTestId( `add-model-preset-btn` ) ).toBeVisible()
+    } )
+
+    test( `models tab hides danger zone behind toggle`, async ( { page } ) => {
+        await page.goto( `/chat` )
+        await page.getByTestId( `settings-btn` ).click()
+        await page.getByTestId( `settings-tab-models` ).click()
+
+        // Clear all data button should not be visible initially
+        await expect( page.getByTestId( `clear-all-data-btn` ) ).not.toBeVisible()
+
+        // Click danger zone toggle to reveal
+        await page.getByTestId( `danger-zone-toggle` ).click()
+
+        // Now the clear all data button should be visible
+        await expect( page.getByTestId( `clear-all-data-btn` ) ).toBeVisible()
     } )
 
 } )

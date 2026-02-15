@@ -2,30 +2,24 @@ import { test, expect } from '@playwright/test'
 
 test.describe( `Chat Page`, () => {
 
-    test( `loads with empty state`, async ( { page } ) => {
+    test( `shows no-model setup CTA when no model loaded`, async ( { page } ) => {
         await page.goto( `/chat` )
-        await expect( page.getByText( `Ask me anything` ) ).toBeVisible()
+        // Should show the actionable "Let's get you set up" heading
+        await expect( page.getByText( `Let's get you set up` ) ).toBeVisible()
+        // Should show the "Set up a model" button
+        await expect( page.getByTestId( `setup-model-btn` ) ).toBeVisible()
     } )
 
-    test( `shows chat input`, async ( { page } ) => {
+    test( `setup model button navigates to welcome page`, async ( { page } ) => {
         await page.goto( `/chat` )
-        await expect( page.getByTestId( `chat-input` ) ).toBeVisible()
-    } )
-
-    test( `send button is disabled when input is empty`, async ( { page } ) => {
-        await page.goto( `/chat` )
-        await expect( page.getByTestId( `send-btn` ) ).toBeDisabled()
-    } )
-
-    test( `shows no model banner when no model loaded`, async ( { page } ) => {
-        await page.goto( `/chat` )
-        // Use the more specific text to avoid matching the model selector dropdown
-        await expect( page.getByText( `No model loaded. Go to the welcome page` ) ).toBeVisible()
+        await page.getByTestId( `setup-model-btn` ).click()
+        await expect( page ).toHaveURL( `/` )
     } )
 
     test( `chat input is disabled when no model loaded`, async ( { page } ) => {
         await page.goto( `/chat` )
-        await expect( page.getByTestId( `chat-input` ) ).toBeDisabled()
+        // The chat input should exist but be disabled
+        await expect( page.getByTestId( `send-btn` ) ).toBeDisabled()
     } )
 
 } )

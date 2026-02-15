@@ -3,12 +3,16 @@ import styled from 'styled-components'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { v4 as uuid } from 'uuid'
 import toast from 'react-hot-toast'
+import { ArrowRight, MessageSquare } from 'lucide-react'
 import AppLayout from '../molecules/AppLayout'
 import MessageList from '../molecules/MessageList'
 import ChatInput from '../molecules/ChatInput'
+import VoiceModelDialog from '../molecules/VoiceModelDialog'
 import use_llm from '../../hooks/use_llm'
 import use_chat_history from '../../hooks/use_chat_history'
 import use_model_manager from '../../hooks/use_model_manager'
+import use_settings from '../../hooks/use_settings'
+import use_voice_input from '../../hooks/use_voice_input'
 import { export_conversation } from '../../utils/export'
 import { parse_model_param, resolve_cached_model } from '../../utils/model_param_resolver'
 
@@ -19,6 +23,7 @@ const Container = styled.div`
     overflow: hidden;
 `
 
+// Empty state with conversation starters
 const EmptyState = styled.div`
     display: flex;
     flex-direction: column;
@@ -29,22 +34,104 @@ const EmptyState = styled.div`
     text-align: center;
 `
 
-const Title = styled.h1`
-    font-size: 2rem;
-    color: ${ ( { theme } ) => theme.colors.primary };
-    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+const WelcomeTitle = styled.h1`
+    font-size: clamp( 1.5rem, 1.2rem + 1vw, 2rem );
+    color: ${ ( { theme } ) => theme.colors.text };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
 `
 
-const Subtitle = styled.p`
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
-`
-
-const NoModelBanner = styled.div`
-    padding: ${ ( { theme } ) => theme.spacing.md };
-    text-align: center;
+const WelcomeSubtitle = styled.p`
     color: ${ ( { theme } ) => theme.colors.text_muted };
-    font-size: 0.85rem;
+    margin-bottom: ${ ( { theme } ) => theme.spacing.xl };
+    font-size: 0.95rem;
 `
+
+// Conversation starter suggestions
+const Suggestions = styled.div`
+    display: grid;
+    grid-template-columns: repeat( auto-fit, minmax( 200px, 1fr ) );
+    gap: ${ ( { theme } ) => theme.spacing.sm };
+    max-width: 500px;
+    width: 100%;
+
+    @media ( max-width: ${ ( { theme } ) => theme.breakpoints.mobile } ) {
+        grid-template-columns: 1fr;
+    }
+`
+
+const SuggestionButton = styled.button`
+    display: flex;
+    align-items: flex-start;
+    gap: ${ ( { theme } ) => theme.spacing.sm };
+    padding: ${ ( { theme } ) => theme.spacing.md };
+    border: 1px solid ${ ( { theme } ) => theme.colors.border };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    text-align: left;
+    font-size: 0.85rem;
+    color: ${ ( { theme } ) => theme.colors.text_secondary };
+    line-height: 1.4;
+    transition: border-color 0.15s, color 0.15s;
+    min-height: 2.75rem;
+
+    &:hover {
+        border-color: ${ ( { theme } ) => theme.colors.text_muted };
+        color: ${ ( { theme } ) => theme.colors.text };
+    }
+`
+
+const SuggestionIcon = styled.div`
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    flex-shrink: 0;
+    margin-top: 1px;
+`
+
+// No model CTA — replaces the old dismissive banner
+const NoModelContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: ${ ( { theme } ) => theme.spacing.xl };
+    text-align: center;
+`
+
+const NoModelTitle = styled.h2`
+    font-size: 1.3rem;
+    color: ${ ( { theme } ) => theme.colors.text };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+`
+
+const NoModelText = styled.p`
+    color: ${ ( { theme } ) => theme.colors.text_secondary };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.lg };
+    max-width: 400px;
+    line-height: 1.5;
+`
+
+const SetupButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.sm };
+    background: ${ ( { theme } ) => theme.colors.accent };
+    color: white;
+    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.lg }` };
+    border-radius: ${ ( { theme } ) => theme.border_radius.full };
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: opacity 0.15s;
+    min-height: 2.75rem;
+
+    &:hover { opacity: 0.85; }
+`
+
+// Conversation starter prompts
+const SUGGESTIONS = [
+    `Explain something complex in simple terms`,
+    `Help me write a message`,
+    `Brainstorm ideas for a project`,
+    `Summarise a topic I'm curious about`,
+]
 
 /**
  * Main chat interface page with layout shell
@@ -81,6 +168,30 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         is_loading: is_model_switching,
         refresh_models,
     } = use_model_manager()
+    const { settings, get_generate_options } = use_settings()
+
+    // Voice input hook
+    const {
+        is_model_cached: is_voice_cached,
+        is_downloading: is_voice_downloading,
+        download_progress: voice_download_progress,
+        is_recording,
+        is_transcribing,
+        is_loading_model: is_voice_loading_model,
+        audio_level: voice_audio_level,
+        recording_start_time: voice_recording_start_time,
+        download_model: download_voice_model,
+        start_recording,
+        stop_and_transcribe,
+    } = use_voice_input()
+
+    // Voice dialog and transcription state
+    const [ show_voice_dialog, set_show_voice_dialog ] = useState( false )
+    const [ voice_download_error, set_voice_download_error ] = useState( false )
+    const [ voice_text, set_voice_text ] = useState( null )
+
+    // Whether a model is available for inference
+    const has_model = model_loaded || !!loaded_model_id
 
     // Try loading the active model on mount
     useEffect( () => {
@@ -93,6 +204,15 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         }
 
     }, [] )
+
+    // Listen for global stop-generation shortcut (Ctrl+Shift+Backspace)
+    useEffect( () => {
+
+        const handle_stop = () => abort()
+        window.addEventListener( `locallm:stop-generation`, handle_stop )
+        return () => window.removeEventListener( `locallm:stop-generation`, handle_stop )
+
+    }, [ abort ] )
 
     // Load conversation messages when navigating to /chat/:id
     useEffect( () => {
@@ -141,16 +261,12 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         const new_messages = [ ...history_msgs, assistant_msg ]
         set_messages( new_messages )
 
-        const system_prompt = localStorage.getItem( `locallm:settings:system_prompt` )
-            || import.meta.env.VITE_DEFAULT_SYSTEM_PROMPT
-            || ``
+        // Build system prompt from settings hook (centralised source of truth)
+        const system_prompt = settings.system_prompt || ``
         const history = history_msgs.map( ( { role, content } ) => ( { role, content } ) )
         if( system_prompt ) history.unshift( { role: `system`, content: system_prompt } )
 
-        const opts = {
-            temperature: parseFloat( localStorage.getItem( `locallm:settings:temperature` ) ) || 0.7,
-            max_tokens: parseInt( localStorage.getItem( `locallm:settings:max_tokens` ) ) || 2048,
-        }
+        const opts = get_generate_options()
 
         try {
 
@@ -179,7 +295,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             // Error handling done in use_llm
         }
 
-    }, [ chat_stream, persist_messages ] )
+    }, [ chat_stream, persist_messages, get_generate_options, settings.system_prompt ] )
 
     /**
      * Regenerate the last assistant message
@@ -220,21 +336,13 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         const assistant_msg = { id: uuid(), role: `assistant`, content: `` }
         set_messages( prev => [ ...prev, assistant_msg ] )
 
-        // Build message history for the provider
-        const system_prompt = localStorage.getItem( `locallm:settings:system_prompt` )
-            || import.meta.env.VITE_DEFAULT_SYSTEM_PROMPT
-            || ``
+        // Build message history with system prompt from settings hook
+        const system_prompt = settings.system_prompt || ``
         const history = [ ...messages, user_msg ].map( ( { role, content } ) => ( { role, content } ) )
         if( system_prompt ) history.unshift( { role: `system`, content: system_prompt } )
 
-        // Build generation options from settings
-        const opts = {
-            temperature: parseFloat( localStorage.getItem( `locallm:settings:temperature` ) ) || 0.7,
-            max_tokens: parseInt( localStorage.getItem( `locallm:settings:max_tokens` ) ) || 2048,
-            top_p: parseFloat( localStorage.getItem( `locallm:settings:top_p` ) ) || 0.95,
-            top_k: parseInt( localStorage.getItem( `locallm:settings:top_k` ) ) || 40,
-            repeat_penalty: parseFloat( localStorage.getItem( `locallm:settings:repeat_penalty` ) ) || 1.1,
-        }
+        // Build generation options from settings hook
+        const opts = get_generate_options()
 
         try {
 
@@ -276,7 +384,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             }
         }
 
-    }, [ messages, chat_stream, current_conversation_id, create_conversation, save_message, navigate, refresh ] )
+    }, [ messages, chat_stream, current_conversation_id, create_conversation, save_message, navigate, refresh, get_generate_options, settings.system_prompt ] )
 
     // Process query parameters (?q= and ?model=)
     useEffect( () => {
@@ -353,7 +461,17 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const handle_new_chat = useCallback( () => {
         set_current_conversation_id( null )
         set_messages( [] )
-    }, [] )
+        navigate( `/chat` )
+    }, [ navigate ] )
+
+    // Listen for global new-chat shortcut (Ctrl+N)
+    useEffect( () => {
+
+        const on_new_chat = () => handle_new_chat()
+        window.addEventListener( `locallm:new-chat`, on_new_chat )
+        return () => window.removeEventListener( `locallm:new-chat`, on_new_chat )
+
+    }, [ handle_new_chat ] )
 
     /**
      * Handle exporting a conversation from sidebar
@@ -395,7 +513,105 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
     }, [ load_model, refresh_models ] )
 
+    // ── Voice input handlers ─────────────────────────────────────────
+
+    const handle_mic_click = useCallback( async () => {
+
+        if( !is_voice_cached ) {
+            set_show_voice_dialog( true )
+            return
+        }
+
+        await start_recording()
+
+    }, [ is_voice_cached, start_recording ] )
+
+    const handle_mic_stop = useCallback( async () => {
+
+        const text = await stop_and_transcribe()
+        set_voice_text( null )
+        if( text ) set_voice_text( text )
+
+    }, [ stop_and_transcribe ] )
+
+    const handle_voice_confirm = useCallback( async () => {
+
+        set_voice_download_error( false )
+
+        try {
+
+            await download_voice_model()
+            set_show_voice_dialog( false )
+            await start_recording()
+
+        } catch {
+            set_voice_download_error( true )
+        }
+
+    }, [ download_voice_model, start_recording ] )
+
+    const handle_voice_dialog_close = useCallback( () => {
+        set_show_voice_dialog( false )
+        set_voice_download_error( false )
+    }, [] )
+
+    /**
+     * Handle clicking a conversation starter suggestion
+     */
+    const handle_suggestion = useCallback( ( text ) => {
+        if( has_model ) send_message( text )
+    }, [ has_model, send_message ] )
+
     const has_messages = messages.length > 0
+
+    // Render the main content area based on state
+    const render_content = () => {
+
+        // No model loaded — show a helpful, actionable CTA instead of dismissive banner
+        if( !has_model ) {
+            return <NoModelContainer>
+                <NoModelTitle>Let's get you set up</NoModelTitle>
+                <NoModelText>
+                    You need to download an AI model before you can start chatting.
+                    It only takes a minute.
+                </NoModelText>
+                <SetupButton
+                    data-testid="setup-model-btn"
+                    onClick={ () => navigate( `/` ) }
+                >
+                    Set up a model <ArrowRight size={ 16 } />
+                </SetupButton>
+            </NoModelContainer>
+        }
+
+        // Model loaded but no messages — show welcome with suggestions
+        if( !has_messages ) {
+            return <EmptyState>
+                <WelcomeTitle>What can I help with?</WelcomeTitle>
+                <WelcomeSubtitle>Ask me anything, or try one of these:</WelcomeSubtitle>
+                <Suggestions data-testid="suggestions">
+                    { SUGGESTIONS.map( ( suggestion ) =>
+                        <SuggestionButton
+                            key={ suggestion }
+                            data-testid="suggestion-btn"
+                            onClick={ () => handle_suggestion( suggestion ) }
+                        >
+                            <SuggestionIcon><MessageSquare size={ 14 } /></SuggestionIcon>
+                            { suggestion }
+                        </SuggestionButton>
+                    ) }
+                </Suggestions>
+            </EmptyState>
+        }
+
+        // Messages exist — show the message list
+        return <MessageList
+            messages={ messages }
+            is_streaming={ is_generating }
+            on_regenerate={ handle_regenerate }
+            on_edit={ handle_edit }
+        />
+    }
 
     return <AppLayout
         theme_preference={ theme_preference }
@@ -412,32 +628,36 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     >
         <Container>
 
-            { !model_loaded && !loaded_model_id &&
-                <NoModelBanner>
-                    No model loaded. Go to the welcome page to download a model.
-                </NoModelBanner> }
-
-            { has_messages ?
-                <MessageList
-                    messages={ messages }
-                    is_streaming={ is_generating }
-                    on_regenerate={ handle_regenerate }
-                    on_edit={ handle_edit }
-                />
-                :
-                <EmptyState>
-                    <Title>localLM</Title>
-                    <Subtitle>Ask me anything.</Subtitle>
-                </EmptyState> }
+            { render_content() }
 
             <ChatInput
                 on_send={ send_message }
                 on_stop={ handle_stop }
                 is_generating={ is_generating }
-                disabled={ !model_loaded && !loaded_model_id }
+                disabled={ !has_model }
+                on_mic_click={ handle_mic_click }
+                on_mic_stop={ handle_mic_stop }
+                is_recording={ is_recording }
+                is_transcribing={ is_transcribing }
+                is_loading_model={ is_voice_loading_model }
+                audio_level={ voice_audio_level }
+                recording_start_time={ voice_recording_start_time }
+                append_text={ voice_text }
             />
 
         </Container>
+
+        { /* Voice model download dialog */ }
+        <VoiceModelDialog
+            is_open={ show_voice_dialog }
+            on_close={ handle_voice_dialog_close }
+            on_confirm={ handle_voice_confirm }
+            is_downloading={ is_voice_downloading }
+            download_progress={ voice_download_progress }
+            has_error={ voice_download_error }
+            on_retry={ handle_voice_confirm }
+        />
+
     </AppLayout>
 
 }

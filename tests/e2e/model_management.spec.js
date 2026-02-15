@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test'
 
 test.describe( `Model Management`, () => {
 
-    test( `model selector shows no model loaded`, async ( { page } ) => {
+    test( `model selector shows no model state`, async ( { page } ) => {
         await page.goto( `/chat` )
-        await expect( page.getByTestId( `model-selector-dropdown` ) ).toContainText( `No model loaded` )
+        await expect( page.getByTestId( `model-selector-dropdown` ) ).toContainText( `No model` )
     } )
 
     test( `model selector dropdown opens on click`, async ( { page } ) => {
@@ -27,11 +27,11 @@ test.describe( `Model Management`, () => {
         await expect( page.getByTestId( `storage-summary` ) ).toBeVisible()
     } )
 
-    test( `models tab shows empty state when no models cached`, async ( { page } ) => {
+    test( `models tab shows empty state when no models downloaded`, async ( { page } ) => {
         await page.goto( `/chat` )
         await page.getByTestId( `settings-btn` ).click()
         await page.getByTestId( `settings-tab-models` ).click()
-        await expect( page.getByText( `No models cached yet` ) ).toBeVisible()
+        await expect( page.getByText( /No models downloaded yet/i ) ).toBeVisible()
     } )
 
 } )

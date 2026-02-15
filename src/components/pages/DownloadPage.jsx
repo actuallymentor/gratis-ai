@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { X } from 'lucide-react'
+import { X, CheckCircle } from 'lucide-react'
 import { download_model, is_model_cached } from '../../utils/model_download'
 import { format_file_size } from '../../providers/model_registry'
 
@@ -16,13 +16,17 @@ const Container = styled.div`
 `
 
 const Title = styled.h1`
-    font-size: 2rem;
+    font-size: clamp( 1.5rem, 1.2rem + 1.5vw, 2rem );
+    color: ${ ( { theme } ) => theme.colors.text };
     margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
 `
 
-const ModelName = styled.p`
+const StatusMessage = styled.p`
     color: ${ ( { theme } ) => theme.colors.text_secondary };
     margin-bottom: ${ ( { theme } ) => theme.spacing.lg };
+    font-size: 0.95rem;
+    max-width: 400px;
+    line-height: 1.5;
 `
 
 const ProgressContainer = styled.div`
@@ -33,31 +37,39 @@ const ProgressContainer = styled.div`
 
 const ProgressBar = styled.div`
     width: 100%;
-    height: 12px;
-    background: ${ ( { theme } ) => theme.colors.surface };
+    height: 8px;
+    background: ${ ( { theme } ) => theme.colors.border_subtle };
     border-radius: ${ ( { theme } ) => theme.border_radius.full };
     overflow: hidden;
-    border: 1px solid ${ ( { theme } ) => theme.colors.border };
 `
 
 const ProgressFill = styled.div`
     height: 100%;
-    background: ${ ( { theme } ) => theme.colors.primary };
+    background: ${ ( { theme } ) => theme.colors.accent };
     border-radius: ${ ( { theme } ) => theme.border_radius.full };
     transition: width 0.3s ease;
     width: ${ ( { $progress } ) => `${ $progress * 100 }%` };
 `
 
-const ProgressText = styled.p`
-    font-size: 0.85rem;
-    color: ${ ( { theme } ) => theme.colors.text_muted };
+const ProgressDetails = styled.div`
+    display: flex;
+    justify-content: space-between;
     margin-top: ${ ( { theme } ) => theme.spacing.sm };
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
 `
 
-const StatusText = styled.p`
-    font-size: 0.9rem;
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
-    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+const PercentText = styled.span`
+    font-weight: 600;
+    font-size: 1.5rem;
+    color: ${ ( { theme } ) => theme.colors.text };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+`
+
+const ETAText = styled.p`
+    font-size: 0.85rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.lg };
 `
 
 const CancelButton = styled.button`
@@ -65,13 +77,12 @@ const CancelButton = styled.button`
     align-items: center;
     gap: ${ ( { theme } ) => theme.spacing.xs };
     padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
-    border-radius: ${ ( { theme } ) => theme.border_radius.md };
-    border: 1px solid ${ ( { theme } ) => theme.colors.border };
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
-    transition: all 0.2s;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    font-size: 0.85rem;
+    transition: color 0.15s;
+    min-height: 2.75rem;
 
     &:hover {
-        border-color: ${ ( { theme } ) => theme.colors.error };
         color: ${ ( { theme } ) => theme.colors.error };
     }
 `
@@ -81,8 +92,61 @@ const ErrorText = styled.p`
     margin-bottom: ${ ( { theme } ) => theme.spacing.md };
 `
 
+// Step progress indicator
+const StepIndicator = styled.div`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.xl };
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+`
+
+const StepDot = styled.div`
+    width: 8px;
+    height: 8px;
+    border-radius: ${ ( { theme } ) => theme.border_radius.full };
+    background: ${ ( { theme, $active, $done } ) =>
+        $done ? theme.colors.accent
+            : $active ? theme.colors.accent
+                : theme.colors.border };
+`
+
+const StepLine = styled.div`
+    width: 24px;
+    height: 2px;
+    background: ${ ( { theme, $done } ) => $done ? theme.colors.accent : theme.colors.border };
+`
+
+// Success animation
+const fade_in = keyframes`
+    from { opacity: 0; transform: scale( 0.9 ); }
+    to { opacity: 1; transform: scale( 1 ); }
+`
+
+const SuccessIcon = styled.div`
+    color: ${ ( { theme } ) => theme.colors.success };
+    animation: ${ fade_in } 0.3s ease-out;
+
+    @media ( prefers-reduced-motion: reduce ) {
+        animation: none;
+    }
+`
+
 /**
- * Download page - shows model download progress
+ * Format seconds into a friendly time estimate
+ * @param {number} seconds
+ * @returns {string}
+ */
+const format_eta = ( seconds ) => {
+    if( seconds < 0 || !isFinite( seconds ) ) return ``
+    if( seconds < 60 ) return `About ${ Math.ceil( seconds / 5 ) * 5 } seconds left`
+    const minutes = Math.ceil( seconds / 60 )
+    return `About ${ minutes } minute${ minutes !== 1 ? `s` : `` } left`
+}
+
+/**
+ * Download page - shows model download progress with friendly feedback
  * @returns {JSX.Element}
  */
 export default function DownloadPage() {
@@ -94,7 +158,11 @@ export default function DownloadPage() {
 
     const [ progress, set_progress ] = useState( { progress: 0, bytes_loaded: 0, bytes_total: 0, status: `Preparing...` } )
     const [ error, set_error ] = useState( null )
+    const [ is_complete, set_is_complete ] = useState( false )
     const abort_ref = useRef( null )
+
+    // Track download speed for ETA calculation
+    const speed_ref = useRef( { start_time: null, samples: [] } )
 
     const on_complete = useCallback( () => {
 
@@ -102,7 +170,10 @@ export default function DownloadPage() {
         if( model ) {
             localStorage.setItem( `locallm:settings:active_model_id`, model.id )
         }
-        navigate( return_to, { replace: true } )
+
+        // Brief success flash before navigating
+        set_is_complete( true )
+        setTimeout( () => navigate( return_to, { replace: true } ), 800 )
 
     }, [ model, navigate, return_to ] )
 
@@ -124,8 +195,25 @@ export default function DownloadPage() {
             // Start download
             const controller = new AbortController()
             abort_ref.current = controller
+            speed_ref.current.start_time = Date.now()
 
-            download_model( model, set_progress, controller.signal )
+            const on_progress = ( prog ) => {
+                set_progress( prog )
+
+                // Track speed samples for ETA
+                if( prog.bytes_loaded > 0 ) {
+                    speed_ref.current.samples.push( {
+                        time: Date.now(),
+                        bytes: prog.bytes_loaded,
+                    } )
+                    // Keep last 10 samples for smoothing
+                    if( speed_ref.current.samples.length > 10 ) {
+                        speed_ref.current.samples.shift()
+                    }
+                }
+            }
+
+            download_model( model, on_progress, controller.signal )
                 .then( on_complete )
                 .catch( err => {
                     if( err.name !== `AbortError` ) {
@@ -146,31 +234,74 @@ export default function DownloadPage() {
         navigate( `/select-model`, { replace: true } )
     }
 
+    // Calculate ETA from speed samples
+    const get_eta = () => {
+        const { samples } = speed_ref.current
+        if( samples.length < 2 || progress.bytes_total <= 0 ) return ``
+
+        const recent = samples[ samples.length - 1 ]
+        const older = samples[ 0 ]
+        const elapsed_ms = recent.time - older.time
+        const bytes_transferred = recent.bytes - older.bytes
+
+        if( elapsed_ms <= 0 || bytes_transferred <= 0 ) return ``
+
+        const speed_bps =  bytes_transferred / elapsed_ms  * 1000
+        const remaining_bytes = progress.bytes_total - progress.bytes_loaded
+        const remaining_seconds = remaining_bytes / speed_bps
+
+        return format_eta( remaining_seconds )
+    }
+
     if( !model ) return null
+
+    const percent = Math.round( progress.progress * 100 )
+    const eta = get_eta()
+
+    // Show success state briefly
+    if( is_complete ) {
+        return <Container>
+            <SuccessIcon><CheckCircle size={ 48 } /></SuccessIcon>
+            <Title style={ { marginTop: `1rem` } }>Ready to chat!</Title>
+        </Container>
+    }
 
     return <Container>
 
-        <Title>Downloading Model</Title>
-        <ModelName>{ model.name } ({ format_file_size( model.file_size_bytes ) })</ModelName>
+        { /* Step progress */ }
+        <StepIndicator data-testid="step-indicator">
+            <StepDot $done />
+            <StepLine $done />
+            <StepDot $done />
+            <StepLine $done />
+            <StepDot $active />
+        </StepIndicator>
+
+        <Title>Downloading your model</Title>
+        <StatusMessage>
+            { model.name } — this is a one-time download.
+            After this, everything works offline.
+        </StatusMessage>
 
         { error && <ErrorText>{ error }</ErrorText> }
+
+        <PercentText>{ percent }%</PercentText>
 
         <ProgressContainer>
             <ProgressBar data-testid="download-progress-bar">
                 <ProgressFill $progress={ progress.progress } />
             </ProgressBar>
-            <ProgressText>
-                { format_file_size( progress.bytes_loaded ) } / { format_file_size( progress.bytes_total ) }
-                { ` — ` }
-                { Math.round( progress.progress * 100 ) }%
-            </ProgressText>
+            <ProgressDetails>
+                <span>{ format_file_size( progress.bytes_loaded ) } / { format_file_size( progress.bytes_total ) }</span>
+                { eta && <span>{ eta }</span> }
+            </ProgressDetails>
         </ProgressContainer>
 
-        <StatusText>{ progress.status }</StatusText>
+        { eta && <ETAText>{ eta }</ETAText> }
 
         <CancelButton onClick={ handle_cancel }>
             <X size={ 16 } />
-            Cancel
+            Cancel download
         </CancelButton>
 
     </Container>

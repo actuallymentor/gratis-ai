@@ -4,7 +4,7 @@ test.describe( `Chat History`, () => {
 
     test( `sidebar shows no conversations initially`, async ( { page } ) => {
         await page.goto( `/chat` )
-        await expect( page.getByText( `No conversations yet` ) ).toBeVisible()
+        await expect( page.getByText( /conversations will appear here/i ) ).toBeVisible()
     } )
 
     test( `new chat button is visible`, async ( { page } ) => {
@@ -15,7 +15,8 @@ test.describe( `Chat History`, () => {
     test( `new chat button navigates to empty chat`, async ( { page } ) => {
         await page.goto( `/chat` )
         await page.getByTestId( `new-chat-btn` ).click()
-        await expect( page.getByText( `Ask me anything` ) ).toBeVisible()
+        // Without a model loaded, shows the setup CTA
+        await expect( page.getByText( `Let's get you set up` ) ).toBeVisible()
     } )
 
 } )

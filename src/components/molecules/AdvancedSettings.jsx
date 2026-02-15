@@ -15,6 +15,7 @@ const Description = styled.p`
     font-size: 0.8rem;
     color: ${ ( { theme } ) => theme.colors.text_muted };
     margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+    line-height: 1.4;
 `
 
 const SliderRow = styled.div`
@@ -25,7 +26,7 @@ const SliderRow = styled.div`
 
 const Slider = styled.input`
     flex: 1;
-    accent-color: ${ ( { theme } ) => theme.colors.primary };
+    accent-color: ${ ( { theme } ) => theme.colors.accent };
 `
 
 const NumberInput = styled.input`
@@ -39,8 +40,34 @@ const NumberInput = styled.input`
     font-size: 0.85rem;
 `
 
+const TextInput = styled.input`
+    width: 100%;
+    padding: ${ ( { theme } ) => theme.spacing.sm };
+    background: ${ ( { theme } ) => theme.colors.input_background };
+    color: ${ ( { theme } ) => theme.colors.text };
+    border: 1px solid ${ ( { theme } ) => theme.colors.border };
+    border-radius: ${ ( { theme } ) => theme.border_radius.sm };
+    font-size: 0.85rem;
+`
+
+const Divider = styled.div`
+    height: 1px;
+    background: ${ ( { theme } ) => theme.colors.border_subtle };
+    margin: ${ ( { theme } ) => `${ theme.spacing.lg } 0` };
+`
+
+const DividerLabel = styled.p`
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+`
+
 /**
- * Advanced settings tab content
+ * Advanced settings tab — includes Temperature and Max Tokens
+ * (moved from Basic for progressive disclosure) plus all fine-tuning knobs.
+ * Descriptions are written in plain language.
  * @param {Object} props
  * @param {Object} props.settings - Current settings values
  * @param {Function} props.on_change - Handler for setting changes (key, value)
@@ -50,10 +77,61 @@ export default function AdvancedSettings( { settings, on_change } ) {
 
     return <>
 
+        { /* Temperature — moved from Basic */ }
+        <Section>
+            <Label>Creativity</Label>
+            <Description>
+                Lower values give more predictable, focused answers.
+                Higher values make responses more creative and varied.
+            </Description>
+            <SliderRow>
+                <Slider
+                    data-testid="temperature-slider"
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value={ settings.temperature }
+                    onChange={ ( e ) => on_change( `temperature`, parseFloat( e.target.value ) ) }
+                />
+                <NumberInput
+                    data-testid="temperature-input"
+                    type="number"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value={ settings.temperature }
+                    onChange={ ( e ) => on_change( `temperature`, parseFloat( e.target.value ) || 0 ) }
+                />
+            </SliderRow>
+        </Section>
+
+        { /* Max Tokens — moved from Basic */ }
+        <Section>
+            <Label>Response Length</Label>
+            <Description>
+                Maximum length of each response. Higher values allow longer answers
+                but take more time to generate.
+            </Description>
+            <NumberInput
+                data-testid="max-tokens-input"
+                type="number"
+                min="64"
+                max="32768"
+                step="64"
+                value={ settings.max_tokens }
+                onChange={ ( e ) => on_change( `max_tokens`, parseInt( e.target.value ) || 64 ) }
+                style={ { width: `120px` } }
+            />
+        </Section>
+
+        <Divider />
+        <DividerLabel>Fine-tuning</DividerLabel>
+
         { /* Top P */ }
         <Section>
             <Label>Top P</Label>
-            <Description>Nucleus sampling: only consider top P% of probability mass.</Description>
+            <Description>Limits the pool of words the AI picks from. Lower values keep it more focused.</Description>
             <SliderRow>
                 <Slider
                     type="range" min="0" max="1" step="0.05"
@@ -71,7 +149,7 @@ export default function AdvancedSettings( { settings, on_change } ) {
         { /* Top K */ }
         <Section>
             <Label>Top K</Label>
-            <Description>Only sample from the top K most likely tokens.</Description>
+            <Description>Only considers the top K most likely next words. Lower = more predictable.</Description>
             <NumberInput
                 type="number" min="0" max="200"
                 value={ settings.top_k ?? 40 }
@@ -83,7 +161,7 @@ export default function AdvancedSettings( { settings, on_change } ) {
         { /* Min P */ }
         <Section>
             <Label>Min P</Label>
-            <Description>Minimum probability threshold for token sampling.</Description>
+            <Description>Filters out words that are too unlikely. Higher values make output more predictable.</Description>
             <SliderRow>
                 <Slider
                     type="range" min="0" max="1" step="0.01"
@@ -101,7 +179,7 @@ export default function AdvancedSettings( { settings, on_change } ) {
         { /* Repeat Penalty */ }
         <Section>
             <Label>Repeat Penalty</Label>
-            <Description>Penalises repeated tokens. Higher = less repetition.</Description>
+            <Description>Discourages the AI from repeating itself. Higher values = less repetition.</Description>
             <SliderRow>
                 <Slider
                     type="range" min="1" max="2" step="0.05"
@@ -119,7 +197,7 @@ export default function AdvancedSettings( { settings, on_change } ) {
         { /* Repeat Last N */ }
         <Section>
             <Label>Repeat Last N</Label>
-            <Description>Number of recent tokens to consider for repeat penalty.</Description>
+            <Description>How far back the AI checks for repeated words.</Description>
             <NumberInput
                 type="number" min="0" max="2048"
                 value={ settings.repeat_last_n ?? 64 }
@@ -131,7 +209,7 @@ export default function AdvancedSettings( { settings, on_change } ) {
         { /* Frequency Penalty */ }
         <Section>
             <Label>Frequency Penalty</Label>
-            <Description>Penalises tokens based on how often they appear.</Description>
+            <Description>Reduces how often common words appear. Useful for more varied language.</Description>
             <SliderRow>
                 <Slider
                     type="range" min="0" max="2" step="0.1"
@@ -149,7 +227,7 @@ export default function AdvancedSettings( { settings, on_change } ) {
         { /* Presence Penalty */ }
         <Section>
             <Label>Presence Penalty</Label>
-            <Description>Penalises tokens that have appeared at all.</Description>
+            <Description>Encourages the AI to talk about new topics rather than repeating old ones.</Description>
             <SliderRow>
                 <Slider
                     type="range" min="0" max="2" step="0.1"
@@ -167,12 +245,24 @@ export default function AdvancedSettings( { settings, on_change } ) {
         { /* Seed */ }
         <Section>
             <Label>Seed</Label>
-            <Description>-1 for random. Set a positive integer for deterministic output.</Description>
+            <Description>Set a number for reproducible results. Leave at -1 for random.</Description>
             <NumberInput
                 type="number" min="-1"
                 value={ settings.seed ?? -1 }
                 onChange={ ( e ) => on_change( `seed`, parseInt( e.target.value ) || -1 ) }
                 style={ { width: `120px` } }
+            />
+        </Section>
+
+        { /* Stop Sequences */ }
+        <Section>
+            <Label>Stop Sequences</Label>
+            <Description>Words or phrases that tell the AI to stop generating. Separate with commas.</Description>
+            <TextInput
+                type="text"
+                placeholder="e.g. [END], STOP, ###"
+                value={ settings.stop_sequences ?? `` }
+                onChange={ ( e ) => on_change( `stop_sequences`, e.target.value ) }
             />
         </Section>
 

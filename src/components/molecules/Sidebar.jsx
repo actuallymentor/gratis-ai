@@ -10,10 +10,14 @@ const SidebarContainer = styled.aside`
     width: ${ ( { $collapsed } ) => $collapsed ? `0px` : `260px` };
     min-width: ${ ( { $collapsed } ) => $collapsed ? `0px` : `260px` };
     background: ${ ( { theme } ) => theme.colors.sidebar };
-    border-right: 1px solid ${ ( { theme } ) => theme.colors.border };
+    border-right: 1px solid ${ ( { theme } ) => theme.colors.border_subtle };
     transition: all 0.2s ease;
     overflow: hidden;
     height: 100%;
+
+    @media ( prefers-reduced-motion: reduce ) {
+        transition: none;
+    }
 
     @media ( max-width: ${ ( { theme } ) => theme.breakpoints.mobile } ) {
         position: absolute;
@@ -23,12 +27,24 @@ const SidebarContainer = styled.aside`
     }
 `
 
+// Mobile backdrop — closes sidebar on tap outside
+const Backdrop = styled.div`
+    display: none;
+
+    @media ( max-width: ${ ( { theme } ) => theme.breakpoints.mobile } ) {
+        display: ${ ( { $visible } ) => $visible ? `block` : `none` };
+        position: fixed;
+        inset: 0;
+        background: rgba( 0, 0, 0, 0.3 );
+        z-index: 99;
+    }
+`
+
 const SidebarHeader = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: ${ ( { theme } ) => theme.spacing.sm };
-    border-bottom: 1px solid ${ ( { theme } ) => theme.colors.border };
     min-height: 56px;
 `
 
@@ -40,27 +56,23 @@ const NewChatButton = styled.button`
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
     color: ${ ( { theme } ) => theme.colors.text };
     font-size: 0.85rem;
-    transition: background 0.2s;
+    transition: opacity 0.15s;
+    min-height: 2.75rem;
 
-    &:hover {
-        background: ${ ( { theme } ) => theme.colors.surface_hover };
-    }
+    &:hover { opacity: 0.7; }
 `
 
 const CollapseButton = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
-    transition: all 0.2s;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    transition: color 0.15s;
 
-    &:hover {
-        background: ${ ( { theme } ) => theme.colors.surface_hover };
-        color: ${ ( { theme } ) => theme.colors.text };
-    }
+    &:hover { color: ${ ( { theme } ) => theme.colors.text }; }
 `
 
 const ConversationListContainer = styled.div`
@@ -70,10 +82,11 @@ const ConversationListContainer = styled.div`
 `
 
 const EmptyState = styled.div`
-    padding: ${ ( { theme } ) => theme.spacing.lg };
+    padding: ${ ( { theme } ) => theme.spacing.xl };
     text-align: center;
     color: ${ ( { theme } ) => theme.colors.text_muted };
     font-size: 0.85rem;
+    line-height: 1.5;
 `
 
 const ConversationItem = styled.button`
@@ -86,8 +99,10 @@ const ConversationItem = styled.button`
     text-align: left;
     font-size: 0.85rem;
     color: ${ ( { theme } ) => theme.colors.text };
-    background: ${ ( { $active, theme } ) => $active ? theme.colors.surface_hover : `transparent` };
+    font-weight: ${ ( { $active } ) => $active ? `600` : `400` };
+    background: transparent;
     transition: background 0.15s;
+    min-height: 2.75rem;
 
     &:hover {
         background: ${ ( { theme } ) => theme.colors.surface_hover };
@@ -116,19 +131,28 @@ const ActionIcon = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    min-width: 2rem;
+    min-height: 2rem;
     border-radius: ${ ( { theme } ) => theme.border_radius.sm };
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
+    color: ${ ( { theme, $confirming } ) => $confirming ? theme.colors.error : theme.colors.text_muted };
+    transition: color 0.15s, background 0.15s;
 
     &:hover {
-        background: ${ ( { theme } ) => theme.colors.surface };
-        color: ${ ( { theme } ) => theme.colors.text };
+        color: ${ ( { theme, $confirming } ) => $confirming ? theme.colors.error : theme.colors.text };
+        background: ${ ( { theme } ) => theme.colors.code_background };
     }
 `
 
+// Confirmation label that appears alongside the trash icon
+const ConfirmLabel = styled.span`
+    font-size: 0.7rem;
+    color: ${ ( { theme } ) => theme.colors.error };
+    white-space: nowrap;
+`
+
 /**
- * Sidebar with chat history and new chat button
+ * Sidebar with chat history, new chat button, and mobile backdrop.
+ * Delete uses a "click again to confirm" pattern with visible text feedback.
  * @param {Object} props
  * @param {boolean} props.collapsed - Whether sidebar is collapsed
  * @param {Function} props.on_toggle - Handler for toggling sidebar
@@ -172,60 +196,74 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
         }
     }
 
-    return <SidebarContainer $collapsed={ collapsed }>
+    return <>
 
-        <SidebarHeader>
-            <NewChatButton
-                data-testid="new-chat-btn"
-                onClick={ handle_new_chat }
-            >
-                <Plus size={ 16 } />
-                New Chat
-            </NewChatButton>
+        { /* Mobile backdrop — dims content behind sidebar */ }
+        <Backdrop $visible={ !collapsed } onClick={ on_toggle } data-testid="sidebar-backdrop" />
 
-            <CollapseButton onClick={ on_toggle } aria-label="Toggle sidebar">
-                { collapsed ? <PanelLeft size={ 18 } /> : <PanelLeftClose size={ 18 } /> }
-            </CollapseButton>
-        </SidebarHeader>
+        <SidebarContainer $collapsed={ collapsed }>
 
-        <ConversationListContainer>
+            <SidebarHeader>
+                <NewChatButton
+                    data-testid="new-chat-btn"
+                    onClick={ handle_new_chat }
+                >
+                    <Plus size={ 16 } />
+                    New Chat
+                </NewChatButton>
 
-            { conversations.length === 0 ?
-                <EmptyState>No conversations yet</EmptyState>
-                :
-                conversations.map( ( conv ) =>
-                    <ConversationItem
-                        key={ conv.id }
-                        data-testid={ `sidebar-conversation-${ conv.id }` }
-                        $active={ conv.id === active_id }
-                        onClick={ () => handle_click_conversation( conv.id ) }
-                    >
-                        <ConversationTitle>
-                            { truncate( conv.title, 40 ) }
-                        </ConversationTitle>
+                <CollapseButton onClick={ on_toggle } aria-label="Toggle sidebar">
+                    { collapsed ? <PanelLeft size={ 18 } /> : <PanelLeftClose size={ 18 } /> }
+                </CollapseButton>
+            </SidebarHeader>
 
-                        <ConversationActions className="conv-actions">
-                            <ActionIcon
-                                data-testid={ `sidebar-export-${ conv.id }` }
-                                onClick={ ( e ) => handle_export( e, conv ) }
-                                aria-label="Export conversation"
-                            >
-                                <Download size={ 14 } />
-                            </ActionIcon>
-                            <ActionIcon
-                                data-testid={ `sidebar-delete-${ conv.id }` }
-                                onClick={ ( e ) => handle_delete( e, conv.id ) }
-                                aria-label={ confirming_delete === conv.id ? `Confirm delete` : `Delete conversation` }
-                                style={ confirming_delete === conv.id ? { color: `var(--error, #ef4444)` } : {} }
-                            >
-                                <Trash2 size={ 14 } />
-                            </ActionIcon>
-                        </ConversationActions>
-                    </ConversationItem>
-                ) }
+            <ConversationListContainer>
 
-        </ConversationListContainer>
+                { conversations.length === 0 ?
+                    <EmptyState>
+                        Your conversations will appear here.
+                        Start a new chat to begin!
+                    </EmptyState>
+                    :
+                    conversations.map( ( conv ) =>
+                        <ConversationItem
+                            key={ conv.id }
+                            data-testid={ `sidebar-conversation-${ conv.id }` }
+                            $active={ conv.id === active_id }
+                            onClick={ () => handle_click_conversation( conv.id ) }
+                        >
+                            <ConversationTitle>
+                                { truncate( conv.title, 40 ) }
+                            </ConversationTitle>
 
-    </SidebarContainer>
+                            <ConversationActions className="conv-actions">
+                                <ActionIcon
+                                    data-testid={ `sidebar-export-${ conv.id }` }
+                                    onClick={ ( e ) => handle_export( e, conv ) }
+                                    aria-label="Export conversation"
+                                    title="Export"
+                                >
+                                    <Download size={ 14 } />
+                                </ActionIcon>
+                                { confirming_delete === conv.id &&
+                                    <ConfirmLabel>Delete?</ConfirmLabel> }
+                                <ActionIcon
+                                    data-testid={ `sidebar-delete-${ conv.id }` }
+                                    onClick={ ( e ) => handle_delete( e, conv.id ) }
+                                    aria-label={ confirming_delete === conv.id ? `Confirm delete` : `Delete conversation` }
+                                    title={ confirming_delete === conv.id ? `Click to confirm` : `Delete` }
+                                    $confirming={ confirming_delete === conv.id }
+                                >
+                                    <Trash2 size={ 14 } />
+                                </ActionIcon>
+                            </ConversationActions>
+                        </ConversationItem>
+                    ) }
+
+            </ConversationListContainer>
+
+        </SidebarContainer>
+
+    </>
 
 }
