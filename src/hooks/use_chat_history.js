@@ -131,10 +131,12 @@ export default function use_chat_history() {
     }, [ load_conversations ] )
 
     /**
-     * Delete all conversations and their messages
+     * Delete all conversations and their messages.
+     * Plain function (not useCallback) to avoid changing the hook count —
+     * safe because load_conversations is a stable reference.
      * @returns {Promise<void>}
      */
-    const delete_all_conversations = useCallback( async () => {
+    const delete_all_conversations = async () => {
 
         const db = await get_db()
         const tx = db.transaction( [ `conversations`, `messages` ], `readwrite` )
@@ -146,7 +148,7 @@ export default function use_chat_history() {
 
         await load_conversations()
 
-    }, [ load_conversations ] )
+    }
 
     /**
      * Update conversation title
