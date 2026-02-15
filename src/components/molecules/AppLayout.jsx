@@ -36,6 +36,7 @@ const ContentArea = styled.main`
  * @param {Array} props.conversations - Array of conversation objects for sidebar
  * @param {Function} props.on_export - Handler for exporting a conversation
  * @param {Function} props.on_delete - Handler for deleting a conversation
+ * @param {Function} props.on_delete_all - Handler for wiping all conversations
  * @param {Array} props.cached_models - Cached model metadata for model selector
  * @param {string} props.active_model_id - Currently active model ID
  * @param {boolean} props.is_model_switching - Whether model switch is in progress
@@ -44,7 +45,7 @@ const ContentArea = styled.main`
  */
 export default function AppLayout( {
     children, theme_preference, theme_mode, on_theme_toggle, on_new_chat,
-    conversations, on_export, on_delete,
+    conversations, on_export, on_delete, on_delete_all,
     cached_models, active_model_id, is_model_switching, on_model_switch,
 } ) {
 
@@ -65,12 +66,18 @@ export default function AppLayout( {
 
     }, [] )
 
-    // Listen for global open-settings event (Ctrl+,)
+    // Listen for global keyboard shortcut events
     useEffect( () => {
 
-        const handle_open = () => set_settings_open( true )
-        window.addEventListener( `locallm:open-settings`, handle_open )
-        return () => window.removeEventListener( `locallm:open-settings`, handle_open )
+        const handle_open_settings = () => set_settings_open( true )
+        const handle_toggle_sidebar = () => set_sidebar_collapsed( prev => !prev )
+
+        window.addEventListener( `locallm:open-settings`, handle_open_settings )
+        window.addEventListener( `locallm:toggle-sidebar`, handle_toggle_sidebar )
+        return () => {
+            window.removeEventListener( `locallm:open-settings`, handle_open_settings )
+            window.removeEventListener( `locallm:toggle-sidebar`, handle_toggle_sidebar )
+        }
 
     }, [] )
 
@@ -84,6 +91,8 @@ export default function AppLayout( {
             theme_mode={ theme_mode }
             on_theme_toggle={ on_theme_toggle }
             on_settings_open={ () => set_settings_open( true ) }
+            sidebar_collapsed={ sidebar_collapsed }
+            on_toggle_sidebar={ toggle_sidebar }
             cached_models={ cached_models }
             active_model_id={ active_model_id }
             is_model_switching={ is_model_switching }
@@ -98,6 +107,7 @@ export default function AppLayout( {
                 conversations={ conversations }
                 on_export={ on_export }
                 on_delete={ on_delete }
+                on_delete_all={ on_delete_all }
             />
             <ContentArea>
                 { children }
@@ -109,6 +119,7 @@ export default function AppLayout( {
             on_close={ close_settings }
             theme_preference={ theme_preference }
             on_theme_change={ on_theme_toggle }
+            on_model_switch={ on_model_switch }
         />
 
     </LayoutContainer>

@@ -131,6 +131,24 @@ export default function use_chat_history() {
     }, [ load_conversations ] )
 
     /**
+     * Delete all conversations and their messages
+     * @returns {Promise<void>}
+     */
+    const delete_all_conversations = useCallback( async () => {
+
+        const db = await get_db()
+        const tx = db.transaction( [ `conversations`, `messages` ], `readwrite` )
+        await Promise.all( [
+            tx.objectStore( `conversations` ).clear(),
+            tx.objectStore( `messages` ).clear(),
+            tx.done,
+        ] )
+
+        await load_conversations()
+
+    }, [ load_conversations ] )
+
+    /**
      * Update conversation title
      * @param {string} conversation_id
      * @param {string} title
@@ -190,6 +208,7 @@ export default function use_chat_history() {
         save_message,
         load_messages,
         delete_conversation,
+        delete_all_conversations,
         update_title,
         replace_messages,
         refresh: load_conversations,

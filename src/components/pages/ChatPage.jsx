@@ -192,6 +192,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         save_message,
         load_messages,
         delete_conversation,
+        delete_all_conversations,
         replace_messages,
         refresh,
     } = use_chat_history()
@@ -537,6 +538,20 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     }, [ delete_conversation, current_conversation_id, navigate ] )
 
     /**
+     * Handle wiping all conversations from sidebar
+     */
+    const handle_delete_all = useCallback( async () => {
+
+        await delete_all_conversations()
+
+        // Reset current chat state
+        set_current_conversation_id( null )
+        set_messages( [] )
+        navigate( `/chat` )
+
+    }, [ delete_all_conversations, navigate ] )
+
+    /**
      * Switch to a different cached model
      */
     const handle_model_switch = useCallback( async ( model_id ) => {
@@ -668,6 +683,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         conversations={ conversations }
         on_export={ handle_export }
         on_delete={ handle_delete }
+        on_delete_all={ handle_delete_all }
         cached_models={ cached_models }
         active_model_id={ loaded_model_id }
         is_model_switching={ is_model_switching }

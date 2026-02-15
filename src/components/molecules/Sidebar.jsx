@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import styled from 'styled-components'
-import { Plus, PanelLeftClose, PanelLeft, Download, Trash2 } from 'lucide-react'
+import { Plus, PanelLeftClose, PanelLeft, Download, Trash2, Trash } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { truncate } from '../../utils/format'
 
@@ -148,6 +148,29 @@ const ActionIcon = styled.button`
     }
 `
 
+const SidebarFooter = styled.div`
+    padding: ${ ( { theme } ) => theme.spacing.sm };
+    border-top: 1px solid ${ ( { theme } ) => theme.colors.border_subtle };
+`
+
+const WipeButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    width: 100%;
+    padding: ${ ( { theme } ) => `${ theme.spacing.xs } ${ theme.spacing.sm }` };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    color: ${ ( { theme, $confirming } ) => $confirming ? theme.colors.error : theme.colors.text_muted };
+    font-size: 0.8rem;
+    transition: color 0.15s, background 0.15s;
+    min-height: 2.75rem;
+
+    &:hover {
+        color: ${ ( { theme, $confirming } ) => $confirming ? theme.colors.error : theme.colors.text };
+        background: ${ ( { theme } ) => theme.colors.surface_hover };
+    }
+`
+
 /**
  * Sidebar with chat history, new chat button, and mobile backdrop.
  * Delete uses a "click again to confirm" pattern with visible text feedback.
@@ -158,13 +181,15 @@ const ActionIcon = styled.button`
  * @param {Array} props.conversations - Array of conversation objects
  * @param {Function} props.on_export - Handler for exporting a conversation
  * @param {Function} props.on_delete - Handler for deleting a conversation
+ * @param {Function} props.on_delete_all - Handler for wiping all conversations
  * @returns {JSX.Element}
  */
-export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversations = [], on_export, on_delete } ) {
+export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversations = [], on_export, on_delete, on_delete_all } ) {
 
     const navigate = useNavigate()
     const { id: active_id } = useParams()
     const [ confirming_delete, set_confirming_delete ] = useState( null )
+    const [ confirming_wipe, set_confirming_wipe ] = useState( false )
 
     const handle_new_chat = () => {
         if( on_new_chat ) on_new_chat()
@@ -191,6 +216,18 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
             set_confirming_delete( id )
             // Reset after 5 seconds if not confirmed
             setTimeout( () => set_confirming_delete( null ), 5000 )
+        }
+    }
+
+    const handle_wipe = () => {
+        if( confirming_wipe ) {
+            // Second click confirms
+            if( on_delete_all ) on_delete_all()
+            set_confirming_wipe( false )
+        } else {
+            // First click — ask to confirm
+            set_confirming_wipe( true )
+            setTimeout( () => set_confirming_wipe( false ), 5000 )
         }
     }
 
@@ -266,6 +303,19 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                     ) }
 
             </ConversationListContainer>
+
+            { /* Wipe history — only shown when there are conversations */ }
+            { conversations.length > 0 && <SidebarFooter>
+                <WipeButton
+                    data-testid="wipe-history-btn"
+                    onClick={ handle_wipe }
+                    $confirming={ confirming_wipe }
+                    aria-label={ confirming_wipe ? `Confirm wipe history` : `Wipe history` }
+                >
+                    <Trash size={ 14 } />
+                    { confirming_wipe ? `Click again to confirm` : `Wipe history` }
+                </WipeButton>
+            </SidebarFooter> }
 
         </SidebarContainer>
 
