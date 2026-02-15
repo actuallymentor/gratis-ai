@@ -89,7 +89,8 @@ const EmptyState = styled.div`
     line-height: 1.5;
 `
 
-const ConversationItem = styled.button`
+const ConversationItem = styled.div`
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -230,7 +231,12 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                             key={ conv.id }
                             data-testid={ `sidebar-conversation-${ conv.id }` }
                             $active={ conv.id === active_id }
+                            role="button"
+                            tabIndex={ 0 }
                             onClick={ () => handle_click_conversation( conv.id ) }
+                            onKeyDown={ ( e ) => {
+                                if( e.key === `Enter` ) handle_click_conversation( conv.id ) 
+                            } }
                         >
                             <ConversationTitle>
                                 { truncate( conv.title, 40 ) }
