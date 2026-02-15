@@ -181,7 +181,8 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const [ messages, set_messages ] = useState( [] )
     // Initialize as null = "haven't tried loading yet" to distinguish from "tried and failed"
     const [ model_loaded, set_model_loaded ] = useState( null )
-    const [ current_conversation_id, set_current_conversation_id ] = useState( conversation_id || null )
+    // Start as null even with a URL param — we validate it exists before accepting it
+    const [ current_conversation_id, set_current_conversation_id ] = useState( null )
     const is_generating_ref = useRef( false )
     const query_processed_ref = useRef( false )
 
@@ -258,15 +259,27 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     useEffect( () => {
 
         if( conversation_id && conversation_id !== current_conversation_id ) {
-            set_current_conversation_id( conversation_id )
+
+            // Validate that the conversation exists before loading messages
             load_messages( conversation_id ).then( ( msgs ) => {
+
+                if( msgs.length === 0 ) {
+                    // Conversation not found or empty — redirect to fresh chat
+                    toast( `Conversation not found` )
+                    navigate( `/chat`, { replace: true } )
+                    return
+                }
+
+                set_current_conversation_id( conversation_id )
                 set_messages( msgs.map( ( m ) => ( {
                     id: m.id,
                     role: m.role,
                     content: m.content,
                     stats: m.stats,
                 } ) ) )
+
             } )
+
         }
 
         // Reset state when navigating to /chat (no id)
@@ -275,7 +288,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             set_messages( [] )
         }
 
-    }, [ conversation_id, current_conversation_id, load_messages ] )
+    }, [ conversation_id, current_conversation_id, load_messages, navigate ] )
 
     // Track is_generating in a ref for stable closures
     useEffect( () => {

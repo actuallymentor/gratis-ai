@@ -27,12 +27,10 @@ const parse_env_model = ( env_value ) => {
 
 // Parse defaults from env vars
 const lightweight_env = import.meta.env.VITE_MODEL_LIGHTWEIGHT_DEFAULT || ``
-const medium_env = import.meta.env.VITE_MODEL_MEDIUM_DEFAULT || ``
 const heavy_env = import.meta.env.VITE_MODEL_HEAVY_DEFAULT || ``
 const ultra_env = import.meta.env.VITE_MODEL_ULTRA_DEFAULT || ``
 
 const lightweight_parsed = parse_env_model( lightweight_env )
-const medium_parsed = parse_env_model( medium_env )
 const heavy_parsed = parse_env_model( heavy_env )
 const ultra_parsed = parse_env_model( ultra_env )
 
@@ -54,15 +52,15 @@ export const MODEL_REGISTRY = [
         quantization: `Q4_K_M`,
     },
     {
-        id: `tinyllama-1.1b`,
+        id: `qwen2.5-1.5b-instruct`,
         category: `medium`,
-        name: `TinyLlama 1.1B`,
+        name: `Qwen2.5 1.5B`,
         description: `Good balance of quality and speed for moderate hardware.`,
-        hugging_face_repo: medium_parsed.repo,
-        file_name: medium_parsed.file_name,
-        file_size_bytes: 670_000_000,
+        hugging_face_repo: `bartowski/Qwen2.5-1.5B-Instruct-GGUF`,
+        file_name: `Qwen2.5-1.5B-Instruct-Q4_K_M.gguf`,
+        file_size_bytes: 990_000_000,
         context_length: 2048,
-        parameters_label: `1.1B`,
+        parameters_label: `1.5B`,
         quantization: `Q4_K_M`,
     },
     {

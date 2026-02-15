@@ -6,7 +6,7 @@ const ActionsBar = styled.div`
     display: flex;
     gap: ${ ( { theme } ) => theme.spacing.xs };
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.15s;
     position: absolute;
     top: -28px;
     right: 0;
@@ -19,14 +19,13 @@ const ActionButton = styled.button`
     width: 28px;
     height: 28px;
     border-radius: ${ ( { theme } ) => theme.border_radius.sm };
-    background: ${ ( { theme } ) => theme.colors.surface };
-    border: 1px solid ${ ( { theme } ) => theme.colors.border };
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
-    transition: all 0.2s;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    opacity: 0.5;
+    transition: opacity 0.15s;
 
     &:hover {
+        opacity: 1;
         color: ${ ( { theme } ) => theme.colors.text };
-        background: ${ ( { theme } ) => theme.colors.surface_hover };
     }
 `
 

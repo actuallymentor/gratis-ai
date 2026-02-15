@@ -13,6 +13,7 @@ const DEFAULTS = {
     frequency_penalty: 0,
     presence_penalty: 0,
     seed: -1,
+    stop_sequences: ``,
 }
 
 const PREFIX = `locallm:settings:`
@@ -69,18 +70,28 @@ export default function use_settings() {
      * Build GenerateOptions object from current settings
      * @returns {import('../providers/types').GenerateOptions}
      */
-    const get_generate_options = useCallback( () => ( {
-        temperature: settings.temperature,
-        max_tokens: settings.max_tokens,
-        top_p: settings.top_p,
-        top_k: settings.top_k,
-        min_p: settings.min_p,
-        repeat_penalty: settings.repeat_penalty,
-        repeat_last_n: settings.repeat_last_n,
-        frequency_penalty: settings.frequency_penalty,
-        presence_penalty: settings.presence_penalty,
-        seed: settings.seed === -1 ? undefined : settings.seed,
-    } ), [ settings ] )
+    const get_generate_options = useCallback( () => {
+
+        // Parse comma-separated stop sequences into an array
+        const stop = settings.stop_sequences
+            ? settings.stop_sequences.split( `,` ).map( s => s.trim() ).filter( Boolean )
+            : undefined
+
+        return {
+            temperature: settings.temperature,
+            max_tokens: settings.max_tokens,
+            top_p: settings.top_p,
+            top_k: settings.top_k,
+            min_p: settings.min_p,
+            repeat_penalty: settings.repeat_penalty,
+            repeat_last_n: settings.repeat_last_n,
+            frequency_penalty: settings.frequency_penalty,
+            presence_penalty: settings.presence_penalty,
+            seed: settings.seed === -1 ? undefined : settings.seed,
+            ... stop?.length ? { stop } : {} ,
+        }
+
+    }, [ settings ] )
 
     // Sync if localStorage changes externally (e.g. another tab)
     useEffect( () => {

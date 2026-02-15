@@ -9,6 +9,10 @@ const ListContainer = styled.div`
     display: flex;
     flex-direction: column;
     gap: ${ ( { theme } ) => theme.spacing.md };
+    max-width: 65ch;
+    width: 100%;
+    margin: 0 auto;
+    padding-inline: ${ ( { theme } ) => theme.spacing.md };
 `
 
 /**
@@ -40,7 +44,7 @@ export default function MessageList( { messages, is_streaming, on_regenerate, on
 
     return <ListContainer ref={ list_ref }>
 
-        { messages.map( ( message, index ) => 
+        { messages.map( ( message, index ) =>
             <MessageBubble
                 key={ message.id || index }
                 message={ message }

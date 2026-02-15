@@ -22,8 +22,8 @@ export default function use_model_manager() {
 
             const db = await get_db()
             const all = await db.getAllFromIndex( `models`, `last_used_at` )
-            // Reverse to get most recent first
-            const sorted = all.reverse()
+            // Reverse to get most recent first, and filter out voice models (e.g. Parakeet)
+            const sorted = all.reverse().filter( m => m.category !== `voice` )
 
             // Calculate total storage (excluding blob from display data)
             const total_bytes = sorted.reduce( ( sum, m ) => sum + ( m.file_size_bytes || 0 ), 0 )

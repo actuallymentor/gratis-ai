@@ -116,8 +116,10 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
     const container_ref = useRef( null )
     const navigate = useNavigate()
 
-    // Close dropdown on click outside
+    // Close dropdown on click outside or Escape key
     useEffect( () => {
+
+        if( !is_open ) return
 
         const handle_click = ( e ) => {
             if( container_ref.current && !container_ref.current.contains( e.target ) ) {
@@ -125,9 +127,18 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
             }
         }
 
-        if( is_open ) {
-            document.addEventListener( `mousedown`, handle_click )
-            return () => document.removeEventListener( `mousedown`, handle_click )
+        const handle_keydown = ( e ) => {
+            if( e.key === `Escape` ) {
+                e.stopPropagation()
+                set_is_open( false )
+            }
+        }
+
+        document.addEventListener( `mousedown`, handle_click )
+        document.addEventListener( `keydown`, handle_keydown, true )
+        return () => {
+            document.removeEventListener( `mousedown`, handle_click )
+            document.removeEventListener( `keydown`, handle_keydown, true )
         }
 
     }, [ is_open ] )

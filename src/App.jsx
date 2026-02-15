@@ -5,6 +5,7 @@ import { QueryParamProvider } from 'use-query-params'
 import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
 import { Toaster } from 'react-hot-toast'
 import GlobalStyle from './styles/GlobalStyle'
+import ErrorBoundary from './components/molecules/ErrorBoundary'
 import use_theme from './hooks/use_theme'
 import Routes from './routes/Routes'
 import { register_shortcuts } from './utils/keyboard_shortcuts'
@@ -12,6 +13,9 @@ import { register_shortcuts } from './utils/keyboard_shortcuts'
 // Choose router based on runtime environment
 const is_electron = typeof window !== `undefined` && window.electronAPI?.native_inference
 const Router = is_electron ? HashRouter : BrowserRouter
+
+// Opt in to v7 behaviour to suppress future flag warnings
+const router_future = { v7_startTransition: true, v7_relativeSplatPath: true }
 
 /**
  * Root application component
@@ -27,34 +31,38 @@ export default function App() {
 
         return register_shortcuts( {
             new_chat: () => window.dispatchEvent( new CustomEvent( `locallm:new-chat` ) ),
+            toggle_sidebar: () => window.dispatchEvent( new CustomEvent( `locallm:toggle-sidebar` ) ),
             open_settings: () => window.dispatchEvent( new CustomEvent( `locallm:open-settings` ) ),
             close_modal: () => window.dispatchEvent( new CustomEvent( `locallm:close-modal` ) ),
+            stop_generation: () => window.dispatchEvent( new CustomEvent( `locallm:stop-generation` ) ),
         } )
 
     }, [] )
 
     return <ThemeProvider theme={ theme }>
         <GlobalStyle />
-        <Router>
-            <QueryParamProvider adapter={ ReactRouter6Adapter }>
-                <Routes
-                    theme_preference={ theme_preference }
-                    theme_mode={ theme.mode }
-                    on_theme_toggle={ set_theme_preference }
-                />
-                <Toaster
-                    position="bottom-center"
-                    toastOptions={ {
-                        duration: 3000,
-                        style: {
-                            background: theme.colors.surface,
-                            color: theme.colors.text,
-                            border: `1px solid ${ theme.colors.border }`,
-                        },
-                    } }
-                />
-            </QueryParamProvider>
-        </Router>
+        <ErrorBoundary>
+            <Router future={ router_future }>
+                <QueryParamProvider adapter={ ReactRouter6Adapter }>
+                    <Routes
+                        theme_preference={ theme_preference }
+                        theme_mode={ theme.mode }
+                        on_theme_toggle={ set_theme_preference }
+                    />
+                    <Toaster
+                        position="bottom-center"
+                        toastOptions={ {
+                            duration: 3000,
+                            style: {
+                                background: theme.colors.surface,
+                                color: theme.colors.text,
+                                border: `1px solid ${ theme.colors.border }`,
+                            },
+                        } }
+                    />
+                </QueryParamProvider>
+            </Router>
+        </ErrorBoundary>
     </ThemeProvider>
 
 }

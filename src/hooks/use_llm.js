@@ -89,9 +89,16 @@ export default function use_llm() {
             }
 
             const elapsed_ms = performance.now() - start_time
+
+            // When the model produces nothing, show a helpful message instead of "0 tokens"
+            if( token_count === 0 && !full_text ) {
+                full_text = `*The model returned an empty response. This can happen when the chat template is incompatible. Try a different model or check the browser console for details.*`
+                if( on_token ) on_token( full_text )
+            }
+
             const generation_stats = {
                 tokens_generated: token_count,
-                tokens_per_second: token_count / ( elapsed_ms / 1000 ),
+                tokens_per_second: elapsed_ms > 0 ? token_count / ( elapsed_ms / 1000 ) : 0,
                 elapsed_ms,
             }
 

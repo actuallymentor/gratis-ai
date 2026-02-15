@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { Sun, Moon, Monitor, Settings } from 'lucide-react'
+import { Sun, Moon, Monitor, Settings, PanelLeft } from 'lucide-react'
 import ModelSelector from './ModelSelector'
 
 const Bar = styled.header`
@@ -7,8 +7,8 @@ const Bar = styled.header`
     align-items: center;
     justify-content: space-between;
     padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
-    background: ${ ( { theme } ) => theme.colors.surface };
-    border-bottom: 1px solid ${ ( { theme } ) => theme.colors.border };
+    background: ${ ( { theme } ) => theme.colors.background };
+    border-bottom: 1px solid ${ ( { theme } ) => theme.colors.border_subtle };
     height: 56px;
     flex-shrink: 0;
 `
@@ -31,19 +31,18 @@ const IconButton = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
-    transition: all 0.2s;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    transition: color 0.15s;
 
     &:hover {
-        background: ${ ( { theme } ) => theme.colors.surface_hover };
         color: ${ ( { theme } ) => theme.colors.text };
     }
 `
 
-// Cycle: system → light → dark → system
+// Cycle: system -> light -> dark -> system
 const CYCLE = [ `system`, `light`, `dark` ]
 
 /**
@@ -65,6 +64,8 @@ const get_theme_icon = ( preference, mode ) => {
  * @param {string} props.theme_mode - Resolved theme mode
  * @param {Function} props.on_theme_toggle - Handler for theme cycling
  * @param {Function} props.on_settings_open - Handler for opening settings
+ * @param {boolean} props.sidebar_collapsed - Whether sidebar is currently collapsed
+ * @param {Function} props.on_toggle_sidebar - Handler for toggling sidebar visibility
  * @param {Array} props.cached_models - Array of cached model metadata
  * @param {string} props.active_model_id - Currently active model ID
  * @param {boolean} props.is_model_switching - Whether a model switch is in progress
@@ -76,6 +77,8 @@ export default function TopBar( {
     theme_mode,
     on_theme_toggle,
     on_settings_open,
+    sidebar_collapsed,
+    on_toggle_sidebar,
     cached_models,
     active_model_id,
     is_model_switching,
@@ -90,8 +93,15 @@ export default function TopBar( {
 
     return <Bar>
 
-        { /* Left: model selector */ }
+        { /* Left: sidebar toggle + model selector */ }
         <LeftSection>
+            { sidebar_collapsed && <IconButton
+                data-testid="sidebar-open-btn"
+                onClick={ on_toggle_sidebar }
+                aria-label="Open sidebar"
+            >
+                <PanelLeft size={ 18 } />
+            </IconButton> }
             <ModelSelector
                 cached_models={ cached_models }
                 active_model_id={ active_model_id }

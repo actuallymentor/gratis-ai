@@ -2,10 +2,10 @@
  * Register global keyboard shortcuts
  * @param {Object} handlers - Map of shortcut actions
  * @param {Function} [handlers.new_chat] - Ctrl+N: Create new chat
- * @param {Function} [handlers.export_chat] - Ctrl+Shift+S: Export current chat
+ * @param {Function} [handlers.toggle_sidebar] - Ctrl+Shift+S: Toggle sidebar
  * @param {Function} [handlers.open_settings] - Ctrl+,: Open settings
  * @param {Function} [handlers.close_modal] - Escape: Close any modal
- * @param {Function} [handlers.clear_all] - Ctrl+Shift+Backspace: Clear all data
+ * @param {Function} [handlers.stop_generation] - Ctrl+Shift+Backspace: Stop generation
  * @returns {Function} Cleanup function to remove the listener
  */
 export const register_shortcuts = ( handlers ) => {
@@ -21,10 +21,10 @@ export const register_shortcuts = ( handlers ) => {
             return
         }
 
-        // Ctrl+Shift+S — Export chat
+        // Ctrl+Shift+S — Toggle sidebar
         if( is_ctrl && e.shiftKey && e.key === `S` ) {
             e.preventDefault()
-            handlers.export_chat?.()
+            handlers.toggle_sidebar?.()
             return
         }
 
@@ -41,10 +41,10 @@ export const register_shortcuts = ( handlers ) => {
             return
         }
 
-        // Ctrl+Shift+Backspace — Clear all data
+        // Ctrl+Shift+Backspace — Stop generation
         if( is_ctrl && e.shiftKey && e.key === `Backspace` ) {
             e.preventDefault()
-            handlers.clear_all?.()
+            handlers.stop_generation?.()
         }
 
     }

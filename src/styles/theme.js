@@ -1,23 +1,23 @@
 // Shared tokens (spacing, fonts, radii) are theme-independent
 const shared = {
     spacing: {
-        xs: `4px`,
-        sm: `8px`,
-        md: `16px`,
-        lg: `24px`,
-        xl: `32px`,
-        xxl: `48px`,
+        xs: `0.25rem`,    // 4px
+        sm: `0.5rem`,     // 8px
+        md: `1rem`,       // 16px
+        lg: `1.5rem`,     // 24px
+        xl: `2rem`,       // 32px
+        xxl: `3rem`,      // 48px
     },
     border_radius: {
-        sm: `4px`,
-        md: `8px`,
-        lg: `12px`,
-        xl: `16px`,
-        full: `9999px`,
+        sm: `0.25rem`,    // subtle rounding
+        md: `0.5rem`,     // default
+        lg: `0.75rem`,    // cards/modals
+        xl: `1rem`,       // large elements
+        full: `9999px`,   // pills
     },
     fonts: {
-        body: `'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`,
-        mono: `'JetBrains Mono', 'Fira Code', 'Consolas', monospace`,
+        body: `system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'`,
+        mono: `'SF Mono', ui-monospace, 'Cascadia Code', 'Segoe UI Mono', Menlo, Consolas, monospace`,
     },
     breakpoints: {
         mobile: `768px`,
@@ -25,48 +25,54 @@ const shared = {
     },
 }
 
-// Dark palette
-const dark_colors = {
-    background: `#1a1a2e`,
-    surface: `#16213e`,
-    surface_hover: `#1e2a4a`,
-    sidebar: `#0f1626`,
-    primary: `#4f8ff7`,
-    primary_hover: `#3a7ae0`,
-    text: `#e0e0e0`,
-    text_secondary: `#8a8a9a`,
-    text_muted: `#5a5a6a`,
-    user_bubble: `#2a3a5c`,
-    assistant_bubble: `#1e2a3a`,
-    border: `#2a2a3e`,
-    error: `#ff4757`,
-    success: `#2ed573`,
-    warning: `#ffa502`,
-    input_background: `#0f1626`,
-    code_background: `#0d1117`,
-    modal_overlay: `rgba(0, 0, 0, 0.6)`,
-}
-
-// Light palette
+// Light palette — minimal, paper-like
 const light_colors = {
-    background: `#f8f9fa`,
+    background: `#ffffff`,
     surface: `#ffffff`,
-    surface_hover: `#f0f1f3`,
-    sidebar: `#eef0f2`,
-    primary: `#2563eb`,
-    primary_hover: `#1d4ed8`,
-    text: `#1a1a2e`,
-    text_secondary: `#5a5a6a`,
-    text_muted: `#9a9aaa`,
-    user_bubble: `#e8eef7`,
-    assistant_bubble: `#f0f2f5`,
-    border: `#d8dbe0`,
+    surface_hover: `#f5f5f5`,
+    sidebar: `#fafafa`,
+    primary: `#111111`,
+    primary_hover: `#333333`,
+    accent: `#2563eb`,
+    accent_hover: `#1d4ed8`,
+    text: `#111111`,
+    text_secondary: `#666666`,
+    text_muted: `#999999`,
+    user_bubble: `transparent`,
+    assistant_bubble: `transparent`,
+    border: `#e5e5e5`,
+    border_subtle: `#f0f0f0`,
     error: `#dc2626`,
     success: `#16a34a`,
     warning: `#d97706`,
-    input_background: `#ffffff`,
-    code_background: `#f6f8fa`,
-    modal_overlay: `rgba(0, 0, 0, 0.3)`,
+    input_background: `#fafafa`,
+    code_background: `#f5f5f5`,
+    modal_overlay: `rgba( 0, 0, 0, 0.4 )`,
+}
+
+// Dark palette — ink on black
+const dark_colors = {
+    background: `#0a0a0a`,
+    surface: `#0a0a0a`,
+    surface_hover: `#1a1a1a`,
+    sidebar: `#0f0f0f`,
+    primary: `#f0f0f0`,
+    primary_hover: `#cccccc`,
+    accent: `#6cacff`,
+    accent_hover: `#5a9aee`,
+    text: `#e8e8e8`,
+    text_secondary: `#999999`,
+    text_muted: `#666666`,
+    user_bubble: `transparent`,
+    assistant_bubble: `transparent`,
+    border: `#222222`,
+    border_subtle: `#1a1a1a`,
+    error: `#ff4757`,
+    success: `#2ed573`,
+    warning: `#ffa502`,
+    input_background: `#111111`,
+    code_background: `#151515`,
+    modal_overlay: `rgba( 0, 0, 0, 0.6 )`,
 }
 
 export const dark_theme = { ...shared, colors: dark_colors, mode: `dark` }

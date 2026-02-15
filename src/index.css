@@ -1,5 +1,4 @@
-/* Base CSS - minimal styles before styled-components loads */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Base CSS - minimal reset before styled-components loads */
 
 html, body {
     margin: 0;

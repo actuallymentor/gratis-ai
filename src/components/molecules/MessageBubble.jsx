@@ -13,7 +13,7 @@ const BubbleContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-self: ${ ( { $is_user } ) => $is_user ? `flex-end` : `flex-start` };
-    max-width: 80%;
+    max-width: 85%;
     position: relative;
 
     &:hover .message-actions {
@@ -22,13 +22,12 @@ const BubbleContainer = styled.div`
 `
 
 const Bubble = styled.div`
-    padding: ${ ( { theme } ) => theme.spacing.md };
-    background: ${ ( { theme, $is_user } ) =>
-        $is_user ? theme.colors.user_bubble : theme.colors.assistant_bubble };
-    border-radius: ${ ( { theme } ) => theme.border_radius.lg };
-    line-height: 1.6;
+    padding: ${ ( { theme } ) => `${ theme.spacing.sm } 0` };
+    background: transparent;
+    line-height: 1.5;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    max-width: 65ch;
 
     /* Markdown styling */
     p { margin: 0 0 0.5em 0; }
@@ -37,6 +36,9 @@ const Bubble = styled.div`
     code {
         font-family: ${ ( { theme } ) => theme.fonts.mono };
         font-size: 0.85em;
+        background: ${ ( { theme } ) => theme.colors.code_background };
+        padding: 0.1em 0.3em;
+        border-radius: ${ ( { theme } ) => theme.border_radius.sm };
     }
     pre {
         position: relative;
@@ -51,7 +53,7 @@ const Bubble = styled.div`
         padding: 0;
     }
     blockquote {
-        border-left: 3px solid ${ ( { theme } ) => theme.colors.primary };
+        border-left: 2px solid ${ ( { theme } ) => theme.colors.border };
         padding-left: ${ ( { theme } ) => theme.spacing.md };
         margin: 0.5em 0;
         color: ${ ( { theme } ) => theme.colors.text_secondary };
@@ -76,7 +78,7 @@ const EditTextarea = styled.textarea`
     resize: vertical;
     font-family: inherit;
     font-size: 0.9rem;
-    line-height: 1.6;
+    line-height: 1.5;
 `
 
 const EditActions = styled.div`
@@ -89,36 +91,33 @@ const EditButton = styled.button`
     padding: ${ ( { theme } ) => `${ theme.spacing.xs } ${ theme.spacing.md }` };
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
     font-size: 0.85rem;
-    transition: all 0.2s;
+    transition: opacity 0.15s;
 `
 
 const SubmitButton = styled( EditButton )`
-    background: ${ ( { theme } ) => theme.colors.primary };
+    background: ${ ( { theme } ) => theme.colors.accent };
     color: white;
-    &:hover { background: ${ ( { theme } ) => theme.colors.primary_hover }; }
+    &:hover { opacity: 0.85; }
 `
 
 const CancelButton = styled( EditButton )`
-    border: 1px solid ${ ( { theme } ) => theme.colors.border };
     color: ${ ( { theme } ) => theme.colors.text_secondary };
-    &:hover { background: ${ ( { theme } ) => theme.colors.surface_hover }; }
+    &:hover { color: ${ ( { theme } ) => theme.colors.text }; }
 `
 
 const CodeCopyButton = styled.button`
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: ${ ( { theme } ) => theme.spacing.sm };
+    right: ${ ( { theme } ) => theme.spacing.sm };
     display: flex;
     align-items: center;
     justify-content: center;
     width: 28px;
     height: 28px;
     border-radius: ${ ( { theme } ) => theme.border_radius.sm };
-    background: ${ ( { theme } ) => theme.colors.surface };
-    border: 1px solid ${ ( { theme } ) => theme.colors.border };
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
+    color: ${ ( { theme } ) => theme.colors.text_muted };
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.15s;
 
     pre:hover & { opacity: 1; }
     &:hover { color: ${ ( { theme } ) => theme.colors.text }; }
@@ -197,7 +196,7 @@ const MessageBubble = memo( ( {
             on_edit={ () => set_is_editing( true ) }
         />
 
-        { is_editing ? 
+        { is_editing ?
             <EditContainer>
                 <EditTextarea
                     data-testid="message-edit-textarea"
@@ -220,7 +219,7 @@ const MessageBubble = memo( ( {
                     </SubmitButton>
                 </EditActions>
             </EditContainer>
-            : 
+            :
             <Bubble data-testid={ testid } $is_user={ is_user }>
                 <ReactMarkdown
                     remarkPlugins={ [ remarkGfm ] }
@@ -233,7 +232,7 @@ const MessageBubble = memo( ( {
             </Bubble> }
 
         { /* Generation stats for completed assistant messages */ }
-        { !is_user && !is_streaming && message.stats && 
+        { !is_user && !is_streaming && message.stats &&
             <GenerationStats stats={ message.stats } /> }
 
     </BubbleContainer>

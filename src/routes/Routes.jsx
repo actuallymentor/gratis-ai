@@ -7,6 +7,7 @@ const WelcomePage = lazy( prefetch( () => import( '../components/pages/WelcomePa
 const ModelSelectPage = lazy( prefetch( () => import( '../components/pages/ModelSelectPage' ) ) )
 const DownloadPage = lazy( prefetch( () => import( '../components/pages/DownloadPage' ) ) )
 const ChatPage = lazy( prefetch( () => import( '../components/pages/ChatPage' ) ) )
+const NotFoundPage = lazy( prefetch( () => import( '../components/pages/NotFoundPage' ) ) )
 
 /**
  * Application route definitions
@@ -28,6 +29,7 @@ export default function Routes( { theme_preference, theme_mode, on_theme_toggle 
             <Route path="/download" element={ <DownloadPage /> } />
             <Route path="/chat" element={ <ChatPage { ...layout_props } /> } />
             <Route path="/chat/:id" element={ <ChatPage { ...layout_props } /> } />
+            <Route path="*" element={ <NotFoundPage /> } />
         </RouterRoutes>
     </Suspense>
 

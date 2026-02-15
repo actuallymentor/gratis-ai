@@ -7,9 +7,9 @@ const blink = keyframes`
 
 const Cursor = styled.span`
     display: inline-block;
-    width: 8px;
-    height: 16px;
-    background: ${ ( { theme } ) => theme.colors.primary };
+    width: 2px;
+    height: 1em;
+    background: ${ ( { theme } ) => theme.colors.text_secondary };
     margin-left: 2px;
     animation: ${ blink } 1s infinite;
     vertical-align: text-bottom;
