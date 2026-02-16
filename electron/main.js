@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require( `electron` )
 const path = require( `path` )
 const fs = require( `fs` )
+const os = require( `os` )
+const { NativeInference } = require( './native_inference' )
 
 let main_window = null
 let native_provider = null
@@ -75,6 +77,47 @@ const create_window = () => {
  */
 const register_ipc_handlers = () => {
 
+    // Return real system info for device detection
+    ipcMain.handle( `system:info`, () => ( {
+        total_memory: os.totalmem(),
+        free_memory: os.freemem(),
+        cpus: os.cpus().length,
+        platform: process.platform,
+        arch: process.arch,
+    } ) )
+
+    // Save a downloaded model to the filesystem
+    ipcMain.handle( `llm:save_model`, async ( _event, { id, file_name, array_buffer, metadata } ) => {
+
+        ensure_models_dir()
+
+        // Write the GGUF file
+        const model_path = path.join( MODELS_DIR, file_name )
+        fs.writeFileSync( model_path, Buffer.from( array_buffer ) )
+
+        // Update manifest
+        const manifest = read_manifest()
+        const now = Date.now()
+
+        // Remove existing entry if present (re-download)
+        const existing_index = manifest.findIndex( ( m ) => m.id === id )
+        if( existing_index !== -1 ) manifest.splice( existing_index, 1 )
+
+        manifest.push( {
+            ...metadata,
+            id,
+            file_name,
+            file_size_bytes: array_buffer.byteLength,
+            cached_at: now,
+            last_used_at: now,
+        } )
+
+        write_manifest( manifest )
+
+        return { success: true }
+
+    } )
+
     // Load a model by ID from the models directory
     ipcMain.handle( `llm:load`, async ( _event, model_id ) => {
 
@@ -85,9 +128,8 @@ const register_ipc_handlers = () => {
         const model_path = path.join( MODELS_DIR, model.file_name )
         if( !fs.existsSync( model_path ) ) throw new Error( `Model file missing: ${ model.file_name }` )
 
-        // Lazy-load node-llama-cpp only when needed
+        // Instantiate native provider on first use
         if( !native_provider ) {
-            const { NativeInference } = require( `./native_inference.js` )
             native_provider = new NativeInference()
         }
 
