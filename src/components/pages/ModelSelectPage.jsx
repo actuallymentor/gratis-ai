@@ -134,7 +134,6 @@ const ModelOption = styled.button`
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
     text-align: left;
     transition: border-color 0.15s;
-    opacity: ${ ( { $dimmed } ) => $dimmed ? 0.6 : 1 };
 
     &:hover {
         border-color: ${ ( { theme } ) => theme.colors.text_muted };
@@ -201,8 +200,8 @@ const TIER_ORDER = { lightweight: 0, medium: 1, heavy: 2, ultra: 3 }
 
 /**
  * Model selection page - auto-recommends based on device, hides complexity.
- * Compatible models are shown prominently. Models too large for the browser's
- * memory are hidden under a "More models" toggle with a warning.
+ * Models that fit in memory are recommended first. Oversized models appear
+ * lower in the list with a warning label but remain selectable.
  * @returns {JSX.Element}
  */
 export default function ModelSelectPage() {
@@ -210,7 +209,6 @@ export default function ModelSelectPage() {
     const navigate = useNavigate()
     const location = useLocation()
     const [ show_alternatives, set_show_alternatives ] = useState( false )
-    const [ show_large_models, set_show_large_models ] = useState( false )
 
     // Get capabilities from navigation state or detect fresh
     const { capabilities: detected_caps, max_model_bytes } = use_device_capabilities()
@@ -222,29 +220,31 @@ export default function ModelSelectPage() {
         return get_recommended_tier( capabilities )
     }, [ capabilities ] )
 
-    // Split models into those that fit in memory and those that don't
-    const { compatible_models, oversized_models } = useMemo( () => {
+    // Sort all models: compatible first, then by recommended tier, then by quality
+    // This ensures the recommendation is always a model that fits in memory
+    const sorted_models = useMemo( () => {
 
-        const compatible = MODEL_REGISTRY.filter( m => can_fit_in_memory( m, max_model_bytes ) )
-        const oversized = MODEL_REGISTRY.filter( m => !can_fit_in_memory( m, max_model_bytes ) )
+        return [ ...MODEL_REGISTRY ].sort( ( a, b ) => {
 
-        // Sort both lists: recommended tier first, then by size descending (best quality first)
-        const sort_models = ( a, b ) => {
+            // Compatible models always come before oversized ones
+            const a_fits = can_fit_in_memory( a, max_model_bytes ) ? 1 : 0
+            const b_fits = can_fit_in_memory( b, max_model_bytes ) ? 1 : 0
+            if( a_fits !== b_fits ) return b_fits - a_fits
+
+            // Within the same group, prefer the recommended tier
             const a_recommended = a.category === recommended_tier ? 1 : 0
             const b_recommended = b.category === recommended_tier ? 1 : 0
             if( a_recommended !== b_recommended ) return b_recommended - a_recommended
+
+            // Then by tier quality (higher = better)
             return TIER_ORDER[ b.category ] - TIER_ORDER[ a.category ]
-        }
 
-        compatible.sort( sort_models )
-        oversized.sort( sort_models )
-
-        return { compatible_models: compatible, oversized_models: oversized }
+        } )
 
     }, [ max_model_bytes, recommended_tier ] )
 
-    // The recommended model is the best compatible model (first after sorting)
-    const recommended_model = compatible_models[ 0 ] || null
+    // The recommended model is the first in the sorted list (best compatible model)
+    const recommended_model = sorted_models[ 0 ] || null
 
     // Track user selection — null means use the recommendation
     const [ selected_model_id, set_selected_model_id ] = useState( null )
@@ -263,8 +263,8 @@ export default function ModelSelectPage() {
         set_selected_model_id( model_id )
     }
 
-    // Alternative models = compatible models minus the currently selected one
-    const alternative_models = compatible_models.filter( m => m.id !==  active_model?.id  )
+    // All models except the currently active one
+    const alternative_models = sorted_models.filter( m => m.id !== active_model?.id )
 
     return <Container>
 
@@ -309,7 +309,7 @@ export default function ModelSelectPage() {
             <StepDot />
         </StepIndicator>
 
-        { /* Compatible alternatives — hidden behind toggle */ }
+        { /* All alternatives in one list — oversized models get a warning label */ }
         { alternative_models.length > 0 && <>
             <ToggleButton
                 data-testid="change-model-toggle"
@@ -324,6 +324,7 @@ export default function ModelSelectPage() {
                     { alternative_models.map( ( model ) => {
                         const is_selected = model.id === active_model?.id
                         const is_recommended = model.id === recommended_model?.id
+                        const too_large = !can_fit_in_memory( model, max_model_bytes )
                         return <ModelOption
                             key={ model.id }
                             $active={ is_selected }
@@ -336,45 +337,11 @@ export default function ModelSelectPage() {
                                 </OptionName>
                                 <OptionMeta>
                                     { model.parameters_label } — { format_file_size( model.file_size_bytes ) }
+                                    { too_large ? ` — may not fit in memory` : `` }
                                 </OptionMeta>
                             </OptionInfo>
                             { is_selected && <CheckIcon><Check size={ 16 } /></CheckIcon> }
-                        </ModelOption>
-                    } ) }
-                </ModelList>
-            </ExpandPanel>
-        </> }
-
-        { /* Oversized models — separate toggle with warning context */ }
-        { oversized_models.length > 0 && <>
-            <ToggleButton onClick={ () => set_show_large_models( !show_large_models ) }>
-                More models
-                { show_large_models ? <ChevronUp size={ 14 } /> : <ChevronDown size={ 14 } /> }
-            </ToggleButton>
-
-            <ExpandPanel $expanded={ show_large_models }>
-                <MemoryWarning style={ { marginBottom: 8 } }>
-                    <AlertTriangle size={ 14 } />
-                    These models may be too large for your browser
-                </MemoryWarning>
-                <ModelList>
-                    { oversized_models.map( ( model ) => {
-                        const is_selected = model.id === active_model?.id
-                        return <ModelOption
-                            key={ model.id }
-                            $active={ is_selected }
-                            $dimmed={ !is_selected }
-                            onClick={ () => handle_select( model.id ) }
-                        >
-                            <OptionInfo>
-                                <OptionName>{ model.name }</OptionName>
-                                <OptionMeta>
-                                    { model.parameters_label } — { format_file_size( model.file_size_bytes ) }
-                                </OptionMeta>
-                            </OptionInfo>
-                            { is_selected
-                                ? <CheckIcon><Check size={ 16 } /></CheckIcon>
-                                : <AlertTriangle size={ 14 } style={ { color: `#e67e22`, flexShrink: 0 } } /> }
+                            { too_large && !is_selected && <AlertTriangle size={ 14 } style={ { color: `#e67e22`, flexShrink: 0 } } /> }
                         </ModelOption>
                     } ) }
                 </ModelList>
