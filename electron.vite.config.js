@@ -14,12 +14,13 @@ export default defineConfig( {
         },
     },
 
-    // Preload script
+    // Preload script — must be CJS for Electron's contextIsolation
     preload: {
         plugins: [ externalizeDepsPlugin() ],
         build: {
             rollupOptions: {
                 input: path.resolve( `electron/preload.js` ),
+                output: { format: `cjs` },
             },
         },
     },

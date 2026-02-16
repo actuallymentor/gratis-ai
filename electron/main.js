@@ -55,7 +55,7 @@ const create_window = () => {
         width: 1280,
         height: 800,
         webPreferences: {
-            preload: path.join( __dirname, `preload.js` ),
+            preload: path.join( __dirname, `../preload/preload.cjs` ),
             contextIsolation: true,
             nodeIntegration: false,
         },
@@ -65,7 +65,7 @@ const create_window = () => {
     if( process.env.NODE_ENV === `development` ) {
         main_window.loadURL( `http://localhost:5173` )
     } else {
-        main_window.loadFile( path.join( __dirname, `../dist/index.html` ) )
+        main_window.loadFile( path.join( __dirname, `../renderer/index.html` ) )
     }
 
 }
