@@ -241,7 +241,10 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                 .then( () => set_model_loaded( true ) )
                 .catch( ( err ) => {
                     console.error( `[ChatPage] Auto-load failed:`, err.message )
+                    // Clear saved model so we don't retry on every page load
+                    localStorage.removeItem( `locallm:settings:active_model_id` )
                     set_model_loaded( false )
+                    toast.error( err.message || `Failed to load model` )
                 } )
         } else if( !active_id ) {
             // No model configured — transition from null (unknown) to false (no model)
