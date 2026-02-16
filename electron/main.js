@@ -15,6 +15,7 @@ class NativeInference {
 
     constructor() {
         this._model = null
+        this._context = null
         this._session = null
         this._model_path = null
         this._abort_controller = null
@@ -35,11 +36,17 @@ class NativeInference {
         try {
 
             // node-llama-cpp loaded lazily — heavy native dep
-            const { getLlama } = await import( `node-llama-cpp` )
+            const { getLlama, LlamaChatSession } = await import( `node-llama-cpp` )
             const llama = await getLlama()
 
             this._model = await llama.loadModel( { modelPath: model_path } )
-            this._session = new llama.createContext( { model: this._model, contextSize: opts.n_ctx || 2048 } )
+
+            // createContext is a method on the model, not on llama
+            this._context = await this._model.createContext( { contextSize: opts.n_ctx || 2048 } )
+
+            // LlamaChatSession wraps a context sequence and manages chat history
+            this._session = new LlamaChatSession( { contextSequence: this._context.getSequence() } )
+
             this._model_path = model_path
 
         } catch ( err ) {
@@ -58,12 +65,9 @@ class NativeInference {
 
         if( !this._session ) throw new Error( `No model loaded` )
 
-        // Build prompt from messages
-        const prompt = messages.map( ( m ) => {
-            if( m.role === `system` ) return `System: ${ m.content }`
-            if( m.role === `user` ) return `User: ${ m.content }`
-            return `Assistant: ${ m.content }`
-        } ).join( `\n` ) + `\nAssistant:`
+        // Extract the last user message — LlamaChatSession manages history internally
+        const last_user_message = [ ...messages ].reverse().find( ( m ) => m.role === `user` )
+        const prompt = last_user_message?.content || ``
 
         const response = await this._session.prompt( prompt, {
             maxTokens: opts.max_tokens || 2048,
@@ -75,22 +79,20 @@ class NativeInference {
     }
 
     /**
-     * Streaming chat completion with token callback
+     * Streaming chat completion with text chunk callback
      * @param {Array} messages - Chat messages
      * @param {Object} opts - Generation options
-     * @param {Function} on_token - Callback for each token
+     * @param {Function} on_text - Callback for each text chunk
      * @returns {Promise<void>}
      */
-    async chat_stream( messages, opts, on_token ) {
+    async chat_stream( messages, opts, on_text ) {
 
         if( !this._session ) throw new Error( `No model loaded` )
         this._abort_controller = new AbortController()
 
-        const prompt = messages.map( ( m ) => {
-            if( m.role === `system` ) return `System: ${ m.content }`
-            if( m.role === `user` ) return `User: ${ m.content }`
-            return `Assistant: ${ m.content }`
-        } ).join( `\n` ) + `\nAssistant:`
+        // Extract the last user message — LlamaChatSession manages history internally
+        const last_user_message = [ ...messages ].reverse().find( ( m ) => m.role === `user` )
+        const prompt = last_user_message?.content || ``
 
         try {
 
@@ -98,8 +100,10 @@ class NativeInference {
                 maxTokens: opts.max_tokens || 2048,
                 temperature: opts.temperature || 0.7,
                 signal: this._abort_controller.signal,
-                onToken: ( token ) => {
-                    if( on_token ) on_token( token )
+                stopOnAbortSignal: true,
+                // onTextChunk sends decoded strings (not raw token IDs)
+                onTextChunk: ( text ) => {
+                    if( on_text ) on_text( text )
                 },
             } )
 
@@ -120,13 +124,28 @@ class NativeInference {
     }
 
     /**
-     * Unload the current model
+     * Unload the current model and dispose native resources
      * @returns {Promise<void>}
      */
     async unload() {
-        if( this._session ) this._session = null
-        if( this._model ) this._model = null
+
+        if( this._session ) {
+            this._session.dispose()
+            this._session = null
+        }
+
+        if( this._context ) {
+            await this._context.dispose()
+            this._context = null
+        }
+
+        if( this._model ) {
+            await this._model.dispose()
+            this._model = null
+        }
+
         this._model_path = null
+
     }
 
     /** @returns {boolean} */
@@ -292,10 +311,12 @@ const register_ipc_handlers = () => {
 
         if( !native_provider?.is_loaded() ) throw new Error( `No model loaded` )
 
-        // Send tokens to renderer via events
-        native_provider.chat_stream( messages, opts, ( token ) => {
-            main_window?.webContents?.send( `llm:stream-token`, token )
+        // Send text chunks to renderer via events, await completion, then signal done
+        await native_provider.chat_stream( messages, opts, ( text ) => {
+            main_window?.webContents?.send( `llm:stream-token`, text )
         } )
+
+        main_window?.webContents?.send( `llm:stream-done` )
 
         return { success: true }
 

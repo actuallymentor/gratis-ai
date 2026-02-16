@@ -71,6 +71,7 @@ export default class ElectronIPCProvider {
         }
 
         window.electronAPI.on_stream_token( token_handler )
+        window.electronAPI.on_stream_done( done_handler )
 
         // Start the stream
         await window.electronAPI.start_stream( messages, opts )
