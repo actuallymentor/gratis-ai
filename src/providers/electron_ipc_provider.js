@@ -73,8 +73,8 @@ export default class ElectronIPCProvider {
         window.electronAPI.on_stream_token( token_handler )
         window.electronAPI.on_stream_done( done_handler )
 
-        // Start the stream
-        await window.electronAPI.start_stream( messages, opts )
+        // Fire off the stream — don't await, tokens arrive via IPC events
+        const stream_promise = window.electronAPI.start_stream( messages, opts )
 
         // Yield tokens as they arrive
         try {
@@ -95,6 +95,9 @@ export default class ElectronIPCProvider {
             while( token_queue.length > 0 ) {
                 yield token_queue.shift()
             }
+
+            // Ensure the stream completed without errors
+            await stream_promise
 
         } finally {
             // Clean up listener
