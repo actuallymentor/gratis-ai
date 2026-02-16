@@ -133,6 +133,16 @@ export const TIER_INFO = [
 ]
 
 /**
+ * Check whether a model's file size fits within the estimated WASM memory budget.
+ * Models need roughly 1.2x their file size once loaded (weights + KV cache + overhead).
+ * @param {ModelDefinition} model
+ * @param {number} max_model_bytes - From estimate_max_model_bytes()
+ * @returns {boolean}
+ */
+export const can_fit_in_memory = ( model, max_model_bytes ) =>
+    model.file_size_bytes * 1.2 <= max_model_bytes
+
+/**
  * Format bytes into human-readable size
  * @param {number} bytes
  * @returns {string}

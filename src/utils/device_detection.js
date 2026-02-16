@@ -168,6 +168,33 @@ export const detect_capabilities = async () => {
 }
 
 /**
+ * Estimate the largest GGUF model (in bytes) that the browser can load into WASM memory.
+ * WASM on most browsers is limited to a 4 GB address space. The runtime, KV cache, and
+ * scratch buffers consume overhead on top of the raw model weights, so we apply a
+ * conservative multiplier. When navigator.deviceMemory is available we also cap against
+ * that, since a 2 GB device can't spare 4 GB for WASM even if the address space allows it.
+ * @param {DeviceCapabilities} capabilities
+ * @returns {number} Max model file size in bytes
+ */
+export const estimate_max_model_bytes = ( capabilities ) => {
+
+    // Hard ceiling: WASM 32-bit address space minus runtime overhead (~600 MB)
+    const wasm_ceiling = 3_400_000_000
+
+    // If the browser reports device memory, use 60% of it as a soft cap
+    // (the rest is needed by the browser, OS, and other tabs)
+    const device_mem = capabilities?.memory?.device_memory
+    const device_cap = device_mem ? device_mem * 0.6 * 1_000_000_000 : Infinity
+
+    // Chrome exposes jsHeapSizeLimit — useful as a cross-check
+    const heap_limit = capabilities?.memory?.js_heap_limit
+    const heap_cap = heap_limit ? heap_limit * 0.7 : Infinity
+
+    return Math.floor( Math.min( wasm_ceiling, device_cap, heap_cap ) )
+
+}
+
+/**
  * Recommends a model tier based on device capabilities
  * @param {DeviceCapabilities} capabilities
  * @returns {'lightweight' | 'medium' | 'heavy' | 'ultra'}

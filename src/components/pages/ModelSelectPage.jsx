@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react'
 import styled from 'styled-components'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle } from 'lucide-react'
 import { get_recommended_tier } from '../../utils/device_detection'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
-import { get_model_for_tier, TIER_INFO, format_file_size } from '../../providers/model_registry'
+import { get_model_for_tier, TIER_INFO, format_file_size, can_fit_in_memory } from '../../providers/model_registry'
 
 const Container = styled.div`
     display: flex;
@@ -186,6 +186,15 @@ const StepLine = styled.div`
     background: ${ ( { theme, $done } ) => $done ? theme.colors.accent : theme.colors.border };
 `
 
+const MemoryWarning = styled.div`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.warning || `#e67e22` };
+    margin-top: ${ ( { theme } ) => theme.spacing.sm };
+`
+
 // User-friendly tier descriptions (no jargon)
 const FRIENDLY_TIER_LABELS = {
     lightweight: `Faster responses, smaller download`,
@@ -207,7 +216,7 @@ export default function ModelSelectPage() {
     const [ show_alternatives, set_show_alternatives ] = useState( false )
 
     // Get capabilities from navigation state or detect fresh
-    const { capabilities: detected_caps } = use_device_capabilities()
+    const { capabilities: detected_caps, max_model_bytes } = use_device_capabilities()
     const capabilities = location.state?.capabilities || detected_caps
 
     // Determine recommended tier and allow override
@@ -221,6 +230,9 @@ export default function ModelSelectPage() {
 
     // Get the model for the active tier
     const selected_model = get_model_for_tier( active_tier )
+
+    // Check if a model exceeds the browser's estimated WASM memory budget
+    const is_too_large = ( model ) => !can_fit_in_memory( model, max_model_bytes )
 
     const handle_download = () => {
         if( !selected_model ) return
@@ -250,6 +262,10 @@ export default function ModelSelectPage() {
             <ModelSize>
                 Download size: { format_file_size( selected_model.file_size_bytes ) }
             </ModelSize>
+            { is_too_large( selected_model ) && <MemoryWarning>
+                <AlertTriangle size={ 14 } />
+                May be too large for this browser
+            </MemoryWarning> }
         </RecommendedCard> }
 
         <DownloadButton
@@ -284,6 +300,7 @@ export default function ModelSelectPage() {
                     if( !model ) return null
                     const is_selected = tier === active_tier
                     const is_recommended = tier === recommended
+                    const too_large = is_too_large( model )
                     return <AlternativeOption
                         key={ tier }
                         $active={ is_selected }
@@ -296,8 +313,10 @@ export default function ModelSelectPage() {
                             </OptionName>
                             <OptionMeta>
                                 { FRIENDLY_TIER_LABELS[ tier ] } — { format_file_size( model.file_size_bytes ) }
+                                { too_large ? ` — may not fit in memory` : `` }
                             </OptionMeta>
                         </OptionInfo>
+                        { too_large && !is_selected && <AlertTriangle size={ 14 } style={ { color: `#e67e22`, flexShrink: 0 } } /> }
                         { is_selected && <CheckIcon><Check size={ 16 } /></CheckIcon> }
                     </AlternativeOption>
                 } ) }

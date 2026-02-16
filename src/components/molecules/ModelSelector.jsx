@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
-import { ChevronDown, Check, Plus, Settings, Loader } from 'lucide-react'
+import { ChevronDown, Check, Plus, Settings, Loader, AlertTriangle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { format_file_size } from '../../providers/model_registry'
+import { format_file_size, can_fit_in_memory } from '../../providers/model_registry'
+import use_device_capabilities from '../../hooks/use_device_capabilities'
 
 const Container = styled.div`
     position: relative;
@@ -115,6 +116,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
     const [ is_open, set_is_open ] = useState( false )
     const container_ref = useRef( null )
     const navigate = useNavigate()
+    const { max_model_bytes } = use_device_capabilities()
 
     // Close dropdown on click outside or Escape key
     useEffect( () => {
@@ -183,8 +185,9 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                         No models downloaded yet. Add one to get started.
                     </NoModelHint>
                     :
-                    cached_models.map( ( model ) =>
-                        <ModelOption
+                    cached_models.map( ( model ) => {
+                        const too_large = !can_fit_in_memory( model, max_model_bytes )
+                        return <ModelOption
                             key={ model.id }
                             data-testid={ `model-option-${ model.id }` }
                             onClick={ () => handle_select( model.id ) }
@@ -195,10 +198,14 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                                 <div style={ { width: 14 } } /> }
                             <ModelInfo>
                                 <ModelLabel>{ model.name }</ModelLabel>
-                                <ModelMeta>{ format_file_size( model.file_size_bytes ) }</ModelMeta>
+                                <ModelMeta>
+                                    { format_file_size( model.file_size_bytes ) }
+                                    { too_large ? ` — may not fit` : `` }
+                                </ModelMeta>
                             </ModelInfo>
+                            { too_large && <AlertTriangle size={ 12 } style={ { color: `#e67e22`, flexShrink: 0 } } /> }
                         </ModelOption>
-                    ) }
+                    } ) }
 
                 <Divider />
 
