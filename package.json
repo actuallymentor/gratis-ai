@@ -2,6 +2,7 @@
   "name": "locallm",
   "version": "1.0.0",
   "description": "Privacy-first, offline-capable local LLM chat application",
+  "main": "out/main/main.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
