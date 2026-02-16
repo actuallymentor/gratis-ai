@@ -40,10 +40,11 @@ const detect_template_type = ( template ) => {
  * @param {Array<{role: string, content: string}>} messages
  * @param {string} eos_token - The EOS token string (e.g., "</s>")
  * @param {string} bos_token - The BOS token string (e.g., "<s>")
+ * @param {string} eot_token - The EOT (end-of-turn) token string (e.g., "<|eot_id|>")
  * @param {string} template_type - One of the detected template types
  * @returns {string} Formatted prompt ready for completion
  */
-const format_chat_prompt = ( messages, eos_token, bos_token, template_type ) => {
+const format_chat_prompt = ( messages, eos_token, bos_token, eot_token, template_type ) => {
 
     let prompt = ``
 
@@ -69,7 +70,7 @@ const format_chat_prompt = ( messages, eos_token, bos_token, template_type ) => 
     case `llama3`:
         prompt += `<|begin_of_text|>`
         for( const { role, content } of messages ) {
-            prompt += `<|start_header_id|>${ role }<|end_header_id|>\n\n${ content }${ eos_token }`
+            prompt += `<|start_header_id|>${ role }<|end_header_id|>\n\n${ content }${ eot_token }`
         }
         prompt += `<|start_header_id|>assistant<|end_header_id|>\n\n`
         break
@@ -79,11 +80,13 @@ const format_chat_prompt = ( messages, eos_token, bos_token, template_type ) => 
         // Mistral puts system prompt before the first [INST] if present
         const system_msg = messages.find( m => m.role === `system` )
         const non_system = messages.filter( m => m.role !== `system` )
+        // BOS only once at the start, not before every [INST]
+        prompt += bos_token
         let turn_idx = 0
 
         for( const { role, content } of non_system ) {
             if( role === `user` ) {
-                prompt += `${ bos_token }[INST] `
+                prompt += `[INST] `
                 // Prepend system prompt to the first user message
                 if( system_msg && turn_idx === 0 ) {
                     prompt += `${ system_msg.content }\n\n`
@@ -124,6 +127,7 @@ export default class WllamaProvider {
         this._template_type = `unknown`
         this._eos_str = `</s>`
         this._bos_str = `<s>`
+        this._eot_str = ``
     }
 
     /**
@@ -192,8 +196,10 @@ export default class WllamaProvider {
         try {
             const eos_id = this._wllama.getEOS()
             const bos_id = this._wllama.getBOS()
+            const eot_id = this._wllama.getEOT()
             if( eos_id >= 0 ) this._eos_str = decoder.decode( await this._wllama.detokenize( [ eos_id ] ) )
             if( bos_id >= 0 ) this._bos_str = decoder.decode( await this._wllama.detokenize( [ bos_id ] ) )
+            if( eot_id >= 0 ) this._eot_str = decoder.decode( await this._wllama.detokenize( [ eot_id ] ) )
         } catch {
             // Keep defaults if detokenize fails
         }
@@ -214,7 +220,7 @@ export default class WllamaProvider {
      * @returns {string} Formatted prompt
      */
     _format_chat( messages ) {
-        return format_chat_prompt( messages, this._eos_str, this._bos_str, this._template_type )
+        return format_chat_prompt( messages, this._eos_str, this._bos_str, this._eot_str, this._template_type )
     }
 
     /**
