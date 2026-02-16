@@ -18,7 +18,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@rollup/rollup-linux-arm64-gnu": "^4.57.1",
     "@wllama/wllama": "^2.3.7",
     "idb": "^8.0.1",
     "less-lazy": "^0.0.2",
