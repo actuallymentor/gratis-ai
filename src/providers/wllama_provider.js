@@ -165,11 +165,33 @@ export default class WllamaProvider {
         const n_threads = Math.max( 1, Math.floor( hw_threads / 2 ) )
 
         // Load from blob — larger batch size improves throughput in multi-threaded mode
-        await this._wllama.loadModel( [ cached.blob ], {
-            n_ctx: cached.context_length || 2048,
-            n_batch: n_threads > 1 ? 512 : 256,
-            n_threads,
-        } )
+        const file_size_mb = ( cached.blob.size / 1_000_000 ).toFixed( 0 )
+        console.info( `[wllama] Loading model ${ model_id } (${ file_size_mb } MB, ${ n_threads } threads)` )
+
+        try {
+
+            await this._wllama.loadModel( [ cached.blob ], {
+                n_ctx: cached.context_length || 2048,
+                n_batch: n_threads > 1 ? 512 : 256,
+                n_threads,
+            } )
+
+        } catch ( load_err ) {
+
+            // WASM heap overflow produces a RangeError when the model is too large
+            const is_memory_error = load_err instanceof RangeError
+                || load_err.message?.includes( `memory` )
+                || load_err.message?.includes( `out of bounds` )
+
+            if( is_memory_error ) {
+                console.error( `[wllama] Out of memory loading ${ model_id } (${ file_size_mb } MB)` )
+                throw new Error( `This model is too large for your browser's memory. Try a smaller model or close other tabs.` )
+            }
+
+            console.error( `[wllama] Failed to load model:`, load_err )
+            throw load_err
+
+        }
 
         this._loaded_model_id = model_id
 
@@ -189,6 +211,7 @@ export default class WllamaProvider {
         // where eos_token is not provided to the Jinja template engine)
         const template = this._wllama.getChatTemplate()
         this._template_type = detect_template_type( template )
+        console.info( `[wllama] Detected template type: ${ this._template_type }` )
 
         // Get EOS and BOS token strings by detokenizing their IDs
         // detokenize returns Uint8Array so we need to decode to string
@@ -200,8 +223,9 @@ export default class WllamaProvider {
             if( eos_id >= 0 ) this._eos_str = decoder.decode( await this._wllama.detokenize( [ eos_id ] ) )
             if( bos_id >= 0 ) this._bos_str = decoder.decode( await this._wllama.detokenize( [ bos_id ] ) )
             if( eot_id >= 0 ) this._eot_str = decoder.decode( await this._wllama.detokenize( [ eot_id ] ) )
-        } catch {
-            // Keep defaults if detokenize fails
+            console.info( `[wllama] Tokens — EOS: ${ JSON.stringify( this._eos_str ) }, BOS: ${ JSON.stringify( this._bos_str ) }, EOT: ${ JSON.stringify( this._eot_str ) }` )
+        } catch ( token_err ) {
+            console.warn( `[wllama] Could not resolve special tokens, using defaults`, token_err )
         }
 
         // Update last_used_at timestamp
@@ -267,6 +291,7 @@ export default class WllamaProvider {
         // Use our own chat formatter which correctly includes EOS/BOS tokens
         // (wllama's formatChat has a bug where eos_token is not provided to the Jinja engine)
         const prompt = this._format_chat( messages )
+        console.debug( `[wllama] Prompt (${ this._template_type }):\n`, prompt )
 
         let last_text = ``
         let token_count = 0

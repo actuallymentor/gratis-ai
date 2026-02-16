@@ -43,10 +43,14 @@ export default function use_llm() {
         set_is_loading( true )
         set_error( null )
 
+        console.info( `[use_llm] Loading model: ${ model_id }` )
+
         try {
             await provider.load_model( model_id, on_progress )
             set_loaded_model_id( model_id )
+            console.info( `[use_llm] Model loaded successfully: ${ model_id }` )
         } catch ( err ) {
+            console.error( `[use_llm] Model load failed:`, err.message )
             set_error( err.message )
             throw err
         } finally {
@@ -90,6 +94,8 @@ export default function use_llm() {
 
             const elapsed_ms = performance.now() - start_time
 
+            console.info( `[use_llm] Generation complete: ${ token_count } tokens in ${ elapsed_ms.toFixed( 0 ) }ms` )
+
             // When the model produces nothing, show a helpful message instead of "0 tokens"
             if( token_count === 0 && !full_text ) {
                 full_text = `*The model returned an empty response. This can happen when the chat template is incompatible. Try a different model or check the browser console for details.*`
@@ -107,6 +113,7 @@ export default function use_llm() {
 
         } catch ( err ) {
             if( err.name !== `AbortError` && !err.message?.includes( `abort` ) ) {
+                console.error( `[use_llm] Generation error:`, err.message )
                 set_error( err.message )
             }
             const elapsed_ms = performance.now() - start_time

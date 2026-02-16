@@ -236,9 +236,13 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
         const active_id = localStorage.getItem( `locallm:settings:active_model_id` )
         if( active_id && !loaded_model_id ) {
+            console.info( `[ChatPage] Auto-loading saved model: ${ active_id }` )
             load_model( active_id )
                 .then( () => set_model_loaded( true ) )
-                .catch( () => set_model_loaded( false ) )
+                .catch( ( err ) => {
+                    console.error( `[ChatPage] Auto-load failed:`, err.message )
+                    set_model_loaded( false )
+                } )
         } else if( !active_id ) {
             // No model configured — transition from null (unknown) to false (no model)
             set_model_loaded( false )
@@ -575,7 +579,8 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             localStorage.setItem( `locallm:settings:active_model_id`, model_id )
             await refresh_models()
         } catch ( err ) {
-            console.error( `Failed to switch model:`, err )
+            console.error( `[ChatPage] Failed to switch model:`, err )
+            toast.error( err.message || `Failed to load model` )
         }
 
     }, [ load_model, refresh_models ] )
