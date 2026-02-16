@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle } from 'lucide-react'
 import { get_recommended_tier } from '../../utils/device_detection'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
-import { get_model_for_tier, TIER_INFO, format_file_size, can_fit_in_memory } from '../../providers/model_registry'
+import { MODEL_REGISTRY, format_file_size, can_fit_in_memory } from '../../providers/model_registry'
 
 const Container = styled.div`
     display: flex;
@@ -89,8 +89,8 @@ const DownloadButton = styled.button`
     &:hover { opacity: 0.85; }
 `
 
-// "Choose a different model" is hidden behind a toggle (progressive disclosure)
-const ChangeModelToggle = styled.button`
+// Toggle buttons for expanding model lists
+const ToggleButton = styled.button`
     display: flex;
     align-items: center;
     gap: ${ ( { theme } ) => theme.spacing.xs };
@@ -103,9 +103,9 @@ const ChangeModelToggle = styled.button`
     &:hover { color: ${ ( { theme } ) => theme.colors.text_secondary }; }
 `
 
-const AlternativePanel = styled.div`
+const ExpandPanel = styled.div`
     overflow: hidden;
-    max-height: ${ ( { $expanded } ) => $expanded ? `600px` : `0px` };
+    max-height: ${ ( { $expanded } ) => $expanded ? `800px` : `0px` };
     opacity: ${ ( { $expanded } ) => $expanded ? 1 : 0 };
     visibility: ${ ( { $expanded } ) => $expanded ? `visible` : `hidden` };
     transition: max-height 0.3s ease, opacity 0.2s ease, visibility 0.3s ease;
@@ -117,14 +117,14 @@ const AlternativePanel = styled.div`
     }
 `
 
-const AlternativeList = styled.div`
+const ModelList = styled.div`
     display: flex;
     flex-direction: column;
     gap: ${ ( { theme } ) => theme.spacing.sm };
     padding-top: ${ ( { theme } ) => theme.spacing.md };
 `
 
-const AlternativeOption = styled.button`
+const ModelOption = styled.button`
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -134,6 +134,7 @@ const AlternativeOption = styled.button`
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
     text-align: left;
     transition: border-color 0.15s;
+    opacity: ${ ( { $dimmed } ) => $dimmed ? 0.6 : 1 };
 
     &:hover {
         border-color: ${ ( { theme } ) => theme.colors.text_muted };
@@ -195,18 +196,13 @@ const MemoryWarning = styled.div`
     margin-top: ${ ( { theme } ) => theme.spacing.sm };
 `
 
-// User-friendly tier descriptions (no jargon)
-const FRIENDLY_TIER_LABELS = {
-    lightweight: `Faster responses, smaller download`,
-    medium: `Good balance of speed and quality`,
-    heavy: `Smarter responses, larger download`,
-    ultra: `Best quality, requires powerful hardware`,
-}
+// Tier order for sorting — higher quality models sort later
+const TIER_ORDER = { lightweight: 0, medium: 1, heavy: 2, ultra: 3 }
 
 /**
  * Model selection page - auto-recommends based on device, hides complexity.
- * Uses progressive disclosure: recommended model shown prominently,
- * alternatives hidden behind "Choose a different model" toggle.
+ * Compatible models are shown prominently. Models too large for the browser's
+ * memory are hidden under a "More models" toggle with a warning.
  * @returns {JSX.Element}
  */
 export default function ModelSelectPage() {
@@ -214,34 +210,61 @@ export default function ModelSelectPage() {
     const navigate = useNavigate()
     const location = useLocation()
     const [ show_alternatives, set_show_alternatives ] = useState( false )
+    const [ show_large_models, set_show_large_models ] = useState( false )
 
     // Get capabilities from navigation state or detect fresh
     const { capabilities: detected_caps, max_model_bytes } = use_device_capabilities()
     const capabilities = location.state?.capabilities || detected_caps
 
-    // Determine recommended tier and allow override
-    const recommended = useMemo( () => {
+    // Determine recommended tier based on device
+    const recommended_tier = useMemo( () => {
         if( !capabilities ) return `lightweight`
         return get_recommended_tier( capabilities )
     }, [ capabilities ] )
 
-    const [ selected_tier, set_selected_tier ] = useState( null )
-    const active_tier = selected_tier || recommended
+    // Split models into those that fit in memory and those that don't
+    const { compatible_models, oversized_models } = useMemo( () => {
 
-    // Get the model for the active tier
-    const selected_model = get_model_for_tier( active_tier )
+        const compatible = MODEL_REGISTRY.filter( m => can_fit_in_memory( m, max_model_bytes ) )
+        const oversized = MODEL_REGISTRY.filter( m => !can_fit_in_memory( m, max_model_bytes ) )
 
-    // Check if a model exceeds the browser's estimated WASM memory budget
-    const is_too_large = ( model ) => !can_fit_in_memory( model, max_model_bytes )
+        // Sort both lists: recommended tier first, then by size descending (best quality first)
+        const sort_models = ( a, b ) => {
+            const a_recommended = a.category === recommended_tier ? 1 : 0
+            const b_recommended = b.category === recommended_tier ? 1 : 0
+            if( a_recommended !== b_recommended ) return b_recommended - a_recommended
+            return TIER_ORDER[ b.category ] - TIER_ORDER[ a.category ]
+        }
+
+        compatible.sort( sort_models )
+        oversized.sort( sort_models )
+
+        return { compatible_models: compatible, oversized_models: oversized }
+
+    }, [ max_model_bytes, recommended_tier ] )
+
+    // The recommended model is the best compatible model (first after sorting)
+    const recommended_model = compatible_models[ 0 ] || null
+
+    // Track user selection — null means use the recommendation
+    const [ selected_model_id, set_selected_model_id ] = useState( null )
+
+    // Resolve the active model — user pick or recommendation
+    const active_model = selected_model_id
+        ? MODEL_REGISTRY.find( m => m.id === selected_model_id )
+        : recommended_model
 
     const handle_download = () => {
-        if( !selected_model ) return
-        navigate( `/download`, { state: { model: selected_model } } )
+        if( !active_model ) return
+        navigate( `/download`, { state: { model: active_model } } )
     }
 
-    const handle_select_tier = ( tier ) => {
-        set_selected_tier( tier )
+    const handle_select = ( model_id ) => {
+        set_selected_model_id( model_id )
     }
+
+    // Alternative models = compatible models minus the currently selected one
+    const alternative_models = compatible_models.filter( m => m.id !==  active_model?.id  )
 
     return <Container>
 
@@ -252,17 +275,19 @@ export default function ModelSelectPage() {
         </Subtitle>
 
         { /* Recommended model card — always visible */ }
-        { selected_model && <RecommendedCard>
+        { active_model && <RecommendedCard>
             <RecommendedBadge>
                 <Sparkles size={ 14 } />
-                { active_tier === recommended ? `Recommended for your device` : FRIENDLY_TIER_LABELS[ active_tier ] }
+                { active_model.id === recommended_model?.id
+                    ? `Recommended for your device`
+                    : active_model.description }
             </RecommendedBadge>
-            <ModelName>{ selected_model.name }</ModelName>
-            <ModelDescription>{ selected_model.description }</ModelDescription>
+            <ModelName>{ active_model.name }</ModelName>
+            <ModelDescription>{ active_model.description }</ModelDescription>
             <ModelSize>
-                Download size: { format_file_size( selected_model.file_size_bytes ) }
+                Download size: { format_file_size( active_model.file_size_bytes ) }
             </ModelSize>
-            { is_too_large( selected_model ) && <MemoryWarning>
+            { !can_fit_in_memory( active_model, max_model_bytes ) && <MemoryWarning>
                 <AlertTriangle size={ 14 } />
                 May be too large for this browser
             </MemoryWarning> }
@@ -284,44 +309,77 @@ export default function ModelSelectPage() {
             <StepDot />
         </StepIndicator>
 
-        { /* Progressive disclosure: alternatives hidden by default */ }
-        <ChangeModelToggle
-            data-testid="change-model-toggle"
-            onClick={ () => set_show_alternatives( !show_alternatives ) }
-        >
-            Choose a different model
-            { show_alternatives ? <ChevronUp size={ 14 } /> : <ChevronDown size={ 14 } /> }
-        </ChangeModelToggle>
+        { /* Compatible alternatives — hidden behind toggle */ }
+        { alternative_models.length > 0 && <>
+            <ToggleButton
+                data-testid="change-model-toggle"
+                onClick={ () => set_show_alternatives( !show_alternatives ) }
+            >
+                Choose a different model
+                { show_alternatives ? <ChevronUp size={ 14 } /> : <ChevronDown size={ 14 } /> }
+            </ToggleButton>
 
-        <AlternativePanel $expanded={ show_alternatives }>
-            <AlternativeList>
-                { TIER_INFO.map( ( { tier } ) => {
-                    const model = get_model_for_tier( tier )
-                    if( !model ) return null
-                    const is_selected = tier === active_tier
-                    const is_recommended = tier === recommended
-                    const too_large = is_too_large( model )
-                    return <AlternativeOption
-                        key={ tier }
-                        $active={ is_selected }
-                        onClick={ () => handle_select_tier( tier ) }
-                    >
-                        <OptionInfo>
-                            <OptionName>
-                                { model.name }
-                                { is_recommended ? ` (recommended)` : `` }
-                            </OptionName>
-                            <OptionMeta>
-                                { FRIENDLY_TIER_LABELS[ tier ] } — { format_file_size( model.file_size_bytes ) }
-                                { too_large ? ` — may not fit in memory` : `` }
-                            </OptionMeta>
-                        </OptionInfo>
-                        { too_large && !is_selected && <AlertTriangle size={ 14 } style={ { color: `#e67e22`, flexShrink: 0 } } /> }
-                        { is_selected && <CheckIcon><Check size={ 16 } /></CheckIcon> }
-                    </AlternativeOption>
-                } ) }
-            </AlternativeList>
-        </AlternativePanel>
+            <ExpandPanel $expanded={ show_alternatives }>
+                <ModelList>
+                    { alternative_models.map( ( model ) => {
+                        const is_selected = model.id === active_model?.id
+                        const is_recommended = model.id === recommended_model?.id
+                        return <ModelOption
+                            key={ model.id }
+                            $active={ is_selected }
+                            onClick={ () => handle_select( model.id ) }
+                        >
+                            <OptionInfo>
+                                <OptionName>
+                                    { model.name }
+                                    { is_recommended ? ` (recommended)` : `` }
+                                </OptionName>
+                                <OptionMeta>
+                                    { model.parameters_label } — { format_file_size( model.file_size_bytes ) }
+                                </OptionMeta>
+                            </OptionInfo>
+                            { is_selected && <CheckIcon><Check size={ 16 } /></CheckIcon> }
+                        </ModelOption>
+                    } ) }
+                </ModelList>
+            </ExpandPanel>
+        </> }
+
+        { /* Oversized models — separate toggle with warning context */ }
+        { oversized_models.length > 0 && <>
+            <ToggleButton onClick={ () => set_show_large_models( !show_large_models ) }>
+                More models
+                { show_large_models ? <ChevronUp size={ 14 } /> : <ChevronDown size={ 14 } /> }
+            </ToggleButton>
+
+            <ExpandPanel $expanded={ show_large_models }>
+                <MemoryWarning style={ { marginBottom: 8 } }>
+                    <AlertTriangle size={ 14 } />
+                    These models may be too large for your browser
+                </MemoryWarning>
+                <ModelList>
+                    { oversized_models.map( ( model ) => {
+                        const is_selected = model.id === active_model?.id
+                        return <ModelOption
+                            key={ model.id }
+                            $active={ is_selected }
+                            $dimmed={ !is_selected }
+                            onClick={ () => handle_select( model.id ) }
+                        >
+                            <OptionInfo>
+                                <OptionName>{ model.name }</OptionName>
+                                <OptionMeta>
+                                    { model.parameters_label } — { format_file_size( model.file_size_bytes ) }
+                                </OptionMeta>
+                            </OptionInfo>
+                            { is_selected
+                                ? <CheckIcon><Check size={ 16 } /></CheckIcon>
+                                : <AlertTriangle size={ 14 } style={ { color: `#e67e22`, flexShrink: 0 } } /> }
+                        </ModelOption>
+                    } ) }
+                </ModelList>
+            </ExpandPanel>
+        </> }
 
     </Container>
 
