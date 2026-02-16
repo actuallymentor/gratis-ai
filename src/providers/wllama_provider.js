@@ -169,6 +169,17 @@ export default class WllamaProvider {
 
         this._loaded_model_id = model_id
 
+        // Verify the tokenizer works — some GGUF files (e.g. QuantFactory conversions)
+        // have broken tokenizer data that crashes the WASM runtime. Catching this
+        // early gives the user a clear message instead of silent 0-token outputs.
+        try {
+            const probe_tokens = await this._wllama.tokenize( `Hello`, true )
+            if( !probe_tokens?.length ) throw new Error( `empty` )
+        } catch {
+            await this.unload_model()
+            throw new Error( `This model file has an incompatible tokenizer. Please delete it and re-download.` )
+        }
+
         // Detect the chat template type and cache EOS/BOS token strings
         // so we can format prompts ourselves (wllama's formatChat has a bug
         // where eos_token is not provided to the Jinja template engine)

@@ -12,15 +12,33 @@ export const build_download_url = ( repo, file_name ) =>
     `${ HF_BASE_URL }/${ repo }/resolve/main/${ file_name }`
 
 /**
- * Checks if a model is already cached in IndexedDB
+ * Checks if a model is already cached in IndexedDB.
+ * When expected_repo and expected_file are provided, also verifies the cached
+ * model came from the same source — this handles registry changes (e.g. switching
+ * from a broken GGUF publisher to a working one).
  * @param {string} model_id - Model identifier
+ * @param {string} [expected_repo] - Expected hugging_face_repo value
+ * @param {string} [expected_file] - Expected file_name value
  * @returns {Promise<boolean>}
  */
-export const is_model_cached = async ( model_id ) => {
+export const is_model_cached = async ( model_id, expected_repo, expected_file ) => {
 
     const db = await get_db()
-    const model = await db.get( `models`, model_id )
-    return !!model
+    const cached = await db.get( `models`, model_id )
+    if( !cached ) return false
+
+    // If caller provided expected source, verify the cache matches
+    // A mismatch means the registry changed to a different GGUF file
+    if( expected_repo && cached.hugging_face_repo !== expected_repo ) {
+        await db.delete( `models`, model_id )
+        return false
+    }
+    if( expected_file && cached.file_name !== expected_file ) {
+        await db.delete( `models`, model_id )
+        return false
+    }
+
+    return true
 
 }
 

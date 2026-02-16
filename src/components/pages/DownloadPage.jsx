@@ -201,8 +201,8 @@ export default function DownloadPage() {
         if( download_started_ref.current ) return
         download_started_ref.current = true
 
-        // Check if already cached
-        is_model_cached( model.id ).then( cached => {
+        // Check if already cached (also validates the source repo/file match)
+        is_model_cached( model.id, model.hugging_face_repo, model.file_name ).then( cached => {
 
             if( cached ) {
                 on_complete()
