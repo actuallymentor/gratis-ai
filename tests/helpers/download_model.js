@@ -12,7 +12,7 @@ import { expect } from '@playwright/test'
  */
 export async function download_model_via_ui( page, model, opts = {} ) {
 
-    const { download_timeout = 300_000, load_timeout = 60_000 } = opts
+    const { download_timeout = 300_000, load_timeout = 180_000 } = opts
 
     // Step 1 — Welcome page
     await page.goto( `/` )

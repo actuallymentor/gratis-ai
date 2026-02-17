@@ -4,11 +4,15 @@ import { download_model_via_ui, send_message } from '../helpers/download_model'
 import { wait_for_inference } from '../helpers/wait_for_inference'
 
 // Tests downloading two models and switching between them.
-// Verifies inference works with each and chat history is preserved across switches.
+// Requires two models to fit in browser memory simultaneously.
+// Skipped by default — set CI_INFERENCE=1 to enable.
 
 test.describe( `Model Switching`, () => {
 
     test.setTimeout( 600_000 )
+
+    // Skip unless explicitly enabled — needs > 1 GB browser memory for two models
+    test.skip( !process.env.CI_INFERENCE && !process.env.FULL_INFERENCE, `Requires CI_INFERENCE=1 (large downloads)` )
 
     test( `download two models, switch between them, verify inference`, async ( { page } ) => {
 
@@ -36,8 +40,8 @@ test.describe( `Model Switching`, () => {
         // Confirm and download
         await page.getByTestId( `model-select-confirm-btn` ).click()
         await expect( page ).toHaveURL( /\/download/ )
-        await expect( page ).toHaveURL( /\/chat/, { timeout: 300_000 } )
-        await expect( page.getByTestId( `chat-input` ) ).toBeEnabled( { timeout: 60_000 } )
+        await expect( page ).toHaveURL( /\/chat/, { timeout: 600_000 } )
+        await expect( page.getByTestId( `chat-input` ) ).toBeEnabled( { timeout: 120_000 } )
 
         // Send a message with model 2
         await send_message( page, TEST_PROMPT )

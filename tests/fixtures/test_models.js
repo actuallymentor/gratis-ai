@@ -1,13 +1,17 @@
 /**
  * Test model definitions for multi-architecture E2E testing.
- * Uses Q2_K quantisation for smallest possible downloads.
+ *
+ * IMPORTANT: These must match the model_registry.js definitions — the UI
+ * download flow always uses the registry's repo/file/quantisation, not these.
+ * These fixtures are used to identify models by name in the UI and to set
+ * correct timeouts based on real file sizes.
  *
  * Architecture coverage:
- * - SmolLM2 360M  → ChatML template
- * - TinyLlama 1.1B → Zephyr template
- * - Llama 3.2 1B  → Llama3 template
- * - DeepSeek R1 Qwen 1.5B → ChatML template (Qwen arch)
- * - Mistral 7B    → Mistral template
+ * - SmolLM2 360M  → ChatML template (Q4_K_M, ~271 MB)
+ * - TinyLlama 1.1B → Zephyr template (Q4_K_M, ~670 MB)
+ * - Llama 3.2 1B  → Llama3 template (Q4_K_M, ~808 MB)
+ * - DeepSeek R1 Qwen 1.5B → ChatML template (Q4_K_M, ~1.1 GB)
+ * - Mistral 7B    → Mistral template (Q5_K_M, ~5.1 GB)
  */
 
 export const MODELS = {
@@ -17,10 +21,7 @@ export const MODELS = {
         name: `SmolLM2 360M`,
         architecture: `smollm`,
         template: `chatml`,
-        repo: `QuantFactory/SmolLM2-360M-Instruct-GGUF`,
-        file_name: `SmolLM2-360M-Instruct.Q2_K.gguf`,
-        url: `https://huggingface.co/QuantFactory/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct.Q2_K.gguf`,
-        size_bytes: 200_000_000,
+        size_mb: 271,
         tier: `fast`,
     },
 
@@ -29,10 +30,7 @@ export const MODELS = {
         name: `TinyLlama 1.1B Chat`,
         architecture: `llama`,
         template: `zephyr`,
-        repo: `QuantFactory/TinyLlama-1.1B-Chat-v1.0-GGUF`,
-        file_name: `TinyLlama-1.1B-Chat-v1.0.Q2_K.gguf`,
-        url: `https://huggingface.co/QuantFactory/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/TinyLlama-1.1B-Chat-v1.0.Q2_K.gguf`,
-        size_bytes: 420_000_000,
+        size_mb: 670,
         tier: `medium`,
     },
 
@@ -41,10 +39,7 @@ export const MODELS = {
         name: `Llama 3.2 1B Instruct`,
         architecture: `llama`,
         template: `llama3`,
-        repo: `bartowski/Llama-3.2-1B-Instruct-GGUF`,
-        file_name: `Llama-3.2-1B-Instruct-Q2_K.gguf`,
-        url: `https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q2_K.gguf`,
-        size_bytes: 500_000_000,
+        size_mb: 808,
         tier: `medium`,
     },
 
@@ -53,10 +48,7 @@ export const MODELS = {
         name: `DeepSeek R1 Distill Qwen 1.5B`,
         architecture: `qwen`,
         template: `chatml`,
-        repo: `bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF`,
-        file_name: `DeepSeek-R1-Distill-Qwen-1.5B-Q2_K.gguf`,
-        url: `https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q2_K.gguf`,
-        size_bytes: 600_000_000,
+        size_mb: 1120,
         tier: `medium`,
     },
 
@@ -65,20 +57,19 @@ export const MODELS = {
         name: `Mistral 7B Instruct`,
         architecture: `mistral`,
         template: `mistral`,
-        repo: `TheBloke/Mistral-7B-Instruct-v0.2-GGUF`,
-        file_name: `mistral-7b-instruct-v0.2.Q2_K.gguf`,
-        url: `https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q2_K.gguf`,
-        size_bytes: 2_700_000_000,
+        size_mb: 5130,
         tier: `heavy`,
     },
 
 }
 
-// Convenience arrays for test iteration
+// Default set for CI: SmolLM2 + TinyLlama covers two different template types
+// in reasonable time (~10-15 min). Use ALL_MODELS for full coverage.
 export const FAST_MODELS = [ MODELS.smollm2 ]
-export const MEDIUM_MODELS = [ MODELS.tinyllama, MODELS.llama32, MODELS.deepseek ]
-export const HEAVY_MODELS = [ MODELS.mistral ]
+export const CI_MODELS = [ MODELS.smollm2, MODELS.tinyllama ]
+export const MEDIUM_MODELS = [ MODELS.smollm2, MODELS.tinyllama, MODELS.llama32 ]
 export const ALL_INFERENCE_MODELS = [ MODELS.smollm2, MODELS.tinyllama, MODELS.llama32, MODELS.deepseek ]
+export const HEAVY_MODELS = [ MODELS.mistral ]
 
 // Test prompt designed to produce short, verifiable responses across all architectures
 export const TEST_PROMPT = `What is 2+2? Answer with just the number.`

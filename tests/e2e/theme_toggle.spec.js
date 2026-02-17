@@ -12,19 +12,21 @@ test.describe( `Theme Toggle`, () => {
 
     } )
 
-    test( `clicking theme toggle cycles theme`, async ( { page } ) => {
+    test( `clicking theme toggle cycles to dark mode`, async ( { page } ) => {
 
         await page.goto( `/chat` )
 
-        // Get initial theme state
+        // Get initial background (system default, resolves to light in headless Chromium)
         const initial_bg = await page.evaluate( () =>
             getComputedStyle( document.body ).backgroundColor
         )
 
-        // Click theme toggle
+        // Theme cycle is system → light → dark — click twice to reach dark mode
+        // (system and light both resolve to white bg in headless Chromium)
+        await page.getByTestId( `theme-toggle` ).click()
         await page.getByTestId( `theme-toggle` ).click()
 
-        // Background color should change (theme cycled)
+        // Background should now be dark
         await expect( async () => {
             const new_bg = await page.evaluate( () =>
                 getComputedStyle( document.body ).backgroundColor
@@ -38,7 +40,8 @@ test.describe( `Theme Toggle`, () => {
 
         await page.goto( `/chat` )
 
-        // Click theme toggle to change theme
+        // Click twice to reach dark mode (system → light → dark)
+        await page.getByTestId( `theme-toggle` ).click()
         await page.getByTestId( `theme-toggle` ).click()
         await page.waitForTimeout( 500 )
 

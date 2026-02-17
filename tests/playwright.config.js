@@ -11,6 +11,11 @@ export default defineConfig( {
         headless: true,
         viewport: { width: 1280, height: 720 },
         actionTimeout: 30_000,
+        // GGUF model blobs are stored in IndexedDB — allow unlimited storage
+        // so large models don't hit Chromium's default quota
+        launchOptions: {
+            args: [ `--unlimited-storage` ],
+        },
     },
     webServer: {
         command: `npm run dev`,
@@ -31,7 +36,7 @@ export default defineConfig( {
         // Inference tests — download real models and run WASM inference
         {
             name: `inference`,
-            testMatch: /\b(inference_multimodel|model_switching|abort_generation|chat_history_with_inference|settings_with_inference|deep_link_with_inference)\.spec\.js$/,
+            testMatch: /\/(inference|inference_multimodel|model_switching|abort_generation|chat_history_with_inference|settings_with_inference|deep_link_with_inference)\.spec\.js$/,
             retries: 0,
             workers: 1,
             timeout: 600_000,

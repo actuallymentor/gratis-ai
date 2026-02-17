@@ -1,22 +1,33 @@
 import { test, expect } from '@playwright/test'
-import { ALL_INFERENCE_MODELS, TEST_PROMPT } from '../fixtures/test_models'
+import { FAST_MODELS, CI_MODELS, ALL_INFERENCE_MODELS, TEST_PROMPT } from '../fixtures/test_models'
 import { download_model_via_ui, send_message } from '../helpers/download_model'
 import { wait_for_inference } from '../helpers/wait_for_inference'
 
-// Multi-architecture inference tests — downloads and runs 4 different model architectures
-// Covers: SmolLM2 (ChatML), TinyLlama (Zephyr), Llama 3.2 (Llama3), DeepSeek R1 (ChatML/Qwen)
+// Multi-architecture inference tests — downloads and runs real model inference.
+//
+// Default: SmolLM2 only (~25s) — covers full UI download + ChatML inference.
+// Tiers controlled by env vars:
+//   CI_INFERENCE=1        → SmolLM2 + TinyLlama (~15 min, needs > 1 GB browser memory)
+//   FULL_INFERENCE=1      → All 4 architectures (~40+ min, needs > 2 GB browser memory)
+
+const models = process.env.FULL_INFERENCE
+    ? ALL_INFERENCE_MODELS
+    : process.env.CI_INFERENCE
+        ? CI_MODELS
+        : FAST_MODELS
 
 test.describe( `Multi-Architecture Inference`, () => {
 
-    // Each model test: download (~2-5 min) + inference (~1-3 min)
-    test.setTimeout( 600_000 )
-
-    for( const model of ALL_INFERENCE_MODELS ) {
+    for( const model of models ) {
 
         test( `${ model.name } (${ model.template }) — download and inference`, async ( { page } ) => {
 
+            // Scale timeouts with model size — ~1 second per MB download + loading + inference
+            const download_timeout = Math.max( 300_000, model.size_mb * 1_000 )
+            test.setTimeout( download_timeout + 300_000 )
+
             // Download the model through the full onboarding UI flow
-            await download_model_via_ui( page, model, { download_timeout: 300_000 } )
+            await download_model_via_ui( page, model, { download_timeout } )
 
             // Verify chat is ready
             await expect( page.getByText( `What can I help with?` ) ).toBeVisible()
