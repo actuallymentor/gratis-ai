@@ -18,22 +18,24 @@ test.describe( `Abort Generation`, () => {
         // Send a long prompt that will generate a lengthy response
         await send_message( page, LONG_PROMPT )
 
-        // Wait for streaming to begin — at least one assistant message should appear
-        await expect( page.locator( `[data-testid="assistant-message"]` ).first() ).toBeVisible( { timeout: 60_000 } )
+        // Wait for streaming to begin — poll until assistant message has actual text content
+        await expect( async () => {
+            const msgs = await page.locator( `[data-testid="assistant-message"]` ).all()
+            expect( msgs.length ).toBeGreaterThanOrEqual( 1 )
+            const content = await msgs[ msgs.length - 1 ].textContent()
+            expect( content?.length ).toBeGreaterThan( 0 )
+        } ).toPass( { timeout: 60_000 } )
 
-        // Wait a bit for some tokens to stream in
-        await page.waitForTimeout( 3_000 )
-
-        // Click the stop button to abort generation
+        // Try to abort — if the stop button is still visible, click it.
+        // SmolLM2 is fast enough that generation may already be done.
         const stop_btn = page.getByTestId( `stop-btn` )
-        if( await stop_btn.isVisible() ) {
+        const stop_was_visible = await stop_btn.isVisible()
+        if( stop_was_visible ) {
             await stop_btn.click()
+            await page.waitForTimeout( 1_000 )
         }
 
-        // Give it a moment to settle
-        await page.waitForTimeout( 1_000 )
-
-        // Verify partial response was preserved (some text should be there)
+        // Verify response text is preserved regardless of whether we aborted or it finished
         const messages = await page.locator( `[data-testid="assistant-message"]` ).all()
         expect( messages.length ).toBeGreaterThanOrEqual( 1 )
         const text = await messages[ messages.length - 1 ].textContent()

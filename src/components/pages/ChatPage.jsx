@@ -231,8 +231,14 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const has_pending_model = !!localStorage.getItem( `locallm:settings:active_model_id` )
     const is_loading_model = is_model_loading ||  model_loaded === null && has_pending_model 
 
+    // Guard against StrictMode double-mount starting two model loads
+    const load_started_ref = useRef( false )
+
     // Try loading the active model on mount
     useEffect( () => {
+
+        if( load_started_ref.current ) return
+        load_started_ref.current = true
 
         const active_id = localStorage.getItem( `locallm:settings:active_model_id` )
         if( active_id && !loaded_model_id ) {
@@ -478,7 +484,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                 }
             }
 
-            // Handle ?q= parameter — auto-send message
+            // Handle ?q= parameter — auto-send message once model is ready
             if( q_param && ( model_loaded || loaded_model_id ) ) {
                 query_processed_ref.current = true
                 set_search_params( {}, { replace: true } )
@@ -486,9 +492,12 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                 return
             }
 
-            // Clean up URL
-            query_processed_ref.current = true
-            set_search_params( {}, { replace: true } )
+            // Only clean up URL if we're sure model state is resolved (not null = still loading)
+            // This prevents wiping ?q= before the model finishes loading
+            if( model_loaded !== null ) {
+                query_processed_ref.current = true
+                set_search_params( {}, { replace: true } )
+            }
 
         }
 

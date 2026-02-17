@@ -15,10 +15,16 @@ test.describe( `Deep Links with Inference`, () => {
         // First, download a model through the normal flow
         await download_model_via_ui( page, MODELS.smollm2, { download_timeout: 300_000 } )
 
-        // Now navigate to /chat with a query param — the model is cached so it should load
+        // Wait for chat input to be enabled (model fully loaded and ready)
+        await expect( page.getByTestId( `chat-input` ) ).toBeEnabled( { timeout: 60_000 } )
+
+        // Navigate to /chat with a query param — model is cached so it will reload
         await page.goto( `/chat?q=What+is+the+capital+of+France` )
 
-        // The message should be auto-sent and inference should start
+        // Wait for model to be ready again before expecting inference
+        await expect( page.getByTestId( `chat-input` ) ).toBeEnabled( { timeout: 120_000 } )
+
+        // The ?q= param auto-sends the message once the model is loaded
         // Wait for an assistant response to appear
         await wait_for_inference( page, 1, 180_000 )
 

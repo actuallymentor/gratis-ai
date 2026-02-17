@@ -35,6 +35,11 @@ test.describe( `Chat History with Inference`, () => {
         await send_message( page, `Remember the word: pineapple. Repeat it back.` )
         await wait_for_inference( page, 1, 180_000 )
 
+        // Wait for generation stats to appear — indicates the full generation cycle
+        // (including IndexedDB persist) has completed
+        await expect( page.getByTestId( `generation-stats` ) ).toBeVisible( { timeout: 30_000 } )
+        await page.waitForTimeout( 500 )
+
         // Verify assistant message exists
         const first_response = await page.locator( `[data-testid="assistant-message"]` ).first().textContent()
         expect( first_response?.length ).toBeGreaterThan( 0 )
@@ -72,8 +77,11 @@ test.describe( `Chat History with Inference`, () => {
         const testid = await conversations.first().getAttribute( `data-testid` )
         const conv_id = testid?.replace( `sidebar-conversation-`, `` )
 
-        // Click the delete button for this conversation
+        // Click the delete button once to show "Delete?" confirmation
         const delete_btn = page.getByTestId( `sidebar-delete-${ conv_id }` )
+        await delete_btn.click()
+
+        // Click again to confirm the actual deletion
         await delete_btn.click()
 
         // The conversation should be removed from the sidebar

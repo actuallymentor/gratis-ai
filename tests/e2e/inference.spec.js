@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test'
+import { MODELS } from '../fixtures/test_models'
+import { select_model_on_page } from '../helpers/download_model'
 import { wait_for_inference } from '../helpers/wait_for_inference'
 
 // This test downloads a real model and runs inference — tag @slow for separate runs
@@ -17,11 +19,12 @@ test.describe( `E2E Inference`, () => {
         await expect( page.getByTestId( `get-started-btn` ) ).toBeEnabled( { timeout: 15_000 } )
         await page.getByTestId( `get-started-btn` ).click()
 
-        // Step 2 — Model select page (now auto-recommends)
+        // Step 2 — Model select page: explicitly pick SmolLM2 (smallest, Docker-friendly)
         await expect( page ).toHaveURL( /\/select-model/ )
         await expect( page.getByText( `We found a model for you` ) ).toBeVisible()
+        await select_model_on_page( page, MODELS.smollm2 )
 
-        // Confirm the auto-recommended model (no need to pick a tier)
+        // Confirm the selected model to start download
         await page.getByTestId( `model-select-confirm-btn` ).click()
 
         // Step 3 — Download page — wait for download to complete
