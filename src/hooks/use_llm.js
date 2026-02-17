@@ -10,6 +10,10 @@ import { create_provider } from '../providers/factory'
 export default function use_llm() {
 
     const provider_ref = useRef( null )
+    // Single shared promise prevents TOCTOU race — StrictMode double-mount
+    // can cause multiple concurrent ensure_provider() calls, each of which
+    // would create a separate provider if we only check provider_ref
+    const provider_promise_ref = useRef( null )
     const [ is_loading, set_is_loading ] = useState( false )
     const [ is_generating, set_is_generating ] = useState( false )
     const [ loaded_model_id, set_loaded_model_id ] = useState( null )
@@ -18,12 +22,15 @@ export default function use_llm() {
 
     /**
      * Ensure the provider is initialised (handles async creation)
+     * Uses a shared promise so all concurrent callers get the same instance
      */
     const ensure_provider = useCallback( async () => {
-        if( !provider_ref.current ) {
-            provider_ref.current = await create_provider()
+        if( !provider_promise_ref.current ) {
+            provider_promise_ref.current = create_provider()
         }
-        return provider_ref.current
+        const provider = await provider_promise_ref.current
+        provider_ref.current = provider
+        return provider
     }, [] )
 
     // Initialize provider on mount

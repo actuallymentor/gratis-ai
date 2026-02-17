@@ -228,8 +228,12 @@ export default class WllamaProvider {
             console.warn( `[wllama] Could not resolve special tokens, using defaults`, token_err )
         }
 
-        // Update last_used_at timestamp
-        await db.put( `models`, { ...cached, last_used_at: Date.now() } )
+        // Update last_used_at timestamp — non-critical, don't fail the load if storage is full
+        try {
+            await db.put( `models`, { ...cached, last_used_at: Date.now() } )
+        } catch {
+            console.warn( `[wllama] Could not update last_used_at (storage quota may be full)` )
+        }
 
         if( on_progress ) {
             on_progress( { progress: 1, status: `Model ready` } )
