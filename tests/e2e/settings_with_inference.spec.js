@@ -5,15 +5,38 @@ import { wait_for_inference } from '../helpers/wait_for_inference'
 
 // Tests that settings affect inference: custom system prompt,
 // low temperature, and max tokens limiting response length.
+//
+// All tests share a single browser context so the model is downloaded once.
 
 test.describe( `Settings with Inference`, () => {
 
     test.setTimeout( 600_000 )
 
-    test( `custom system prompt affects response`, async ( { page } ) => {
+    /** @type {import('@playwright/test').BrowserContext} */
+    let context
 
-        // Download model
+    /** @type {import('@playwright/test').Page} */
+    let page
+
+    test.beforeAll( async ( { browser } ) => {
+
+        // Single shared context — model downloads once into IndexedDB
+        context = await browser.newContext()
+        page = await context.newPage()
+
+        // Download model through the full onboarding UI flow
         await download_model_via_ui( page, MODELS.smollm2, { download_timeout: 300_000 } )
+
+    } )
+
+    test.afterAll( async () => {
+        await context?.close()
+    } )
+
+    // Tests run in order — each uses the shared page
+    test.describe.configure( { mode: `serial` } )
+
+    test( `custom system prompt affects response`, async () => {
 
         // Open settings and set a custom system prompt
         await page.getByTestId( `settings-btn` ).click()
@@ -39,10 +62,11 @@ test.describe( `Settings with Inference`, () => {
 
     } )
 
-    test( `max tokens limits response length`, async ( { page } ) => {
+    test( `max tokens limits response length`, async () => {
 
-        // Download model
-        await download_model_via_ui( page, MODELS.smollm2, { download_timeout: 300_000 } )
+        // Start a new chat to isolate from previous test's system prompt
+        await page.getByTestId( `new-chat-btn` ).click()
+        await expect( page.locator( `[data-testid="assistant-message"]` ) ).toHaveCount( 0, { timeout: 5_000 } )
 
         // Open settings → Advanced tab and set very low max tokens
         await page.getByTestId( `settings-btn` ).click()

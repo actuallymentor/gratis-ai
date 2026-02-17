@@ -12,7 +12,8 @@ test.describe( `Query Parameter Support`, () => {
 
     test( `model=nonexistent shows model not found toast`, async ( { page } ) => {
         await page.goto( `/chat?model=nonexistent-model-xyz` )
-        await expect( page.getByText( `Model not found` ) ).toBeVisible( { timeout: 5000 } )
+        // The toast may render multiple times in StrictMode — use .first()
+        await expect( page.getByText( `Model not found` ).first() ).toBeVisible( { timeout: 5000 } )
     } )
 
     test( `model param is cleaned from URL`, async ( { page } ) => {

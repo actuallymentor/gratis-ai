@@ -465,8 +465,17 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
         const process_params = async () => {
 
-            // Handle ?model= parameter
+            // Handle ?model= parameter — mark processed immediately to prevent
+            // StrictMode double-mount from firing the toast multiple times
             if( model_param ) {
+
+                query_processed_ref.current = true
+                set_search_params( ( prev ) => {
+                    const next = new URLSearchParams( prev )
+                    next.delete( `model` )
+                    return next
+                }, { replace: true } )
+
                 const parsed = parse_model_param( model_param )
                 if( parsed ) {
                     const match = resolve_cached_model( parsed, cached_models )
@@ -482,6 +491,9 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                         toast.error( `Model not found: ${ parsed.value }` )
                     }
                 }
+
+                // If no ?q= param, we're done
+                if( !q_param ) return
             }
 
             // Handle ?q= parameter — auto-send message once model is ready

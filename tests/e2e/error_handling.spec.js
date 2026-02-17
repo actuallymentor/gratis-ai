@@ -8,7 +8,9 @@ test.describe( `Error Handling`, () => {
     test( `invalid model param shows toast error`, async ( { page } ) => {
 
         await page.goto( `/chat?model=nonexistent-model-xyz` )
-        await expect( page.getByText( `Model not found` ) ).toBeVisible( { timeout: 5_000 } )
+
+        // The toast may render multiple times in StrictMode — use .first()
+        await expect( page.getByText( `Model not found` ).first() ).toBeVisible( { timeout: 5_000 } )
 
     } )
 
