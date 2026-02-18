@@ -12,7 +12,7 @@ export const build_download_url = ( repo, file_name ) =>
     `${ HF_BASE_URL }/${ repo }/resolve/main/${ file_name }`
 
 /**
- * Checks if a model is already cached in IndexedDB.
+ * Checks if a model is already cached (filesystem in Electron, IndexedDB in browser).
  * When expected_repo and expected_file are provided, also verifies the cached
  * model came from the same source — this handles registry changes (e.g. switching
  * from a broken GGUF publisher to a working one).
@@ -23,6 +23,28 @@ export const build_download_url = ( repo, file_name ) =>
  */
 export const is_model_cached = async ( model_id, expected_repo, expected_file ) => {
 
+    // In Electron, check the filesystem manifest via IPC
+    if( window.electronAPI?.list_models ) {
+
+        const models = await window.electronAPI.list_models()
+        const cached = models.find( ( m ) => m.id === model_id )
+        if( !cached ) return false
+
+        // Verify the cache matches the expected source
+        if( expected_repo && cached.hugging_face_repo !== expected_repo ) {
+            await window.electronAPI.delete_model( model_id )
+            return false
+        }
+        if( expected_file && cached.file_name !== expected_file ) {
+            await window.electronAPI.delete_model( model_id )
+            return false
+        }
+
+        return true
+
+    }
+
+    // Browser path: check IndexedDB
     const db = await get_db()
     const cached = await db.get( `models`, model_id )
     if( !cached ) return false
@@ -55,8 +77,8 @@ export const get_cached_model = async ( model_id ) => {
 }
 
 /**
- * Downloads a GGUF model from Hugging Face with progress tracking
- * Stores the model blob and metadata in IndexedDB
+ * Downloads a GGUF model from Hugging Face with progress tracking.
+ * In Electron, saves to the filesystem via IPC. In browser, stores in IndexedDB.
  *
  * @param {Object} model - Model definition
  * @param {string} model.id - Unique model ID
@@ -78,6 +100,48 @@ export const download_model = async ( model, on_progress, signal ) => {
 
     on_progress( { progress: 0, bytes_loaded: 0, bytes_total: model.file_size_bytes, status: `Starting download...` } )
 
+    // In Electron, delegate to the main process which streams directly to disk.
+    // This avoids buffering multi-GB files in the renderer's V8 heap.
+    if( window.electronAPI?.download_model ) {
+
+        // Forward progress events from main process
+        const cleanup = window.electronAPI.on_download_progress( on_progress )
+
+        // Wire up abort signal to main process
+        const abort_handler = () => window.electronAPI.abort_download()
+        if( signal ) signal.addEventListener( `abort`, abort_handler )
+
+        try {
+            await window.electronAPI.download_model( {
+                url,
+                id: model.id,
+                file_name: model.file_name,
+                expected_size: model.file_size_bytes,
+                metadata: {
+                    name: model.name,
+                    category: model.category,
+                    hugging_face_repo: model.hugging_face_repo,
+                    file_name: model.file_name,
+                    parameters_label: model.parameters_label,
+                    quantization: model.quantization,
+                    context_length: model.context_length,
+                },
+            } )
+        } catch ( err ) {
+            if( err?.message?.includes( `abort` ) ) {
+                throw Object.assign( new Error( `Download aborted` ), { name: `AbortError` } )
+            }
+            throw err
+        } finally {
+            cleanup()
+            if( signal ) signal.removeEventListener( `abort`, abort_handler )
+        }
+
+        return
+
+    }
+
+    // Browser path: download in renderer and store in IndexedDB
     const response = await fetch( url, { signal } )
 
     if( !response.ok ) {
@@ -113,9 +177,8 @@ export const download_model = async ( model, on_progress, signal ) => {
 
     // Combine chunks into a single blob
     const blob = new Blob( chunks )
-    const now = Date.now()
 
-    // Store in IndexedDB
+    const now = Date.now()
     const db = await get_db()
     await db.put( `models`, {
         id: model.id,

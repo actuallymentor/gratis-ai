@@ -5,6 +5,7 @@ const os = require( `os` )
 
 let main_window = null
 let native_provider = null
+let active_download_controller = null
 
 // ---------------------------------------------------
 // Native inference provider using node-llama-cpp
@@ -244,9 +245,24 @@ const register_ipc_handlers = () => {
 
         ensure_models_dir()
 
-        // Write the GGUF file
+        // Write the GGUF file with explicit fsync to ensure data is flushed
+        // before node-llama-cpp mmap()s the file
         const model_path = path.join( MODELS_DIR, file_name )
-        fs.writeFileSync( model_path, Buffer.from( array_buffer ) )
+        const buffer = Buffer.from( array_buffer )
+        let fd
+        try {
+            fd = fs.openSync( model_path, 'w', 0o644 )
+            fs.writeSync( fd, buffer, 0, buffer.length )
+            fs.fsyncSync( fd )
+        } finally {
+            if( fd !== undefined ) fs.closeSync( fd )
+        }
+
+        // Verify the written file matches expected size
+        const written_size = fs.statSync( model_path ).size
+        if( written_size !== buffer.length ) {
+            throw new Error( `Model file size mismatch: expected ${ buffer.length } bytes, wrote ${ written_size }` )
+        }
 
         // Update manifest
         const manifest = read_manifest()
@@ -267,6 +283,114 @@ const register_ipc_handlers = () => {
 
         write_manifest( manifest )
 
+        return { success: true }
+
+    } )
+
+    // Download a model by streaming directly to disk — avoids buffering
+    // the entire file in renderer memory (which fails for large models)
+    ipcMain.handle( `llm:download_model`, async ( _event, { url, id, file_name, metadata, expected_size } ) => {
+
+        ensure_models_dir()
+
+        active_download_controller = new AbortController()
+        const model_path = path.join( MODELS_DIR, file_name )
+
+        try {
+
+            const response = await fetch( url, { signal: active_download_controller.signal } )
+            if( !response.ok ) throw new Error( `Download failed: ${ response.status } ${ response.statusText }` )
+
+            const content_length = parseInt( response.headers.get( `content-length` ) ) || expected_size || 0
+            const reader = response.body.getReader()
+            let bytes_loaded = 0
+            let last_progress_time = 0
+
+            // Stream chunks directly to disk — never holds the full file in memory
+            let fd
+            try {
+
+                fd = fs.openSync( model_path, `w`, 0o644 )
+
+                while( true ) {
+
+                    const { done, value } = await reader.read()
+                    if( done ) break
+
+                    fs.writeSync( fd, value )
+                    bytes_loaded += value.byteLength
+
+                    // Throttle progress events to ~4 updates/sec
+                    const now = Date.now()
+                    if( now - last_progress_time >= 250 ) {
+                        last_progress_time = now
+                        main_window?.webContents?.send( `llm:download-progress`, {
+                            progress: content_length > 0 ? bytes_loaded / content_length : 0,
+                            bytes_loaded,
+                            bytes_total: content_length,
+                            status: `Downloading...`,
+                        } )
+                    }
+
+                }
+
+                fs.fsyncSync( fd )
+
+            } finally {
+                if( fd !== undefined ) fs.closeSync( fd )
+            }
+
+            // Verify written size matches expected
+            const written_size = fs.statSync( model_path ).size
+            if( content_length > 0 && written_size !== content_length ) {
+                fs.unlinkSync( model_path )
+                throw new Error( `Size mismatch: expected ${ content_length }, wrote ${ written_size }` )
+            }
+
+            // Update manifest
+            const manifest = read_manifest()
+            const now = Date.now()
+            const existing_index = manifest.findIndex( ( m ) => m.id === id )
+            if( existing_index !== -1 ) manifest.splice( existing_index, 1 )
+
+            manifest.push( {
+                ...metadata,
+                id,
+                file_name,
+                file_size_bytes: written_size,
+                cached_at: now,
+                last_used_at: now,
+            } )
+
+            write_manifest( manifest )
+
+            // Final progress event
+            main_window?.webContents?.send( `llm:download-progress`, {
+                progress: 1,
+                bytes_loaded: written_size,
+                bytes_total: written_size,
+                status: `Complete`,
+            } )
+
+            return { success: true }
+
+        } catch( err ) {
+            // Clean up partial file on failure
+            if( fs.existsSync( model_path ) ) fs.unlinkSync( model_path )
+            throw err
+        } finally {
+            active_download_controller = null
+        }
+
+    } )
+
+    // Abort an in-progress download
+    ipcMain.handle( `llm:abort_download`, async () => {
+
+        if( active_download_controller ) {
+            active_download_controller.abort()
+            active_download_controller = null
+        }
         return { success: true }
 
     } )

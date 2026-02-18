@@ -25,4 +25,13 @@ contextBridge.exposeInMainWorld( `electronAPI`, {
     delete_model: ( model_id ) => ipcRenderer.invoke( `llm:delete_model`, model_id ),
     save_model: ( data ) => ipcRenderer.invoke( `llm:save_model`, data ),
 
+    // Streaming download — main process downloads and writes directly to disk
+    download_model: ( data ) => ipcRenderer.invoke( `llm:download_model`, data ),
+    abort_download: () => ipcRenderer.invoke( `llm:abort_download` ),
+    on_download_progress: ( callback ) => {
+        const handler = ( _, data ) => callback( data )
+        ipcRenderer.on( `llm:download-progress`, handler )
+        return () => ipcRenderer.removeListener( `llm:download-progress`, handler )
+    },
+
 } )
