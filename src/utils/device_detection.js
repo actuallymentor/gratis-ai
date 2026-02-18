@@ -7,6 +7,13 @@
  * @property {string} gpu.renderer - GPU name from WebGL debug info
  * @property {string} gpu.vendor - GPU vendor
  * @property {number} gpu.estimated_vram - Estimated VRAM in GB (heuristic)
+ * @property {boolean} [gpu.metal] - True if Metal GPU acceleration is available (Electron only)
+ * @property {boolean} [gpu.cuda] - True if CUDA GPU acceleration is available (Electron only)
+ * @property {boolean} [gpu.vulkan] - True if Vulkan GPU acceleration is available (Electron only)
+ * @property {number} [gpu.vram_total] - Total VRAM in bytes (Electron only)
+ * @property {number} [gpu.vram_free] - Free VRAM in bytes (Electron only)
+ * @property {number} [gpu.unified_memory] - Unified memory pool in bytes — >0 on Apple Silicon (Electron only)
+ * @property {string[]} [gpu.device_names] - GPU device names (Electron only)
  * @property {Object} memory
  * @property {number|null} memory.device_memory - navigator.deviceMemory (GB), null if unavailable
  * @property {number|null} memory.js_heap_limit - performance.memory?.jsHeapSizeLimit (Chrome only)
@@ -14,6 +21,8 @@
  * @property {number} cpu.cores - navigator.hardwareConcurrency
  * @property {'browser' | 'electron'} runtime
  */
+
+import { MODEL_REGISTRY } from '../providers/model_registry'
 
 /**
  * Probes WebGPU for GPU info and VRAM heuristic
@@ -117,7 +126,10 @@ const estimate_vram_from_name = ( renderer ) => {
 }
 
 /**
- * Detects device capabilities for model tier recommendation
+ * Detects device capabilities for model tier recommendation.
+ * In Electron, uses real system info from the main process via IPC — including
+ * GPU type, VRAM, and unified memory detection from node-llama-cpp.
+ * In browser, uses navigator APIs and WebGPU/WebGL probing.
  * @returns {Promise<DeviceCapabilities>}
  */
 export const detect_capabilities = async () => {
@@ -127,7 +139,53 @@ export const detect_capabilities = async () => {
         ? `electron`
         : `browser`
 
-    // Probe GPU capabilities
+    // In Electron, fetch real system info + GPU capabilities from the main process
+    if( runtime === `electron` ) {
+
+        const sys = await window.electronAPI.get_system_info()
+        const total_gb = sys.total_memory / 1_000_000_000
+        const gpu = sys.gpu || {}
+
+        // Determine a human-readable renderer name
+        const device_names = gpu.device_names || []
+        const renderer = device_names.length
+            ? device_names.join( `, ` )
+            : gpu.type ? `${ gpu.type } (node-llama-cpp)` : `CPU`
+
+        return {
+            gpu: {
+                available: !!gpu.type,
+                webgpu: false,
+                webgl: false,
+                renderer,
+                vendor: `System`,
+                estimated_vram: gpu.vram_total ? gpu.vram_total / 1_000_000_000 : 0,
+                // Native GPU capabilities from node-llama-cpp
+                metal: !!gpu.metal,
+                cuda: !!gpu.cuda,
+                vulkan: !!gpu.vulkan,
+                vram_total: gpu.vram_total || 0,
+                vram_free: gpu.vram_free || 0,
+                unified_memory: gpu.unified_memory || 0,
+                device_names,
+            },
+            memory: {
+                device_memory: total_gb,
+                total_bytes: sys.total_memory,
+                free_bytes: sys.free_memory,
+                js_heap_limit: null,
+            },
+            cpu: {
+                cores: sys.cpus,
+            },
+            runtime,
+            platform: sys.platform,
+            arch: sys.arch,
+        }
+
+    }
+
+    // Browser path: probe GPU capabilities
     const webgpu_info = await detect_webgpu()
     const webgl_info = detect_webgl()
 
@@ -168,17 +226,62 @@ export const detect_capabilities = async () => {
 }
 
 /**
- * Estimate the largest GGUF model (in bytes) that the browser can load into WASM memory.
- * WASM on most browsers is limited to a 4 GB address space. The runtime, KV cache, and
- * scratch buffers consume overhead on top of the raw model weights, so we apply a
- * conservative multiplier. When navigator.deviceMemory is available we also cap against
- * that, since a 2 GB device can't spare 4 GB for WASM even if the address space allows it.
+ * Estimate the largest GGUF model (in bytes) the runtime can load.
+ *
+ * ## Electron (native node-llama-cpp)
+ *
+ * No WASM ceiling — the memory budget depends on GPU acceleration:
+ *
+ * - **Apple Silicon (Metal + unified memory)**: GPU and CPU share the same RAM
+ *   pool. macOS allows Metal to access ~75% of physical RAM. For a single-user
+ *   chat app with no other heavy processes, we budget 75% of total RAM.
+ *   → 8 GB Mac ≈ 6.0 GB budget  → Mistral 7B (5.1 GB) fits
+ *   → 16 GB Mac ≈ 12 GB budget  → Mistral 7B easily, larger models too
+ *   → 32 GB Mac ≈ 24 GB budget  → Mixtral 8x7B (26.4 GB) is tight
+ *
+ * - **Discrete GPU (CUDA / Vulkan)**: VRAM is the primary constraint for
+ *   GPU-offloaded layers, but node-llama-cpp can spill to system RAM for
+ *   partial offloading. We use max(VRAM, 60% of system RAM) to allow both
+ *   pure-GPU and hybrid configurations.
+ *
+ * - **CPU-only (no GPU)**: System RAM is the sole constraint. This is a
+ *   dedicated desktop app doing single-user inference, so 70% of total RAM
+ *   is a safe budget (leaves room for OS, Electron, and small apps).
+ *
+ * ## Browser (WASM)
+ *
+ * Limited to the ~4 GB WASM 32-bit address space minus runtime overhead.
+ * Also capped against navigator.deviceMemory and jsHeapSizeLimit.
+ *
  * @param {DeviceCapabilities} capabilities
  * @returns {number} Max model file size in bytes
  */
 export const estimate_max_model_bytes = ( capabilities ) => {
 
-    // Hard ceiling: WASM 32-bit address space minus runtime overhead (~600 MB)
+    if( capabilities?.runtime === `electron` && capabilities?.memory?.total_bytes ) {
+
+        const total = capabilities.memory.total_bytes
+        const gpu = capabilities.gpu || {}
+
+        // Apple Silicon: unified memory — GPU/CPU share the same pool
+        // macOS lets Metal access up to ~75% of physical RAM
+        if( gpu.unified_memory > 0 || gpu.metal ) {
+            const unified = gpu.unified_memory || total
+            return Math.floor( unified * 0.75 )
+        }
+
+        // Discrete GPU: use the larger of VRAM or 60% system RAM
+        // This handles partial offloading where layers spill to system RAM
+        if( gpu.vram_total > 0 ) {
+            return Math.floor( Math.max( gpu.vram_total, total * 0.6 ) )
+        }
+
+        // CPU-only: 70% of system RAM — generous for a dedicated single-user app
+        return Math.floor( total * 0.7 )
+
+    }
+
+    // Browser: hard ceiling from WASM 32-bit address space minus runtime overhead (~600 MB)
     const wasm_ceiling = 3_400_000_000
 
     // If the browser reports device memory, use 60% of it as a soft cap
@@ -195,18 +298,48 @@ export const estimate_max_model_bytes = ( capabilities ) => {
 }
 
 /**
- * Recommends a model tier based on device capabilities
+ * Recommends the best model tier based on device capabilities.
+ *
+ * The logic walks the model registry from highest quality to lowest and picks
+ * the highest tier where at least one model fits within the memory budget.
+ * This means the recommendation is always grounded in what can actually run,
+ * not in abstract VRAM thresholds.
+ *
+ * For Electron with GPU acceleration, the memory budget is much larger than
+ * browser WASM, so heavier models become reachable on modest hardware:
+ *
+ * | Hardware                    | Budget  | Recommended tier |
+ * |-----------------------------|---------|-----------------|
+ * | Apple Silicon 8 GB (Metal)  | ~6.0 GB | heavy (Mistral 7B at 5.1 GB) |
+ * | Apple Silicon 16 GB (Metal) | ~12 GB  | heavy (Mistral 7B comfortably) |
+ * | Apple Silicon 32 GB (Metal) | ~24 GB  | heavy (Mixtral 8x7B is 26.4 GB — too tight) |
+ * | Apple Silicon 64 GB (Metal) | ~48 GB  | ultra (Mixtral 8x7B at 26.4 GB) |
+ * | NVIDIA 8 GB VRAM            | ~8 GB   | heavy (Mistral 7B fits) |
+ * | NVIDIA 12+ GB VRAM          | ~12 GB  | heavy (Mistral 7B comfortably) |
+ * | NVIDIA 24+ GB VRAM          | ~24 GB  | heavy (Mixtral needs >26 GB) |
+ * | CPU-only 8 GB               | ~5.6 GB | heavy (Mistral 7B at 5.1 GB fits) |
+ * | CPU-only 4 GB               | ~2.8 GB | medium |
+ * | Browser 8 GB                | ~3.4 GB | medium (WASM ceiling) |
+ * | Browser 4 GB                | ~2.4 GB | medium |
+ *
  * @param {DeviceCapabilities} capabilities
  * @returns {'lightweight' | 'medium' | 'heavy' | 'ultra'}
  */
 export const get_recommended_tier = ( capabilities ) => {
 
-    const { gpu, memory } = capabilities
-    const vram = gpu.estimated_vram
+    const budget = estimate_max_model_bytes( capabilities )
 
-    if( vram >= 16 ) return `ultra`
-    if( vram >= 8 ) return `heavy`
-    if( vram >= 4 ||  memory.device_memory && memory.device_memory >= 8  ) return `medium`
+    // Walk tiers from highest to lowest — first tier where a model fits wins
+    // Models need ~1.2x their file size once loaded (weights + KV cache + overhead)
+    const tiers_descending = [ `ultra`, `heavy`, `medium`, `lightweight` ]
+
+    for( const tier of tiers_descending ) {
+        const fits = MODEL_REGISTRY.some( m =>
+            m.category === tier && m.file_size_bytes * 1.2 <= budget
+        )
+        if( fits ) return tier
+    }
+
     return `lightweight`
 
 }

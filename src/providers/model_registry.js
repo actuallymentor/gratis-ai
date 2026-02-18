@@ -126,10 +126,10 @@ export const get_model_for_tier = ( tier ) =>
  * @returns {Array<{ tier: string, label: string, description: string }>}
  */
 export const TIER_INFO = [
-    { tier: `lightweight`, label: `Lightweight`, description: `Best for integrated GPUs and low-memory devices` },
-    { tier: `medium`, label: `Medium`, description: `Good for 4-8 GB VRAM or 8+ GB RAM` },
-    { tier: `heavy`, label: `Heavy`, description: `For discrete GPUs with 8-16 GB VRAM` },
-    { tier: `ultra`, label: `Ultra`, description: `For high-end GPUs with 16+ GB VRAM` },
+    { tier: `lightweight`, label: `Lightweight`, description: `For low-memory devices (under 4 GB RAM)` },
+    { tier: `medium`, label: `Medium`, description: `Good for most browsers and 4+ GB devices` },
+    { tier: `heavy`, label: `Heavy`, description: `Best for Electron — 8+ GB RAM or Metal/CUDA GPU` },
+    { tier: `ultra`, label: `Ultra`, description: `For 32+ GB unified memory or 24+ GB VRAM` },
 ]
 
 /**

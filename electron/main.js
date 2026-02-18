@@ -231,14 +231,66 @@ const create_window = () => {
  */
 const register_ipc_handlers = () => {
 
-    // Return real system info for device detection
-    ipcMain.handle( `system:info`, () => ( {
-        total_memory: os.totalmem(),
-        free_memory: os.freemem(),
-        cpus: os.cpus().length,
-        platform: process.platform,
-        arch: process.arch,
-    } ) )
+    // Return real system info for device detection — includes GPU capabilities
+    // detected via node-llama-cpp so the renderer can make smart model recommendations
+    ipcMain.handle( `system:info`, async () => {
+
+        const info = {
+            total_memory: os.totalmem(),
+            free_memory: os.freemem(),
+            cpus: os.cpus().length,
+            platform: process.platform,
+            arch: process.arch,
+            gpu: {
+                type: false,
+                metal: false,
+                cuda: false,
+                vulkan: false,
+                vram_total: 0,
+                vram_free: 0,
+                unified_memory: 0,
+                device_names: [],
+            },
+        }
+
+        // Detect GPU via node-llama-cpp — getLlama() returns a cached singleton,
+        // so this is fast after the first call and gives us real hardware data
+        try {
+
+            const { getLlama } = await import( `node-llama-cpp` )
+            const llama = await getLlama()
+
+            // Which GPU backend is active
+            const gpu_type = llama.gpu
+            if( gpu_type ) info.gpu.type = gpu_type
+            info.gpu.metal = gpu_type === `metal`
+            info.gpu.cuda = gpu_type === `cuda`
+            info.gpu.vulkan = gpu_type === `vulkan`
+
+            // VRAM state — unified_memory > 0 means Apple Silicon shared memory pool
+            const vram = await llama.getVramState()
+            info.gpu.vram_total = vram.total || 0
+            info.gpu.vram_free = vram.free || 0
+            info.gpu.unified_memory = vram.unifiedSize || 0
+
+            // Human-readable GPU names for display
+            info.gpu.device_names = await llama.getGpuDeviceNames()
+
+        } catch {
+
+            // node-llama-cpp unavailable or GPU detection failed — use platform heuristics
+            // Apple Silicon always has Metal with unified memory
+            if( process.platform === `darwin` && process.arch === `arm64` ) {
+                info.gpu.type = `metal`
+                info.gpu.metal = true
+                info.gpu.unified_memory = os.totalmem()
+            }
+
+        }
+
+        return info
+
+    } )
 
     // Save a downloaded model to the filesystem
     ipcMain.handle( `llm:save_model`, async ( _event, { id, file_name, array_buffer, metadata } ) => {
