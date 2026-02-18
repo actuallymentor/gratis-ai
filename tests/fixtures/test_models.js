@@ -63,11 +63,9 @@ export const MODELS = {
 
 }
 
-// Default set for CI: SmolLM2 + TinyLlama covers two different template types
-// in reasonable time (~10-15 min). Use ALL_MODELS for full coverage.
-export const FAST_MODELS = [ MODELS.smollm2 ]
-export const CI_MODELS = [ MODELS.smollm2, MODELS.tinyllama ]
-export const MEDIUM_MODELS = [ MODELS.smollm2, MODELS.tinyllama, MODELS.llama32 ]
+// Default: SmolLM2 + TinyLlama covers two different template types in reasonable time (~15 min).
+// Set FULL_INFERENCE=1 for all 4 architectures (~40+ min).
+export const DEFAULT_MODELS = [ MODELS.smollm2, MODELS.tinyllama ]
 export const ALL_INFERENCE_MODELS = [ MODELS.smollm2, MODELS.tinyllama, MODELS.llama32, MODELS.deepseek ]
 export const HEAVY_MODELS = [ MODELS.mistral ]
 

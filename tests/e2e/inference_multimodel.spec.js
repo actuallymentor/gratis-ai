@@ -1,20 +1,16 @@
 import { test, expect } from '@playwright/test'
-import { FAST_MODELS, CI_MODELS, ALL_INFERENCE_MODELS, TEST_PROMPT } from '../fixtures/test_models'
+import { DEFAULT_MODELS, ALL_INFERENCE_MODELS, TEST_PROMPT } from '../fixtures/test_models'
 import { download_model_via_ui, send_message } from '../helpers/download_model'
 import { wait_for_inference } from '../helpers/wait_for_inference'
 
 // Multi-architecture inference tests — downloads and runs real model inference.
 //
-// Default: SmolLM2 only (~25s) — covers full UI download + ChatML inference.
-// Tiers controlled by env vars:
-//   CI_INFERENCE=1        → SmolLM2 + TinyLlama (~15 min, needs > 1 GB browser memory)
-//   FULL_INFERENCE=1      → All 4 architectures (~40+ min, needs > 2 GB browser memory)
+// Default: SmolLM2 + TinyLlama (~15 min) — covers ChatML + Zephyr templates.
+// Set FULL_INFERENCE=1 for all 4 architectures (~40+ min, needs > 2 GB browser memory).
 
 const models = process.env.FULL_INFERENCE
     ? ALL_INFERENCE_MODELS
-    : process.env.CI_INFERENCE
-        ? CI_MODELS
-        : FAST_MODELS
+    : DEFAULT_MODELS
 
 test.describe( `Multi-Architecture Inference`, () => {
 
