@@ -10,10 +10,15 @@ const Container = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-height: 100vh;
+    height: 100vh;
     padding: ${ ( { theme } ) => theme.spacing.xl };
     overflow-y: auto;
+
+    /* Flex spacers center content when it fits, collapse when it overflows */
+    &::before, &::after {
+        content: '';
+        flex: 1 0 0px;
+    }
 `
 
 const Title = styled.h1`
@@ -104,11 +109,12 @@ const ToggleButton = styled.button`
 `
 
 const ExpandPanel = styled.div`
-    overflow: hidden;
-    max-height: ${ ( { $expanded } ) => $expanded ? `800px` : `0px` };
+    overflow-y: ${ ( { $expanded } ) => $expanded ? `auto` : `hidden` };
+    max-height: ${ ( { $expanded } ) => $expanded ? `min( 800px, 40vh )` : `0px` };
     opacity: ${ ( { $expanded } ) => $expanded ? 1 : 0 };
     visibility: ${ ( { $expanded } ) => $expanded ? `visible` : `hidden` };
     transition: max-height 0.3s ease, opacity 0.2s ease, visibility 0.3s ease;
+    flex-shrink: 0;
     width: 100%;
     max-width: 420px;
 
