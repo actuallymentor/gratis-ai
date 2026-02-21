@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react'
 import styled from 'styled-components'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, Loader, Link } from 'lucide-react'
 import { get_recommended_tier } from '../../utils/device_detection'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import { MODEL_REGISTRY, format_file_size, can_fit_in_memory } from '../../providers/model_registry'
+import { parse_hf_url, resolve_hf_model } from '../../utils/hf_url_parser'
 
 const Container = styled.div`
     display: flex;
@@ -201,6 +202,71 @@ const MemoryWarning = styled.div`
     margin-top: ${ ( { theme } ) => theme.spacing.sm };
 `
 
+// Custom model input section
+const CustomModelSection = styled.div`
+    margin-top: ${ ( { theme } ) => theme.spacing.md };
+    padding-top: ${ ( { theme } ) => theme.spacing.md };
+    border-top: 1px solid ${ ( { theme } ) => theme.colors.border };
+    width: 100%;
+`
+
+const CustomModelLabel = styled.div`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: ${ ( { theme } ) => theme.colors.text_secondary };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+`
+
+const CustomModelRow = styled.form`
+    display: flex;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+`
+
+const CustomModelInput = styled.input`
+    flex: 1;
+    padding: ${ ( { theme } ) => theme.spacing.sm };
+    border: 1px solid ${ ( { theme } ) => theme.colors.border };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    font-size: 0.85rem;
+    background: ${ ( { theme } ) => theme.colors.input_background };
+    color: ${ ( { theme } ) => theme.colors.text };
+    min-width: 0;
+
+    &::placeholder { color: ${ ( { theme } ) => theme.colors.text_muted }; }
+    &:focus { outline: none; border-color: ${ ( { theme } ) => theme.colors.accent }; }
+`
+
+const LoadButton = styled.button`
+    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
+    border: 1px solid ${ ( { theme } ) => theme.colors.accent };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    color: ${ ( { theme } ) => theme.colors.accent };
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.15s;
+
+    &:hover:not(:disabled) { background: ${ ( { theme } ) => theme.colors.accent }; color: white; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+`
+
+const CustomModelStatus = styled.div`
+    font-size: 0.8rem;
+    margin-top: ${ ( { theme } ) => theme.spacing.xs };
+    color: ${ ( { $error, theme } ) => $error ?  theme.colors.error || `#e74c3c`  : theme.colors.text_muted };
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+`
+
+const Spinner = styled( Loader )`
+    animation: spin 1s linear infinite;
+    @keyframes spin { to { transform: rotate( 360deg ); } }
+`
+
 // Tier order for sorting — higher quality models sort later
 const TIER_ORDER = { lightweight: 0, medium: 1, heavy: 2, ultra: 3 }
 
@@ -208,6 +274,7 @@ const TIER_ORDER = { lightweight: 0, medium: 1, heavy: 2, ultra: 3 }
  * Model selection page - auto-recommends based on device, hides complexity.
  * Models that fit in memory are recommended first. Oversized models appear
  * lower in the list with a warning label but remain selectable.
+ * Supports custom HuggingFace model URLs via inline input.
  * @returns {JSX.Element}
  */
 export default function ModelSelectPage() {
@@ -255,10 +322,18 @@ export default function ModelSelectPage() {
     // Track user selection — null means use the recommendation
     const [ selected_model_id, set_selected_model_id ] = useState( null )
 
-    // Resolve the active model — user pick or recommendation
-    const active_model = selected_model_id
-        ? MODEL_REGISTRY.find( m => m.id === selected_model_id )
-        : recommended_model
+    // Custom model state
+    const [ custom_url, set_custom_url ] = useState( `` )
+    const [ custom_model, set_custom_model ] = useState( null )
+    const [ custom_loading, set_custom_loading ] = useState( false )
+    const [ custom_error, set_custom_error ] = useState( null )
+
+    // Resolve the active model — custom model takes priority, then user pick, then recommendation
+    const active_model = custom_model
+        ? custom_model
+        : selected_model_id
+            ? MODEL_REGISTRY.find( m => m.id === selected_model_id )
+            : recommended_model
 
     const handle_download = () => {
         if( !active_model ) return
@@ -266,7 +341,37 @@ export default function ModelSelectPage() {
     }
 
     const handle_select = ( model_id ) => {
+        // Selecting a preset model clears any custom selection
+        set_custom_model( null )
+        set_custom_error( null )
         set_selected_model_id( model_id )
+    }
+
+    // Resolve a custom HuggingFace URL into a model definition
+    const handle_custom_load = async ( e ) => {
+
+        e.preventDefault()
+
+        const parsed = parse_hf_url( custom_url )
+        if( !parsed ) {
+            set_custom_error( `Invalid URL. Use a HuggingFace link like hf.co/org/repo:Q4_K_M` )
+            return
+        }
+
+        set_custom_loading( true )
+        set_custom_error( null )
+        set_custom_model( null )
+        set_selected_model_id( null )
+
+        try {
+            const model = await resolve_hf_model( parsed )
+            set_custom_model( model )
+        } catch ( err ) {
+            set_custom_error( err.message )
+        } finally {
+            set_custom_loading( false )
+        }
+
     }
 
     // All models except the currently active one
@@ -284,14 +389,17 @@ export default function ModelSelectPage() {
         { active_model && <RecommendedCard>
             <RecommendedBadge>
                 <Sparkles size={ 14 } />
-                { active_model.id === recommended_model?.id
-                    ? `Recommended for your device`
-                    : active_model.description }
+                { custom_model
+                    ? `Custom HuggingFace model`
+                    : active_model.id === recommended_model?.id
+                        ? `Recommended for your device`
+                        : active_model.description }
             </RecommendedBadge>
             <ModelName>{ active_model.name }</ModelName>
             <ModelDescription>{ active_model.description }</ModelDescription>
             <ModelSize>
                 Download size: { format_file_size( active_model.file_size_bytes ) }
+                { active_model.quantization && ` — ${ active_model.quantization }` }
             </ModelSize>
             { !can_fit_in_memory( active_model, max_model_bytes ) && <MemoryWarning>
                 <AlertTriangle size={ 14 } />
@@ -351,6 +459,47 @@ export default function ModelSelectPage() {
                         </ModelOption>
                     } ) }
                 </ModelList>
+
+                { /* Custom HuggingFace model input */ }
+                <CustomModelSection>
+                    <CustomModelLabel>
+                        <Link size={ 14 } />
+                        Custom HuggingFace model
+                    </CustomModelLabel>
+
+                    <CustomModelRow onSubmit={ handle_custom_load }>
+                        <CustomModelInput
+                            data-testid="custom-model-input"
+                            type="text"
+                            placeholder="hf.co/org/repo:Q4_K_M"
+                            value={ custom_url }
+                            onChange={ ( e ) => set_custom_url( e.target.value ) }
+                            disabled={ custom_loading }
+                        />
+                        <LoadButton
+                            data-testid="custom-model-load-btn"
+                            type="submit"
+                            disabled={ custom_loading || !custom_url.trim() }
+                        >
+                            { custom_loading ? `Loading...` : `Load` }
+                        </LoadButton>
+                    </CustomModelRow>
+
+                    { /* Status feedback */ }
+                    { custom_loading && <CustomModelStatus>
+                        <Spinner size={ 12 } /> Resolving model...
+                    </CustomModelStatus> }
+
+                    { custom_error && <CustomModelStatus $error>
+                        <AlertTriangle size={ 12 } /> { custom_error }
+                    </CustomModelStatus> }
+
+                    { custom_model && !custom_loading && <CustomModelStatus>
+                        <Check size={ 12 } /> { custom_model.name } — { format_file_size( custom_model.file_size_bytes ) } ({ custom_model.quantization })
+                    </CustomModelStatus> }
+
+                </CustomModelSection>
+
             </ExpandPanel>
         </> }
 

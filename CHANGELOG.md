@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0] - 2026-02-21
+
+### Added
+- Custom HuggingFace model input in model selection — paste hf.co links to load any GGUF model
+- HF URL parser supporting `hf.co/org/repo:quant`, full URLs, and direct file links
+- Auto-resolve model metadata (name, size, quantization) via HuggingFace API
+
 ## [1.1.0] - 2026-02-18
 
 ### Added
