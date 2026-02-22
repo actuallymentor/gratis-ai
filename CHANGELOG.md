@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.1] - 2026-02-22
+
+### Changed
+- Update color palette — primary accent to muted teal `#67a6b6`, harmonize all theme colors
+- Replace hardcoded warning/error hex values with theme token references
+
 ## [1.2.0] - 2026-02-21
 
 ### Added

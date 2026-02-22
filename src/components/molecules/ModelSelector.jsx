@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import styled from 'styled-components'
+import styled, { useTheme } from 'styled-components'
 import { ChevronDown, Check, Plus, Settings, Loader, AlertTriangle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { format_file_size, can_fit_in_memory } from '../../providers/model_registry'
@@ -35,7 +35,7 @@ const Dropdown = styled.div`
     left: 0;
     margin-top: 4px;
     min-width: 220px;
-    max-height: 400px;
+    max-height: min( 400px, 60vh );
     overflow-y: auto;
     background: ${ ( { theme } ) => theme.colors.background };
     border: 1px solid ${ ( { theme } ) => theme.colors.border };
@@ -114,8 +114,11 @@ const NoModelHint = styled.div`
 export default function ModelSelector( { cached_models = [], active_model_id, is_switching, on_switch, on_open_settings } ) {
 
     const [ is_open, set_is_open ] = useState( false )
+    const [ dropdown_max_height, set_dropdown_max_height ] = useState( undefined )
     const container_ref = useRef( null )
+    const dropdown_ref = useRef( null )
     const navigate = useNavigate()
+    const theme = useTheme()
     const { max_model_bytes } = use_device_capabilities()
 
     // Close dropdown on click outside or Escape key
@@ -142,6 +145,24 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
             document.removeEventListener( `mousedown`, handle_click )
             document.removeEventListener( `keydown`, handle_keydown, true )
         }
+
+    }, [ is_open ] )
+
+    // Dynamically compute dropdown max-height based on available viewport space
+    useEffect( () => {
+
+        if( !is_open || !dropdown_ref.current ) return
+
+        const compute_max_height = () => {
+            const rect = dropdown_ref.current.getBoundingClientRect()
+            const available = window.innerHeight - rect.top - 16
+            set_dropdown_max_height( Math.max( 150, available ) )
+        }
+
+        compute_max_height()
+
+        window.addEventListener( `resize`, compute_max_height )
+        return () => window.removeEventListener( `resize`, compute_max_height )
 
     }, [ is_open ] )
 
@@ -178,7 +199,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
         </Trigger>
 
         { is_open &&
-            <Dropdown>
+            <Dropdown ref={ dropdown_ref } style={ dropdown_max_height !== undefined ? { maxHeight: dropdown_max_height } : undefined }>
 
                 { cached_models.length === 0 ?
                     <NoModelHint>
@@ -203,7 +224,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                                     { too_large ? ` — may not fit` : `` }
                                 </ModelMeta>
                             </ModelInfo>
-                            { too_large && <AlertTriangle size={ 12 } style={ { color: `#e67e22`, flexShrink: 0 } } /> }
+                            { too_large && <AlertTriangle size={ 12 } style={ { color: theme.colors.warning, flexShrink: 0 } } /> }
                         </ModelOption>
                     } ) }
 

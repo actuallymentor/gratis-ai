@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import styled from 'styled-components'
+import styled, { useTheme } from 'styled-components'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, Loader, Link } from 'lucide-react'
 import { get_recommended_tier } from '../../utils/device_detection'
@@ -198,7 +198,7 @@ const MemoryWarning = styled.div`
     align-items: center;
     gap: ${ ( { theme } ) => theme.spacing.xs };
     font-size: 0.8rem;
-    color: ${ ( { theme } ) => theme.colors.warning || `#e67e22` };
+    color: ${ ( { theme } ) => theme.colors.warning || `#c49660` };
     margin-top: ${ ( { theme } ) => theme.spacing.sm };
 `
 
@@ -256,7 +256,7 @@ const LoadButton = styled.button`
 const CustomModelStatus = styled.div`
     font-size: 0.8rem;
     margin-top: ${ ( { theme } ) => theme.spacing.xs };
-    color: ${ ( { $error, theme } ) => $error ?  theme.colors.error || `#e74c3c`  : theme.colors.text_muted };
+    color: ${ ( { $error, theme } ) => $error ?  theme.colors.error || `#b85c5c`  : theme.colors.text_muted };
     display: flex;
     align-items: center;
     gap: ${ ( { theme } ) => theme.spacing.xs };
@@ -281,6 +281,7 @@ export default function ModelSelectPage() {
 
     const navigate = useNavigate()
     const location = useLocation()
+    const theme = useTheme()
     const [ show_alternatives, set_show_alternatives ] = useState( false )
 
     // Get capabilities from navigation state or detect fresh
@@ -455,7 +456,7 @@ export default function ModelSelectPage() {
                                 </OptionMeta>
                             </OptionInfo>
                             { is_selected && <CheckIcon><Check size={ 16 } /></CheckIcon> }
-                            { too_large && !is_selected && <AlertTriangle size={ 14 } style={ { color: `#e67e22`, flexShrink: 0 } } /> }
+                            { too_large && !is_selected && <AlertTriangle size={ 14 } style={ { color: theme.colors.warning, flexShrink: 0 } } /> }
                         </ModelOption>
                     } ) }
                 </ModelList>
@@ -496,6 +497,11 @@ export default function ModelSelectPage() {
 
                     { custom_model && !custom_loading && <CustomModelStatus>
                         <Check size={ 12 } /> { custom_model.name } — { format_file_size( custom_model.file_size_bytes ) } ({ custom_model.quantization })
+                    </CustomModelStatus> }
+
+                    { /* Warn browser users about large custom models that may exceed WASM limits */ }
+                    { custom_model && !custom_loading && !window.electronAPI && custom_model.file_size_bytes > 2_000_000_000 && <CustomModelStatus $error>
+                        <AlertTriangle size={ 12 } /> Large models may fail to load in the browser. Consider a smaller quantization or the desktop app.
                     </CustomModelStatus> }
 
                 </CustomModelSection>
