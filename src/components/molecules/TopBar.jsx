@@ -1,5 +1,6 @@
 import styled from 'styled-components'
-import { Sun, Moon, Monitor, Settings, PanelLeft } from 'lucide-react'
+import { Sun, Moon, Monitor, Settings, PanelLeft, ArrowLeftRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import ModelSelector from './ModelSelector'
 
 const Bar = styled.header`
@@ -40,6 +41,20 @@ const IconButton = styled.button`
     &:hover {
         color: ${ ( { theme } ) => theme.colors.text };
     }
+`
+
+const ChangeModelButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    padding: ${ ( { theme } ) => `${ theme.spacing.xs } ${ theme.spacing.sm }` };
+    font-size: 0.75rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    transition: color 0.15s;
+    white-space: nowrap;
+
+    &:hover { color: ${ ( { theme } ) => theme.colors.text_secondary }; }
 `
 
 // Cycle: system -> light -> dark -> system
@@ -85,6 +100,8 @@ export default function TopBar( {
     on_model_switch,
 } ) {
 
+    const navigate = useNavigate()
+
     const cycle_theme = () => {
         const current_index = CYCLE.indexOf( theme_preference )
         const next = CYCLE[ ( current_index + 1 ) % CYCLE.length ]
@@ -93,7 +110,7 @@ export default function TopBar( {
 
     return <Bar>
 
-        { /* Left: sidebar toggle + model selector */ }
+        { /* Left: sidebar toggle + model selector + change model */ }
         <LeftSection>
             { sidebar_collapsed && <IconButton
                 data-testid="sidebar-open-btn"
@@ -109,6 +126,14 @@ export default function TopBar( {
                 on_switch={ on_model_switch }
                 on_open_settings={ on_settings_open }
             />
+            <ChangeModelButton
+                data-testid="change-model-btn"
+                onClick={ () => navigate( `/select-model` ) }
+                aria-label="Change model"
+            >
+                <ArrowLeftRight size={ 14 } />
+                Change model
+            </ChangeModelButton>
         </LeftSection>
 
         { /* Right: theme toggle + settings */ }
