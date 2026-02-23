@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, Loader, Link, Zap } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import use_model_manager from '../../hooks/use_model_manager'
+import use_speed_estimate from '../../hooks/use_speed_estimate'
 import { MODEL_CATALOG, select_model_pair, format_file_size, can_fit_in_memory, estimate_download_time, quality_score } from '../../utils/model_catalog'
 import { parse_hf_url, resolve_hf_model } from '../../utils/hf_url_parser'
 
@@ -402,6 +403,10 @@ export default function ModelSelectPage() {
     const { max_model_bytes } = use_device_capabilities()
     const { cached_models } = use_model_manager()
 
+    // Measure real download speed for accurate time estimates
+    const { speed_bps, run_estimate } = use_speed_estimate()
+    useEffect( () => { run_estimate() }, [ run_estimate ] )
+
     const is_cached = ( model_id ) =>
         cached_models.some( m => m.id === model_id )
 
@@ -518,7 +523,7 @@ export default function ModelSelectPage() {
                 </CardLabel>
                 { is_cached( faster.id )
                     ? <CachedBadge><Check size={ 12 } /> Already downloaded</CachedBadge>
-                    : <DownloadEstimate>Initial download takes { estimate_download_time( faster.file_size_bytes ) }</DownloadEstimate> }
+                    : <DownloadEstimate>Initial download takes { estimate_download_time( faster.file_size_bytes, speed_bps ) }</DownloadEstimate> }
                 <CardDetailsToggle onClick={ ( e ) => {
                     e.stopPropagation(); toggle_details( faster.id ) 
                 } }
@@ -542,7 +547,7 @@ export default function ModelSelectPage() {
                 </CardLabel>
                 { is_cached( smarter.id )
                     ? <CachedBadge><Check size={ 12 } /> Already downloaded</CachedBadge>
-                    : <DownloadEstimate>Initial download takes { estimate_download_time( smarter.file_size_bytes ) }</DownloadEstimate> }
+                    : <DownloadEstimate>Initial download takes { estimate_download_time( smarter.file_size_bytes, speed_bps ) }</DownloadEstimate> }
                 <CardDetailsToggle onClick={ ( e ) => {
                     e.stopPropagation(); toggle_details( smarter.id ) 
                 } }
@@ -565,7 +570,7 @@ export default function ModelSelectPage() {
             </RecommendedBadge>
             { is_cached( active_model.id )
                 ? <CachedBadge><Check size={ 12 } /> Already downloaded</CachedBadge>
-                : <DownloadEstimate>Initial download takes { estimate_download_time( active_model.file_size_bytes ) }</DownloadEstimate> }
+                : <DownloadEstimate>Initial download takes { estimate_download_time( active_model.file_size_bytes, speed_bps ) }</DownloadEstimate> }
             <CardDetailsToggle onClick={ () => toggle_details( active_model.id ) }>
                 Show details { details_open[ active_model.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
             </CardDetailsToggle>

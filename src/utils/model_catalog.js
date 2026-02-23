@@ -42,6 +42,16 @@
  * @property {string} license - License identifier
  * @property {boolean} [uncensored] - Whether this model has had refusal behavior removed
  * @property {string} [category] - Legacy tier label for backward compat with cached IndexedDB data
+ * @property {Benchmarks} [benchmarks] - Benchmark scores (null = unavailable for that benchmark)
+ */
+
+/**
+ * @typedef {Object} Benchmarks
+ * @property {number|null} mmlu      - Massive Multitask Language Understanding (0-100)
+ * @property {number|null} gpqa      - Graduate-level Google-Proof Q&A (0-100)
+ * @property {number|null} humaneval - Code generation — HumanEval / EvalPlus (0-100)
+ * @property {number|null} math      - Competition-level math (0-100)
+ * @property {number|null} gsm8k     - Grade school math (0-100)
  */
 
 
@@ -73,6 +83,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Qwen3-0.6B-GGUF`,
         file_name: `Qwen3-0.6B-Q4_K_M.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 52.8, gpqa: 26.8, humaneval: 36.2, math: 32.4, gsm8k: 59.6 },
         license: `Apache-2.0`,
         category: `lightweight`,
     },
@@ -96,6 +107,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Qwen3-1.7B-GGUF`,
         file_name: `Qwen3-1.7B-Q4_K_M.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 62.6, gpqa: 28.3, humaneval: 52.7, math: 43.5, gsm8k: 75.4 },
         license: `Apache-2.0`,
         category: `lightweight`,
     },
@@ -119,6 +131,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `bartowski/HuggingFaceTB_SmolLM3-3B-GGUF`,
         file_name: `HuggingFaceTB_SmolLM3-3B-Q4_K_M.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 53.5, gpqa: 35.7, humaneval: 30.5, math: 46.1, gsm8k: 67.6 },
         license: `Apache-2.0`,
         category: `medium`,
     },
@@ -142,6 +155,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `Qwen/Qwen3-4B-GGUF`,
         file_name: `Qwen3-4B-Q4_K_M.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 73.0, gpqa: 36.9, humaneval: 63.5, math: 54.1, gsm8k: 87.8 },
         license: `Apache-2.0`,
         category: `medium`,
     },
@@ -165,6 +179,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `Qwen/Qwen3-8B-GGUF`,
         file_name: `Qwen3-8B-Q4_K_M.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 76.9, gpqa: 44.4, humaneval: 67.7, math: 60.8, gsm8k: 89.8 },
         license: `Apache-2.0`,
         category: `heavy`,
     },
@@ -188,6 +203,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Qwen3-14B-GGUF`,
         file_name: `Qwen3-14B-Q4_K_M.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 81.1, gpqa: 39.9, humaneval: 72.2, math: 62.0, gsm8k: 92.5 },
         license: `Apache-2.0`,
         category: `heavy`,
     },
@@ -211,6 +227,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Qwen3-32B-GGUF`,
         file_name: `Qwen3-32B-Q4_K_M.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 83.6, gpqa: 49.5, humaneval: 72.1, math: 61.6, gsm8k: 93.4 },
         license: `Apache-2.0`,
         category: `ultra`,
     },
@@ -234,6 +251,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Llama-3.3-70B-Instruct-GGUF`,
         file_name: `Llama-3.3-70B-Instruct-Q4_K_M.gguf`,
         reasoning: false,
+        benchmarks: { mmlu: 86.0, gpqa: 50.5, humaneval: 88.4, math: 77.0, gsm8k: null },
         license: `Llama`,
         category: `ultra`,
     },
@@ -258,6 +276,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Qwen3-0.6B-GGUF`,
         file_name: `Qwen3-0.6B-Q8_0.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 52.8, gpqa: 26.8, humaneval: 36.2, math: 32.4, gsm8k: 59.6 },
         license: `Apache-2.0`,
         category: `lightweight`,
     },
@@ -279,6 +298,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Phi-4-mini-instruct-GGUF`,
         file_name: `Phi-4-mini-instruct-Q4_K_M.gguf`,
         reasoning: false,
+        benchmarks: { mmlu: 67.3, gpqa: 30.4, humaneval: 74.4, math: 64.0, gsm8k: 88.6 },
         license: `MIT`,
         category: `medium`,
     },
@@ -300,6 +320,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `bartowski/HuggingFaceTB_SmolLM3-3B-GGUF`,
         file_name: `HuggingFaceTB_SmolLM3-3B-Q8_0.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 53.5, gpqa: 35.7, humaneval: 30.5, math: 46.1, gsm8k: 67.6 },
         license: `Apache-2.0`,
         category: `medium`,
     },
@@ -321,6 +342,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `Qwen/Qwen3-8B-GGUF`,
         file_name: `Qwen3-8B-Q5_K_M.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 76.9, gpqa: 44.4, humaneval: 67.7, math: 60.8, gsm8k: 89.8 },
         license: `Apache-2.0`,
         category: `heavy`,
     },
@@ -342,6 +364,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Qwen3-14B-GGUF`,
         file_name: `Qwen3-14B-Q5_K_M.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 81.1, gpqa: 39.9, humaneval: 72.2, math: 62.0, gsm8k: 92.5 },
         license: `Apache-2.0`,
         category: `heavy`,
     },
@@ -363,6 +386,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Qwen3-32B-GGUF`,
         file_name: `Qwen3-32B-Q5_K_M.gguf`,
         reasoning: true,
+        benchmarks: { mmlu: 83.6, gpqa: 49.5, humaneval: 72.1, math: 61.6, gsm8k: 93.4 },
         license: `Apache-2.0`,
         category: `ultra`,
     },
@@ -489,13 +513,40 @@ export const can_fit_in_memory = ( model, max_bytes, context_length ) =>
     estimate_model_memory( model, context_length ) <= max_bytes
 
 
+// ─── Quality scoring ─────────────────────────────────────────────────────────────
+
+const BENCHMARK_FIELDS = [ `mmlu`, `gpqa`, `humaneval`, `math`, `gsm8k` ]
+
+/**
+ * Composite quality score from benchmark data.
+ * Simple average of all non-null scores. Custom models without
+ * benchmarks return 0 (sort below scored models).
+ *
+ * @param {ModelDefinition} model
+ * @returns {number} 0-100, higher is better
+ */
+export const quality_score = ( model ) => {
+
+    if( !model.benchmarks ) return 0
+
+    const scores = BENCHMARK_FIELDS
+        .map( k => model.benchmarks[ k ] )
+        .filter( v => v != null )
+
+    if( !scores.length ) return 0
+
+    return scores.reduce( ( sum, v ) => sum + v, 0 ) / scores.length
+
+}
+
+
 // ─── Selection & filtering ──────────────────────────────────────────────────────
 
 /**
  * Select the best model that fits in the available memory.
  *
- * Strategy: biggest parameter count wins, then highest bpw (quant quality).
- * If nothing fits, returns the smallest model as a fallback.
+ * Strategy: highest quality score wins, then highest bpw (quant quality).
+ * If nothing fits, returns the smallest model as a graceful fallback.
  *
  * @param {number} available_bytes - Memory budget from estimate_max_model_bytes()
  * @returns {ModelDefinition}
@@ -506,10 +557,10 @@ export const select_best_model = ( available_bytes ) => {
     // alternatives list only, never as the default suggestion
     const safe = MODEL_CATALOG.filter( m => !m.uncensored )
 
-    // Models that fit, sorted by parameter count desc → bpw desc
+    // Models that fit, sorted by quality score desc → bpw desc
     const fitting = safe
         .filter( m => can_fit_in_memory( m, available_bytes ) )
-        .sort( ( a, b ) => b.parameters - a.parameters || b.bpw - a.bpw )
+        .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )
 
     if( fitting.length > 0 ) return fitting[ 0 ]
 
@@ -526,7 +577,7 @@ export const select_best_model = ( available_bytes ) => {
 export const get_fitting_models = ( available_bytes ) =>
     MODEL_CATALOG
         .filter( m => can_fit_in_memory( m, available_bytes ) )
-        .sort( ( a, b ) => b.parameters - a.parameters || b.bpw - a.bpw )
+        .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )
 
 
 // ─── Pair selection ──────────────────────────────────────────────────────────────
@@ -534,8 +585,8 @@ export const get_fitting_models = ( available_bytes ) =>
 /**
  * Select a smarter/faster model pair for the two-card recommendation UI.
  *
- * - **smarter** = biggest model that fits (same as `select_best_model`)
- * - **faster**  = biggest model that fits AND is ≤50% the file size of smarter
+ * - **smarter** = highest-quality model that fits (same as `select_best_model`)
+ * - **faster**  = highest-quality model that fits AND is ≤50% the file size of smarter
  *
  * The 50% threshold ensures meaningful differentiation between the two cards.
  * If no meaningfully smaller model exists, `faster` is `null` → UI falls back
@@ -548,14 +599,14 @@ export const select_model_pair = ( available_bytes ) => {
 
     const smarter = select_best_model( available_bytes )
 
-    // Find the biggest model that fits AND is ≤50% the smarter model's file size
+    // Find the highest-quality model that fits AND is ≤50% the smarter model's file size
     const half_size = smarter.file_size_bytes * 0.5
 
     const faster_candidates = MODEL_CATALOG
         .filter( m => !m.uncensored && m.id !== smarter.id )
         .filter( m => can_fit_in_memory( m, available_bytes ) )
         .filter( m => m.file_size_bytes <= half_size )
-        .sort( ( a, b ) => b.parameters - a.parameters || b.bpw - a.bpw )
+        .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )
 
     const faster = faster_candidates[ 0 ] ?? null
 
@@ -569,21 +620,23 @@ export const select_model_pair = ( available_bytes ) => {
 /**
  * Estimate download time for a model file.
  *
- * Uses `navigator.connection.downlink` (Mbps, Chromium/Electron) when available
- * for a concrete time estimate. Falls back to qualitative labels for Safari/Firefox.
+ * Priority chain: measured speed → navigator.connection.downlink → size-based fallback.
+ * Pass `measured_speed_bps` from `use_speed_estimate` for the most accurate result.
  *
- * @param {number} file_size_bytes - GGUF file size in bytes
+ * @param {number} file_size_bytes      - GGUF file size in bytes
+ * @param {number|null} measured_speed_bps - Measured download speed in bytes/sec (from speed-test hook)
  * @returns {string} Human-readable download time estimate
  */
-export const estimate_download_time = ( file_size_bytes ) => {
+export const estimate_download_time = ( file_size_bytes, measured_speed_bps = null ) => {
 
-    // Try Network Information API (Chromium + Electron)
+    // Best source: real measurement from the speed-test hook
+    // Fallback: Network Information API (Chromium + Electron), with 70% efficiency factor
     const downlink = navigator?.connection?.downlink
+    const bytes_per_second = measured_speed_bps
+        || ( downlink > 0 ? downlink * 1_000_000 / 8 * 0.7 : null )
 
-    if( downlink && downlink > 0 ) {
+    if( bytes_per_second ) {
 
-        // downlink is in Mbps — convert to bytes per second, apply 70% efficiency
-        const bytes_per_second =  downlink * 1_000_000 / 8  * 0.7
         const seconds = file_size_bytes / bytes_per_second
 
         if( seconds < 60 ) return `less than a minute`

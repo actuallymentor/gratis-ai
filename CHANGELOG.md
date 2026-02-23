@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.4.0] - 2026-02-23
+
+### Added
+- real download-speed estimation via adaptive test-file downloads (`use_speed_estimate` hook)
+- speed-test file generator script (`scripts/generate_speedtest_files.js`) in postinstall
+- `VITE_APP_BASE_URL` env var for speed-test base URL with `window.location.origin` fallback
+
+### Changed
+- `estimate_download_time()` accepts optional `measured_speed_bps` for real measurements
+- ModelSelectPage uses measured speed for all download time estimates
+
 ## [2.3.0] - 2026-02-23
 
 ### Added
