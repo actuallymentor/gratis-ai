@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { X, CheckCircle } from 'lucide-react'
 import { download_model, is_model_cached } from '../../utils/model_download'
-import { format_file_size } from '../../providers/model_registry'
+import { format_file_size } from '../../utils/model_catalog'
 
 const Container = styled.div`
     display: flex;

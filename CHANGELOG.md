@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.3.0] - 2026-02-23
+
+### Added
+- comprehensive model catalog with 13 models and real architecture params
+- proper memory estimation: weights + KV cache + 300 MB overhead
+- `select_best_model()` auto-picks the best model for any memory budget
+- `get_featured_models()` returns curated UI display list
+- 6 featured models: Qwen3-0.6B, SmolLM3-3B, Qwen3-8B, Qwen3-14B, Qwen3-32B, Llama-3.3-70B
+- 7 non-featured alternatives with higher quants and alt families
+
+### Changed
+- model selection UI now shows featured models sorted by memory fitness
+- memory check uses architecture-aware formula instead of `file_size × 1.2`
+
+### Removed
+- tier system (lightweight/medium/heavy/ultra) from selection logic and UI
+- `get_recommended_tier()` from device_detection.js
+- `model_registry.js` replaced by `model_catalog.js`
+- env var model defaults (`VITE_MODEL_*_DEFAULT`) no longer used
+
 ## [1.2.1] - 2026-02-22
 
 ### Changed

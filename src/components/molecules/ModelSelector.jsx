@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import styled, { useTheme } from 'styled-components'
 import { ChevronDown, Check, Plus, Settings, Loader, AlertTriangle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { format_file_size, can_fit_in_memory } from '../../providers/model_registry'
+import { format_file_size, can_fit_in_memory } from '../../utils/model_catalog'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 
 const Container = styled.div`

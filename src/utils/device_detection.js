@@ -22,8 +22,6 @@
  * @property {'browser' | 'electron'} runtime
  */
 
-import { MODEL_REGISTRY } from '../providers/model_registry'
-
 /**
  * Probes WebGPU for GPU info and VRAM heuristic
  * @returns {Promise<Object>} GPU capability data
@@ -297,49 +295,3 @@ export const estimate_max_model_bytes = ( capabilities ) => {
 
 }
 
-/**
- * Recommends the best model tier based on device capabilities.
- *
- * The logic walks the model registry from highest quality to lowest and picks
- * the highest tier where at least one model fits within the memory budget.
- * This means the recommendation is always grounded in what can actually run,
- * not in abstract VRAM thresholds.
- *
- * For Electron with GPU acceleration, the memory budget is much larger than
- * browser WASM, so heavier models become reachable on modest hardware:
- *
- * | Hardware                    | Budget  | Recommended tier |
- * |-----------------------------|---------|-----------------|
- * | Apple Silicon 8 GB (Metal)  | ~6.0 GB | heavy (Mistral 7B at 5.1 GB) |
- * | Apple Silicon 16 GB (Metal) | ~12 GB  | heavy (Mistral 7B comfortably) |
- * | Apple Silicon 32 GB (Metal) | ~24 GB  | heavy (Mixtral 8x7B is 26.4 GB — too tight) |
- * | Apple Silicon 64 GB (Metal) | ~48 GB  | ultra (Mixtral 8x7B at 26.4 GB) |
- * | NVIDIA 8 GB VRAM            | ~8 GB   | heavy (Mistral 7B fits) |
- * | NVIDIA 12+ GB VRAM          | ~12 GB  | heavy (Mistral 7B comfortably) |
- * | NVIDIA 24+ GB VRAM          | ~24 GB  | heavy (Mixtral needs >26 GB) |
- * | CPU-only 8 GB               | ~5.6 GB | heavy (Mistral 7B at 5.1 GB fits) |
- * | CPU-only 4 GB               | ~2.8 GB | medium |
- * | Browser 8 GB                | ~3.4 GB | medium (WASM ceiling) |
- * | Browser 4 GB                | ~2.4 GB | medium |
- *
- * @param {DeviceCapabilities} capabilities
- * @returns {'lightweight' | 'medium' | 'heavy' | 'ultra'}
- */
-export const get_recommended_tier = ( capabilities ) => {
-
-    const budget = estimate_max_model_bytes( capabilities )
-
-    // Walk tiers from highest to lowest — first tier where a model fits wins
-    // Models need ~1.2x their file size once loaded (weights + KV cache + overhead)
-    const tiers_descending = [ `ultra`, `heavy`, `medium`, `lightweight` ]
-
-    for( const tier of tiers_descending ) {
-        const fits = MODEL_REGISTRY.some( m =>
-            m.category === tier && m.file_size_bytes * 1.2 <= budget
-        )
-        if( fits ) return tier
-    }
-
-    return `lightweight`
-
-}

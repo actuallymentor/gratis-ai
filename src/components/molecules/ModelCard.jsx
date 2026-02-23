@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { format_file_size } from '../../providers/model_registry'
+import { format_file_size } from '../../utils/model_catalog'
 
 const Card = styled.div`
     background: transparent;
@@ -47,7 +47,7 @@ const MetaItem = styled.span`
 /**
  * Card displaying model details for selection
  * @param {Object} props
- * @param {import('../../providers/model_registry').ModelDefinition} props.model
+ * @param {import('../../utils/model_catalog').ModelDefinition} props.model
  * @param {boolean} props.selected
  * @param {Function} props.on_select
  * @returns {JSX.Element}

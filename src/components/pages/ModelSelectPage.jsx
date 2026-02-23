@@ -1,10 +1,9 @@
 import { useState, useMemo } from 'react'
 import styled, { useTheme } from 'styled-components'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, Loader, Link } from 'lucide-react'
-import { get_recommended_tier } from '../../utils/device_detection'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
-import { MODEL_REGISTRY, format_file_size, can_fit_in_memory } from '../../providers/model_registry'
+import { select_best_model, get_featured_models, format_file_size, can_fit_in_memory } from '../../utils/model_catalog'
 import { parse_hf_url, resolve_hf_model } from '../../utils/hf_url_parser'
 
 const Container = styled.div`
@@ -267,8 +266,6 @@ const Spinner = styled( Loader )`
     @keyframes spin { to { transform: rotate( 360deg ); } }
 `
 
-// Tier order for sorting — higher quality models sort later
-const TIER_ORDER = { lightweight: 0, medium: 1, heavy: 2, ultra: 3 }
 
 /**
  * Model selection page - auto-recommends based on device, hides complexity.
@@ -280,45 +277,32 @@ const TIER_ORDER = { lightweight: 0, medium: 1, heavy: 2, ultra: 3 }
 export default function ModelSelectPage() {
 
     const navigate = useNavigate()
-    const location = useLocation()
     const theme = useTheme()
     const [ show_alternatives, set_show_alternatives ] = useState( false )
 
     // Get capabilities from navigation state or detect fresh
-    const { capabilities: detected_caps, max_model_bytes } = use_device_capabilities()
-    const capabilities = location.state?.capabilities || detected_caps
+    const { max_model_bytes } = use_device_capabilities()
 
-    // Determine recommended tier based on device
-    const recommended_tier = useMemo( () => {
-        if( !capabilities ) return `lightweight`
-        return get_recommended_tier( capabilities )
-    }, [ capabilities ] )
+    // Auto-select the best featured model for this device's memory budget
+    const recommended_model = useMemo(
+        () => select_best_model( max_model_bytes, { featured_only: true } ),
+        [ max_model_bytes ],
+    )
 
-    // Sort all models: compatible first, then by recommended tier, then by quality
-    // This ensures the recommendation is always a model that fits in memory
-    const sorted_models = useMemo( () => {
+    // Featured models for the alternatives list, sorted: fits-in-memory first → params desc
+    const featured_models = useMemo( () => {
 
-        return [ ...MODEL_REGISTRY ].sort( ( a, b ) => {
+        return get_featured_models().sort( ( a, b ) => {
 
-            // Compatible models always come before oversized ones
             const a_fits = can_fit_in_memory( a, max_model_bytes ) ? 1 : 0
             const b_fits = can_fit_in_memory( b, max_model_bytes ) ? 1 : 0
             if( a_fits !== b_fits ) return b_fits - a_fits
 
-            // Within the same group, prefer the recommended tier
-            const a_recommended = a.category === recommended_tier ? 1 : 0
-            const b_recommended = b.category === recommended_tier ? 1 : 0
-            if( a_recommended !== b_recommended ) return b_recommended - a_recommended
-
-            // Then by tier quality (higher = better)
-            return TIER_ORDER[ b.category ] - TIER_ORDER[ a.category ]
+            return b.parameters - a.parameters
 
         } )
 
-    }, [ max_model_bytes, recommended_tier ] )
-
-    // The recommended model is the first in the sorted list (best compatible model)
-    const recommended_model = sorted_models[ 0 ] || null
+    }, [ max_model_bytes ] )
 
     // Track user selection — null means use the recommendation
     const [ selected_model_id, set_selected_model_id ] = useState( null )
@@ -333,7 +317,7 @@ export default function ModelSelectPage() {
     const active_model = custom_model
         ? custom_model
         : selected_model_id
-            ? MODEL_REGISTRY.find( m => m.id === selected_model_id )
+            ? featured_models.find( m => m.id === selected_model_id )
             : recommended_model
 
     const handle_download = () => {
@@ -375,8 +359,8 @@ export default function ModelSelectPage() {
 
     }
 
-    // All models except the currently active one
-    const alternative_models = sorted_models.filter( m => m.id !== active_model?.id )
+    // All featured models except the currently active one
+    const alternative_models = featured_models.filter( m => m.id !== active_model?.id )
 
     return <Container>
 

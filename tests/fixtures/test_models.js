@@ -1,8 +1,8 @@
 /**
  * Test model definitions for multi-architecture E2E testing.
  *
- * IMPORTANT: These must match the model_registry.js definitions — the UI
- * download flow always uses the registry's repo/file/quantisation, not these.
+ * IMPORTANT: These must match the model_catalog.js definitions — the UI
+ * download flow always uses the catalog's repo/file/quantisation, not these.
  * These fixtures are used to identify models by name in the UI and to set
  * correct timeouts based on real file sizes.
  *

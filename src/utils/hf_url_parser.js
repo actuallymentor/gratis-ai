@@ -112,7 +112,7 @@ const generate_model_id = ( repo, file_name ) => {
  * @param {string} repo
  * @param {string} file_name
  * @param {number} file_size_bytes
- * @returns {import('../providers/model_registry').ModelDefinition}
+ * @returns {import('./model_catalog').ModelDefinition}
  */
 const build_model_def = ( repo, file_name, file_size_bytes ) => ( {
     id: generate_model_id( repo, file_name ),
@@ -125,6 +125,7 @@ const build_model_def = ( repo, file_name, file_size_bytes ) => ( {
     context_length: 4096,
     parameters_label: extract_parameters( repo ),
     quantization: extract_quantization( file_name ) || `unknown`,
+    featured: false,
     is_custom: true,
 } )
 
@@ -134,7 +135,7 @@ const build_model_def = ( repo, file_name, file_size_bytes ) => ( {
  * model definition ready for download.
  *
  * @param {{ repo: string, file_name: string|null, quantization: string|null }} parsed
- * @returns {Promise<import('../providers/model_registry').ModelDefinition>}
+ * @returns {Promise<import('./model_catalog').ModelDefinition>}
  * @throws {Error} If repo not found, no GGUF files, or no matching quantization
  */
 export const resolve_hf_model = async ( parsed ) => {
