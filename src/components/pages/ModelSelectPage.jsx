@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, Loader, Link, Zap } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import use_model_manager from '../../hooks/use_model_manager'
-import { MODEL_CATALOG, select_model_pair, format_file_size, can_fit_in_memory, estimate_download_time } from '../../utils/model_catalog'
+import { MODEL_CATALOG, select_model_pair, format_file_size, can_fit_in_memory, estimate_download_time, quality_score } from '../../utils/model_catalog'
 import { parse_hf_url, resolve_hf_model } from '../../utils/hf_url_parser'
 
 const Container = styled.div`
@@ -110,6 +110,27 @@ const UncensoredTag = styled.span`
     flex-shrink: 0;
 `
 
+const QualityBadge = styled.span`
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.accent };
+`
+
+const BenchmarkGrid = styled.div`
+    display: flex;
+    gap: ${ ( { theme } ) => theme.spacing.sm };
+    flex-wrap: wrap;
+    margin-top: ${ ( { theme } ) => theme.spacing.xs };
+    font-size: 0.7rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+`
+
+const BenchmarkLabel = styled.span`
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-right: 2px;
+`
+
 const CardDetailsToggle = styled.button`
     display: flex;
     align-items: center;
@@ -124,7 +145,7 @@ const CardDetailsToggle = styled.button`
 
 const CardDetails = styled.div`
     overflow: hidden;
-    max-height: ${ ( { $open } ) => $open ? `60px` : `0px` };
+    max-height: ${ ( { $open } ) => $open ? `120px` : `0px` };
     opacity: ${ ( { $open } ) => $open ? 1 : 0 };
     transition: max-height 0.2s ease, opacity 0.15s ease;
     font-size: 0.8rem;
@@ -353,6 +374,20 @@ const Spinner = styled( Loader )`
 `
 
 
+// ─── Benchmark display ────────────────────────────────────────────────────────
+
+const BENCHMARK_LABELS = { mmlu: `MMLU`, gpqa: `GPQA`, humaneval: `Code`, math: `Math`, gsm8k: `GSM8K` }
+
+function BenchmarkRow( { benchmarks } ) {
+    return <BenchmarkGrid>
+        { Object.entries( BENCHMARK_LABELS ).map( ( [ key, label ] ) =>
+            benchmarks[ key ] != null &&
+                <span key={ key }><BenchmarkLabel>{ label }</BenchmarkLabel>{ benchmarks[ key ] }</span>
+        ) }
+    </BenchmarkGrid>
+}
+
+
 /**
  * Model selection page — recommends up to two models (faster + smarter),
  * auto-detects cached models, estimates download time, and allows alternatives.
@@ -385,7 +420,7 @@ export default function ModelSelectPage() {
             const b_fits = can_fit_in_memory( b, max_model_bytes ) ? 1 : 0
             if( a_fits !== b_fits ) return b_fits - a_fits
 
-            return b.parameters - a.parameters
+            return quality_score( b ) - quality_score( a ) || b.bpw - a.bpw
 
         } )
 
@@ -492,6 +527,7 @@ export default function ModelSelectPage() {
                 </CardDetailsToggle>
                 <CardDetails $open={ !!details_open[ faster.id ] }>
                     { faster.name } — { format_file_size( faster.file_size_bytes ) } — { faster.quantization }
+                    { faster.benchmarks && <BenchmarkRow benchmarks={ faster.benchmarks } /> }
                 </CardDetails>
             </OptionCard>
 
@@ -515,6 +551,7 @@ export default function ModelSelectPage() {
                 </CardDetailsToggle>
                 <CardDetails $open={ !!details_open[ smarter.id ] }>
                     { smarter.name } — { format_file_size( smarter.file_size_bytes ) } — { smarter.quantization }
+                    { smarter.benchmarks && <BenchmarkRow benchmarks={ smarter.benchmarks } /> }
                 </CardDetails>
             </OptionCard>
 
@@ -535,6 +572,7 @@ export default function ModelSelectPage() {
             <CardDetails $open={ !!details_open[ active_model.id ] }>
                 { active_model.name } — { format_file_size( active_model.file_size_bytes ) }
                 { active_model.quantization && ` — ${ active_model.quantization }` }
+                { active_model.benchmarks && <BenchmarkRow benchmarks={ active_model.benchmarks } /> }
             </CardDetails>
             { !can_fit_in_memory( active_model, max_model_bytes ) && <MemoryWarning>
                 <AlertTriangle size={ 14 } />
@@ -583,7 +621,8 @@ export default function ModelSelectPage() {
                                     { model.uncensored && <UncensoredTag>uncensored</UncensoredTag> }
                                 </OptionName>
                                 <OptionMeta>
-                                    { model.parameters_label } — { format_file_size( model.file_size_bytes ) }
+                                    { model.parameters_label } — { format_file_size( model.file_size_bytes ) } — { model.quantization }
+                                    { model.benchmarks && <> — <QualityBadge>Score { quality_score( model ).toFixed( 0 ) }</QualityBadge></> }
                                     { is_cached( model.id ) ? ` — ✓ downloaded` : `` }
                                 </OptionMeta>
                             </OptionInfo>
