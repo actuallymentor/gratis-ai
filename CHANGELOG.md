@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.3.0] - 2026-02-23
+
+### Added
+- 3 uncensored models: Dolphin 2.9.4 8B, Gemma 3 12B Abliterated, Dolphin Mistral 24B Venice
+- red "uncensored" tag next to uncensored model names in alternatives list
+- `uncensored` field in ModelDefinition typedef
+
+### Changed
+- hide non-fitting models from alternatives list instead of showing "may not fit" warning
+- exclude uncensored models from auto-recommendation in `select_best_model` / `select_model_pair`
+
+### Removed
+- "may not fit in memory" warning label and alert icon in alternatives list
+
 ## [2.2.0] - 2026-02-23
 
 ### Added

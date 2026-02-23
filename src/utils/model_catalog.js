@@ -40,6 +40,7 @@
  * @property {string} file_name - GGUF filename
  * @property {boolean} reasoning - Whether the model supports native thinking/reasoning mode (<think> tags)
  * @property {string} license - License identifier
+ * @property {boolean} [uncensored] - Whether this model has had refusal behavior removed
  * @property {string} [category] - Legacy tier label for backward compat with cached IndexedDB data
  */
 
@@ -71,7 +72,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-0.6B-GGUF`,
         file_name: `Qwen3-0.6B-Q4_K_M.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `lightweight`,
@@ -95,7 +95,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-1.7B-GGUF`,
         file_name: `Qwen3-1.7B-Q4_K_M.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `lightweight`,
@@ -119,7 +118,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `bartowski/HuggingFaceTB_SmolLM3-3B-GGUF`,
         file_name: `HuggingFaceTB_SmolLM3-3B-Q4_K_M.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `medium`,
@@ -143,7 +141,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `Qwen/Qwen3-4B-GGUF`,
         file_name: `Qwen3-4B-Q4_K_M.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `medium`,
@@ -167,7 +164,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `Qwen/Qwen3-8B-GGUF`,
         file_name: `Qwen3-8B-Q4_K_M.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `heavy`,
@@ -191,7 +187,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-14B-GGUF`,
         file_name: `Qwen3-14B-Q4_K_M.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `heavy`,
@@ -215,7 +210,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-32B-GGUF`,
         file_name: `Qwen3-32B-Q4_K_M.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `ultra`,
@@ -239,7 +233,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Llama-3.3-70B-Instruct-GGUF`,
         file_name: `Llama-3.3-70B-Instruct-Q4_K_M.gguf`,
-
         reasoning: false,
         license: `Llama`,
         category: `ultra`,
@@ -264,7 +257,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-0.6B-GGUF`,
         file_name: `Qwen3-0.6B-Q8_0.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `lightweight`,
@@ -286,7 +278,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Phi-4-mini-instruct-GGUF`,
         file_name: `Phi-4-mini-instruct-Q4_K_M.gguf`,
-
         reasoning: false,
         license: `MIT`,
         category: `medium`,
@@ -308,7 +299,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `bartowski/HuggingFaceTB_SmolLM3-3B-GGUF`,
         file_name: `HuggingFaceTB_SmolLM3-3B-Q8_0.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `medium`,
@@ -330,7 +320,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `Qwen/Qwen3-8B-GGUF`,
         file_name: `Qwen3-8B-Q5_K_M.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `heavy`,
@@ -352,7 +341,6 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-14B-GGUF`,
         file_name: `Qwen3-14B-Q5_K_M.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `heavy`,
@@ -374,10 +362,77 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-32B-GGUF`,
         file_name: `Qwen3-32B-Q5_K_M.gguf`,
-
         reasoning: true,
         license: `Apache-2.0`,
         category: `ultra`,
+    },
+
+
+    // ── Uncensored models ────────────────────────────────────────────────
+    // Models with refusal behavior removed via training or abliteration.
+    // See MODEL_SELECTION.md §6 for methodology notes.
+
+    {
+        id: `dolphin-2.9.4-llama3.1-8b-q4km`,
+        name: `Dolphin 2.9.4 Llama 3.1 8B`,
+        description: `Training-based uncensored model. Follows all instructions without refusal.`,
+        family: `llama3`,
+        parameters: 8_000_000_000,
+        parameters_label: `8B`,
+        quantization: `Q4_K_M`,
+        bpw: 4.85,
+        file_size_bytes: 4_920_746_784,
+        context_length: 131_072,
+        layers: 32,
+        kv_heads: 8,
+        head_dim: 128,
+        hugging_face_repo: `bartowski/dolphin-2.9.4-llama3.1-8b-GGUF`,
+        file_name: `dolphin-2.9.4-llama3.1-8b-Q4_K_M.gguf`,
+        reasoning: false,
+        license: `Llama`,
+        uncensored: true,
+    },
+
+    {
+        id: `gemma3-12b-abliterated-q4km`,
+        name: `Gemma 3 12B Abliterated`,
+        description: `Abliterated medium-tier model. Gemma 3 quality without content restrictions.`,
+        family: `gemma3`,
+        parameters: 12_000_000_000,
+        parameters_label: `12B`,
+        quantization: `Q4_K_M`,
+        bpw: 4.85,
+        file_size_bytes: 7_300_778_336,
+        context_length: 131_072,
+        layers: 48,
+        kv_heads: 4,
+        head_dim: 256,
+        hugging_face_repo: `mlabonne/Gemma-3-12B-it-abliterated-GGUF`,
+        file_name: `gemma-3-12b-it-abliterated.q4_k_m.gguf`,
+        reasoning: false,
+        license: `Gemma`,
+        uncensored: true,
+    },
+
+    {
+        id: `dolphin-mistral-24b-venice-q4km`,
+        name: `Dolphin Mistral 24B Venice`,
+        description: `Gold standard uncensored model. 2.20% refusal rate — near-zero restrictions.`,
+        family: `mistral`,
+        parameters: 24_000_000_000,
+        parameters_label: `24B`,
+        quantization: `Q4_K_M`,
+        bpw: 4.85,
+        file_size_bytes: 14_333_909_376,
+        context_length: 32_768,
+        layers: 40,
+        kv_heads: 8,
+        head_dim: 128,
+        hugging_face_repo: `bartowski/cognitivecomputations_Dolphin-Mistral-24B-Venice-Edition-GGUF`,
+        file_name: `cognitivecomputations_Dolphin-Mistral-24B-Venice-Edition-Q4_K_M.gguf`,
+        reasoning: false,
+        license: `Apache-2.0`,
+        uncensored: true,
     },
 
 ]
@@ -447,15 +502,19 @@ export const can_fit_in_memory = ( model, max_bytes, context_length ) =>
  */
 export const select_best_model = ( available_bytes ) => {
 
+    // Exclude uncensored models from auto-recommendation — they belong in the
+    // alternatives list only, never as the default suggestion
+    const safe = MODEL_CATALOG.filter( m => !m.uncensored )
+
     // Models that fit, sorted by parameter count desc → bpw desc
-    const fitting = MODEL_CATALOG
+    const fitting = safe
         .filter( m => can_fit_in_memory( m, available_bytes ) )
         .sort( ( a, b ) => b.parameters - a.parameters || b.bpw - a.bpw )
 
     if( fitting.length > 0 ) return fitting[ 0 ]
 
     // Nothing fits — return the smallest model as a graceful fallback
-    return [ ...MODEL_CATALOG ].sort( ( a, b ) => a.file_size_bytes - b.file_size_bytes )[ 0 ]
+    return [ ...safe ].sort( ( a, b ) => a.file_size_bytes - b.file_size_bytes )[ 0 ]
 
 }
 
@@ -475,8 +534,8 @@ export const get_fitting_models = ( available_bytes ) =>
 /**
  * Select a smarter/faster model pair for the two-card recommendation UI.
  *
- * - **smarter** = biggest featured model that fits (same as `select_best_model`)
- * - **faster**  = biggest featured model that fits AND is ≤50% the file size of smarter
+ * - **smarter** = biggest model that fits (same as `select_best_model`)
+ * - **faster**  = biggest model that fits AND is ≤50% the file size of smarter
  *
  * The 50% threshold ensures meaningful differentiation between the two cards.
  * If no meaningfully smaller model exists, `faster` is `null` → UI falls back
@@ -487,13 +546,13 @@ export const get_fitting_models = ( available_bytes ) =>
  */
 export const select_model_pair = ( available_bytes ) => {
 
-    const smarter = select_best_model( available_bytes, { featured_only: true } )
+    const smarter = select_best_model( available_bytes )
 
-    // Find the biggest featured model that fits AND is ≤50% the smarter model's file size
+    // Find the biggest model that fits AND is ≤50% the smarter model's file size
     const half_size = smarter.file_size_bytes * 0.5
 
     const faster_candidates = MODEL_CATALOG
-        .filter( m => m.featured && m.id !== smarter.id )
+        .filter( m => !m.uncensored && m.id !== smarter.id )
         .filter( m => can_fit_in_memory( m, available_bytes ) )
         .filter( m => m.file_size_bytes <= half_size )
         .sort( ( a, b ) => b.parameters - a.parameters || b.bpw - a.bpw )

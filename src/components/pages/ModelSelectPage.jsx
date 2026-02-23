@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react'
-import styled, { useTheme } from 'styled-components'
+import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, Loader, Link, Zap } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import use_model_manager from '../../hooks/use_model_manager'
-import { select_model_pair, get_featured_models, format_file_size, can_fit_in_memory, estimate_download_time } from '../../utils/model_catalog'
+import { MODEL_CATALOG, select_model_pair, format_file_size, can_fit_in_memory, estimate_download_time } from '../../utils/model_catalog'
 import { parse_hf_url, resolve_hf_model } from '../../utils/hf_url_parser'
 
 const Container = styled.div`
@@ -98,6 +98,16 @@ const CachedBadge = styled.div`
     font-weight: 500;
     color: ${ ( { theme } ) => theme.colors.success };
     margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
+`
+
+const UncensoredTag = styled.span`
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.error };
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-left: 6px;
+    flex-shrink: 0;
 `
 
 const CardDetailsToggle = styled.button`
@@ -351,7 +361,6 @@ const Spinner = styled( Loader )`
 export default function ModelSelectPage() {
 
     const navigate = useNavigate()
-    const theme = useTheme()
     const [ show_alternatives, set_show_alternatives ] = useState( false )
 
     // Device memory budget and cached model detection
@@ -367,10 +376,10 @@ export default function ModelSelectPage() {
         [ max_model_bytes ],
     )
 
-    // Featured models for the alternatives list, sorted: fits-in-memory first → params desc
-    const featured_models = useMemo( () => {
+    // All catalog models for the alternatives list, sorted: fits-in-memory first → params desc
+    const catalog_models = useMemo( () => {
 
-        return get_featured_models().sort( ( a, b ) => {
+        return [ ...MODEL_CATALOG ].sort( ( a, b ) => {
 
             const a_fits = can_fit_in_memory( a, max_model_bytes ) ? 1 : 0
             const b_fits = can_fit_in_memory( b, max_model_bytes ) ? 1 : 0
@@ -399,7 +408,7 @@ export default function ModelSelectPage() {
     const active_model = custom_model
         ? custom_model
         : selected_model_id
-            ? [ ...featured_models, faster ].filter( Boolean ).find( m => m.id === selected_model_id ) ?? smarter
+            ? catalog_models.find( m => m.id === selected_model_id ) ?? smarter
             : smarter
 
     const active_is_cached = active_model && is_cached( active_model.id )
@@ -444,7 +453,9 @@ export default function ModelSelectPage() {
 
     // Alternatives exclude both the smarter and faster recommendations
     const shown_ids = new Set( [ smarter?.id, faster?.id ].filter( Boolean ) )
-    const alternative_models = featured_models.filter( m => !shown_ids.has( m.id ) )
+    const alternative_models = catalog_models.filter( m =>
+        !shown_ids.has( m.id ) && can_fit_in_memory( m, max_model_bytes )
+    )
 
     // Two-card layout when a meaningfully smaller model exists
     const show_two_cards = faster !== null
@@ -473,7 +484,10 @@ export default function ModelSelectPage() {
                 { is_cached( faster.id )
                     ? <CachedBadge><Check size={ 12 } /> Already downloaded</CachedBadge>
                     : <DownloadEstimate>Initial download takes { estimate_download_time( faster.file_size_bytes ) }</DownloadEstimate> }
-                <CardDetailsToggle onClick={ ( e ) => { e.stopPropagation(); toggle_details( faster.id ) } }>
+                <CardDetailsToggle onClick={ ( e ) => {
+                    e.stopPropagation(); toggle_details( faster.id ) 
+                } }
+                >
                     Show details { details_open[ faster.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
                 </CardDetailsToggle>
                 <CardDetails $open={ !!details_open[ faster.id ] }>
@@ -493,7 +507,10 @@ export default function ModelSelectPage() {
                 { is_cached( smarter.id )
                     ? <CachedBadge><Check size={ 12 } /> Already downloaded</CachedBadge>
                     : <DownloadEstimate>Initial download takes { estimate_download_time( smarter.file_size_bytes ) }</DownloadEstimate> }
-                <CardDetailsToggle onClick={ ( e ) => { e.stopPropagation(); toggle_details( smarter.id ) } }>
+                <CardDetailsToggle onClick={ ( e ) => {
+                    e.stopPropagation(); toggle_details( smarter.id ) 
+                } }
+                >
                     Show details { details_open[ smarter.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
                 </CardDetailsToggle>
                 <CardDetails $open={ !!details_open[ smarter.id ] }>
@@ -555,22 +572,22 @@ export default function ModelSelectPage() {
                 <ModelList>
                     { alternative_models.map( ( model ) => {
                         const is_selected = model.id === active_model?.id
-                        const too_large = !can_fit_in_memory( model, max_model_bytes )
                         return <ModelOption
                             key={ model.id }
                             $active={ is_selected }
                             onClick={ () => handle_select( model.id ) }
                         >
                             <OptionInfo>
-                                <OptionName>{ model.name }</OptionName>
+                                <OptionName>
+                                    { model.name }
+                                    { model.uncensored && <UncensoredTag>uncensored</UncensoredTag> }
+                                </OptionName>
                                 <OptionMeta>
                                     { model.parameters_label } — { format_file_size( model.file_size_bytes ) }
-                                    { too_large ? ` — may not fit in memory` : `` }
                                     { is_cached( model.id ) ? ` — ✓ downloaded` : `` }
                                 </OptionMeta>
                             </OptionInfo>
                             { is_selected && <CheckIcon><Check size={ 16 } /></CheckIcon> }
-                            { too_large && !is_selected && <AlertTriangle size={ 14 } style={ { color: theme.colors.warning, flexShrink: 0 } } /> }
                         </ModelOption>
                     } ) }
                 </ModelList>
