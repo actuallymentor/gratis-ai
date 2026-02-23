@@ -152,3 +152,6 @@ vite.config.ts.timestamp-*
 
 # WASM binaries copied from node_modules by postinstall
 public/wasm/
+
+# Electron build output
+out/

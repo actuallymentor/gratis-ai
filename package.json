@@ -14,7 +14,7 @@
     "test:ui": "playwright test --ui --config=tests/playwright.config.js",
     "test:headed": "playwright test --headed --config=tests/playwright.config.js",
     "lint": "eslint --fix src",
-    "postinstall": "node scripts/copy_wasm.js",
+    "postinstall": "node scripts/ensure_platform_deps.js && node scripts/copy_wasm.js",
     "prepare": "husky"
   },
   "dependencies": {
