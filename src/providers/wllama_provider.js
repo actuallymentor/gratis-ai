@@ -294,6 +294,7 @@ export default class WllamaProvider {
             nPredict: opts.max_tokens || 2048,
             sampling,
             stream: false,
+            useCache: true,
         } )
 
         // Rough token estimate — wllama doesn't expose token count for non-streaming
@@ -335,6 +336,7 @@ export default class WllamaProvider {
             nPredict: opts.max_tokens || 2048,
             sampling,
             stream: true,
+            useCache: true,
             abortSignal: this._abort_controller.signal,
         } )
 
