@@ -1,0 +1,124 @@
+# Build, sign, notarize, and publish Electron app to GitHub Releases
+# when a version bump lands on main.
+#
+# Secrets required — see README CI/CD section for the full table.
+
+name: Release Electron
+
+on:
+  push:
+    branches: [main]
+    paths: [package.json]
+
+concurrency:
+  group: release-electron
+  cancel-in-progress: true
+
+jobs:
+
+  # ── Gate: only proceed when the version string actually changed ──
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+      version: ${{ steps.diff.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Compare version with previous commit
+        id: diff
+        run: |
+          PREV=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
+          CURR=$(node -p "require('./package.json').version")
+          echo "prev=$PREV curr=$CURR"
+          if [ "$PREV" != "$CURR" ]; then
+            echo "changed=true"  >> "$GITHUB_OUTPUT"
+            echo "version=$CURR" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── Create a GitHub Release with the version tag ──
+  create-release:
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.check-version.outputs.version }}
+          name: v${{ needs.check-version.outputs.version }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+  # ── Build matrix: macOS (arm64+x64), Windows (x64), Linux (x64) ──
+  build:
+    needs: [check-version, create-release]
+    if: needs.check-version.outputs.changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: win
+          - os: ubuntu-latest
+            platform: linux
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # macOS: import Developer ID certificate for codesigning
+      - name: Import macOS codesign certificate
+        if: matrix.platform == 'mac'
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.MAC_CERTIFICATE_P12 }}
+          p12-password: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Linux: native build tools for node-llama-cpp
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+
+      - name: Build Electron app
+        run: npx electron-vite build
+
+      - name: Package with electron-builder
+        run: npx electron-builder --${{ matrix.platform }} --publish never
+        env:
+          # macOS notarization
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Windows code signing
+          CSC_LINK: ${{ secrets.WIN_CERTIFICATE_PFX }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
+
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.check-version.outputs.version }}
+          files: |
+            release/*.dmg
+            release/*.exe
+            release/*.AppImage

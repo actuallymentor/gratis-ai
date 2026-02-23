@@ -1,0 +1,47 @@
+appId: com.gratisai.app
+productName: gratisAI
+directories:
+  output: release/
+
+# node-llama-cpp needs filesystem access for native .node binaries and mmap'd model files
+asar: true
+asarUnpack:
+  - "node_modules/node-llama-cpp/**"
+
+publish:
+  provider: github
+
+# --- macOS ---
+mac:
+  category: public.app-category.productivity
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize: true
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+
+# --- Windows ---
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  sign: true
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+
+# --- Linux ---
+linux:
+  category: Utility
+  target:
+    - target: AppImage
+      arch:
+        - x64

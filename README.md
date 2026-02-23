@@ -25,18 +25,7 @@ npm run dev:electron
 npm run build:electron
 ```
 
-Configure build targets by creating an `electron-builder.yml`:
-
-```yaml
-appId: com.gratisai.app
-productName: gratisAI
-mac:
-  target: dmg
-linux:
-  target: AppImage
-win:
-  target: nsis
-```
+Build targets are configured in `electron-builder.yml` (macOS dmg, Windows nsis, Linux AppImage). See the [CI/CD](#cicd) section for automated release builds.
 
 The Electron code lives in `electron/` — `main.js` (window + IPC), `preload.js` (context bridge), and `native_inference.js` (node-llama-cpp wrapper). The renderer auto-detects Electron at runtime and swaps providers.
 
@@ -139,6 +128,38 @@ tests/
     ├── multi_architecture.spec.js
     └── model_management.spec.js
 ```
+
+## CI/CD
+
+Both workflows trigger when a version bump lands on `main` (the `package.json` version must actually change, not just the file).
+
+### Web → Cloudflare Pages
+
+The `deploy-web` workflow builds with Vite and deploys to Cloudflare Pages. The `public/_headers` file sets `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy` so `SharedArrayBuffer` works for multi-threaded WASM inference.
+
+### Electron → GitHub Releases
+
+The `release-electron` workflow builds for macOS (arm64 + x64), Windows (x64), and Linux (x64). macOS builds are signed and notarized. Windows builds are code-signed. Artifacts are uploaded to a GitHub Release tagged `v{version}`.
+
+### Secrets
+
+| Secret | Platform | How to obtain |
+|--------|----------|---------------|
+| `CLOUDFLARE_API_TOKEN` | Web | [Cloudflare dashboard](https://dash.cloudflare.com/profile/api-tokens) → Create Token → Edit Cloudflare Pages |
+| `CLOUDFLARE_ACCOUNT_ID` | Web | Cloudflare dashboard → any zone → Overview sidebar |
+| `MAC_CERTIFICATE_P12` | macOS | Export "Developer ID Application" cert from Keychain Access as .p12, then `base64 -i cert.p12` |
+| `MAC_CERTIFICATE_PASSWORD` | macOS | Password you set when exporting the .p12 |
+| `APPLE_ID` | macOS | Your Apple ID email (used for notarization) |
+| `APPLE_APP_SPECIFIC_PASSWORD` | macOS | [appleid.apple.com](https://appleid.apple.com) → Sign-In and Security → App-Specific Passwords |
+| `APPLE_TEAM_ID` | macOS | [developer.apple.com](https://developer.apple.com/account) → Membership → Team ID (10-char) |
+| `WIN_CERTIFICATE_PFX` | Windows | Base64-encoded code signing cert (.pfx) — `base64 -i cert.pfx` |
+| `WIN_CERTIFICATE_PASSWORD` | Windows | Password for the .pfx |
+
+### Variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `CLOUDFLARE_PROJECT_NAME` | `gratisai` | Cloudflare Pages project name |
 
 ## Model Selection
 

@@ -1,0 +1,79 @@
+# Deploy web app to Cloudflare Pages when a version bump lands on main.
+#
+# Requires:
+#   Secrets  — CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#   Variables — CLOUDFLARE_PROJECT_NAME (defaults to "gratisai")
+
+name: Deploy Web
+
+on:
+  push:
+    branches: [main]
+    paths: [package.json]
+
+concurrency:
+  group: deploy-web
+  cancel-in-progress: true
+
+jobs:
+
+  # ── Gate: only proceed when the version string actually changed ──
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+      version: ${{ steps.diff.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Compare version with previous commit
+        id: diff
+        run: |
+          PREV=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
+          CURR=$(node -p "require('./package.json').version")
+          echo "prev=$PREV curr=$CURR"
+          if [ "$PREV" != "$CURR" ]; then
+            echo "changed=true"  >> "$GITHUB_OUTPUT"
+            echo "version=$CURR" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── Build & deploy to Cloudflare Pages ──
+  deploy:
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify COOP/COEP headers file
+        run: |
+          if [ ! -f dist/_headers ]; then
+            echo "::error::dist/_headers missing — SharedArrayBuffer will not work"
+            exit 1
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist/ --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME || 'gratisai' }}

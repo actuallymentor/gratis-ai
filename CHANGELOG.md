@@ -6,6 +6,11 @@
 - 3 uncensored models: Dolphin 2.9.4 8B, Gemma 3 12B Abliterated, Dolphin Mistral 24B Venice
 - red "uncensored" tag next to uncensored model names in alternatives list
 - `uncensored` field in ModelDefinition typedef
+- GitHub Actions CI/CD — web deploy to Cloudflare Pages, Electron release to GitHub Releases
+- `electron-builder.yml` with macOS (arm64+x64 dmg), Windows (nsis), Linux (AppImage)
+- macOS hardened runtime entitlements for node-llama-cpp native addons
+- `public/_headers` for COOP/COEP on Cloudflare Pages (SharedArrayBuffer)
+- CI/CD documentation section in README with secrets table
 
 ### Changed
 - hide non-fitting models from alternatives list instead of showing "may not fit" warning
