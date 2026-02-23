@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.2.0] - 2026-02-23
+
+### Added
+- "Change model" button with swap icon in chat header (0bec93f)
+- thinking bubble spinner header with 5-line truncated window and expand (ffd198f)
+- `reasoning` key on all 14 catalog models — flags native `<think>` tag support
+
+### Changed
+- simplify model cards — hero label, download time, collapsible details (eee27c6)
+
 ## [2.1.0] - 2026-02-23
 
 ### Added
