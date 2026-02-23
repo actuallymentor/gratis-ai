@@ -8,7 +8,7 @@ import { wait_for_inference } from '../helpers/wait_for_inference'
 // Pre-downloads models to filesystem for speed, then loads and infers.
 // Covers: SmolLM2 (ChatML), TinyLlama (Zephyr), DeepSeek R1 (ChatML/Qwen).
 
-const CACHE_DIR = `/tmp/locallm-test-models`
+const CACHE_DIR = `/tmp/gratisai-test-models`
 const MODELS_TO_TEST = [ MODELS.smollm2, MODELS.tinyllama, MODELS.deepseek ]
 
 // Skip if no pre-downloaded models available

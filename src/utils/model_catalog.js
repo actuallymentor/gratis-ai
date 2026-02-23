@@ -3,7 +3,7 @@
  *
  * ## For LLM maintainers
  *
- * This file is the canonical registry of GGUF models shipped with localLM.
+ * This file is the canonical registry of GGUF models shipped with gratisAI.
  * It replaces the old `src/providers/model_registry.js` tier-based system with
  * real architecture parameters and proper memory estimation.
  *
@@ -67,7 +67,7 @@
 // ─── The catalog ────────────────────────────────────────────────────────────────
 
 /**
- * Complete model catalog — all preset models available in localLM.
+ * Complete model catalog — all preset models available in gratisAI.
  * Featured models appear in the selection UI. Non-featured models are
  * still auto-selectable by the recommendation engine.
  * @type {ModelDefinition[]}

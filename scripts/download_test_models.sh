@@ -4,11 +4,11 @@
 #
 # Usage: bash scripts/download_test_models.sh [--all | --fast | --medium]
 #
-# Models are saved to /tmp/locallm-test-models/
+# Models are saved to /tmp/gratisai-test-models/
 
 set -euo pipefail
 
-CACHE_DIR="/tmp/locallm-test-models"
+CACHE_DIR="/tmp/gratisai-test-models"
 mkdir -p "$CACHE_DIR"
 
 # Model URLs — Q2_K quantisation for smallest file sizes

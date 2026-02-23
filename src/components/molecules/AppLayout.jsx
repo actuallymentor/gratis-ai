@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import TopBar from './TopBar'
 import Sidebar from './Sidebar'
 import SettingsModal from './SettingsModal'
+import { EVENTS } from '../../utils/branding'
 
 const LayoutContainer = styled.div`
     display: flex;
@@ -72,11 +73,11 @@ export default function AppLayout( {
         const handle_open_settings = () => set_settings_open( true )
         const handle_toggle_sidebar = () => set_sidebar_collapsed( prev => !prev )
 
-        window.addEventListener( `locallm:open-settings`, handle_open_settings )
-        window.addEventListener( `locallm:toggle-sidebar`, handle_toggle_sidebar )
+        window.addEventListener( EVENTS.open_settings, handle_open_settings )
+        window.addEventListener( EVENTS.toggle_sidebar, handle_toggle_sidebar )
         return () => {
-            window.removeEventListener( `locallm:open-settings`, handle_open_settings )
-            window.removeEventListener( `locallm:toggle-sidebar`, handle_toggle_sidebar )
+            window.removeEventListener( EVENTS.open_settings, handle_open_settings )
+            window.removeEventListener( EVENTS.toggle_sidebar, handle_toggle_sidebar )
         }
 
     }, [] )

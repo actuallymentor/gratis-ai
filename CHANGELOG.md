@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.0.0] - 2026-02-23
+
+### Added
+- centralised `src/utils/branding.js` module — single source of truth for app name, storage prefixes, events, and DB name
+- `DISPLAY_NAME`, `APP_PREFIX`, `STORAGE_PREFIX`, `DB_NAME`, `EVENTS`, `storage_key()` exports
+
+### Changed
+- rebrand localLM → gratisAI across all source, tests, config, and docs
+- `VITE_APP_NAME` env var now drives all branded strings (UI, PWA manifest, HTML title)
+- `index.html` title uses Vite template syntax `%VITE_APP_NAME%`
+- `vite.config.js` reads `VITE_APP_NAME` via `loadEnv()` for PWA manifest
+- localStorage keys now use `gratisai:settings:*` prefix
+- IndexedDB database renamed to `gratisai-db`
+- custom events renamed to `gratisai:*` namespace
+- test model cache dir moved to `/tmp/gratisai-test-models/`
+
+### Breaking
+- storage key prefix changed — existing localStorage settings will not carry over
+- IndexedDB name changed — existing conversations and cached models will not carry over
+
 ## [1.4.0] - 2026-02-23
 
 ### Added

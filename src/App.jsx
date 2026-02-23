@@ -9,6 +9,7 @@ import ErrorBoundary from './components/molecules/ErrorBoundary'
 import use_theme from './hooks/use_theme'
 import Routes from './routes/Routes'
 import { register_shortcuts } from './utils/keyboard_shortcuts'
+import { EVENTS } from './utils/branding'
 
 // Choose router based on runtime environment
 const is_electron = typeof window !== `undefined` && window.electronAPI?.native_inference
@@ -30,11 +31,11 @@ export default function App() {
     useEffect( () => {
 
         return register_shortcuts( {
-            new_chat: () => window.dispatchEvent( new CustomEvent( `locallm:new-chat` ) ),
-            toggle_sidebar: () => window.dispatchEvent( new CustomEvent( `locallm:toggle-sidebar` ) ),
-            open_settings: () => window.dispatchEvent( new CustomEvent( `locallm:open-settings` ) ),
-            close_modal: () => window.dispatchEvent( new CustomEvent( `locallm:close-modal` ) ),
-            stop_generation: () => window.dispatchEvent( new CustomEvent( `locallm:stop-generation` ) ),
+            new_chat: () => window.dispatchEvent( new CustomEvent( EVENTS.new_chat ) ),
+            toggle_sidebar: () => window.dispatchEvent( new CustomEvent( EVENTS.toggle_sidebar ) ),
+            open_settings: () => window.dispatchEvent( new CustomEvent( EVENTS.open_settings ) ),
+            close_modal: () => window.dispatchEvent( new CustomEvent( EVENTS.close_modal ) ),
+            stop_generation: () => window.dispatchEvent( new CustomEvent( EVENTS.stop_generation ) ),
         } )
 
     }, [] )

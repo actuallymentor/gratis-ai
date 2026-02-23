@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { STORAGE_PREFIX } from '../utils/branding'
 
 // Default values for all settings
 const DEFAULTS = {
@@ -16,7 +17,7 @@ const DEFAULTS = {
     stop_sequences: ``,
 }
 
-const PREFIX = `locallm:settings:`
+const PREFIX = STORAGE_PREFIX
 
 /**
  * Read a setting from localStorage with fallback to default

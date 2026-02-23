@@ -1,4 +1,4 @@
-# localLM
+# gratisAI
 
 > Run AI locally. Your data never leaves your device.
 
@@ -28,8 +28,8 @@ npm run build:electron
 Configure build targets by creating an `electron-builder.yml`:
 
 ```yaml
-appId: com.locallm.app
-productName: localLM
+appId: com.gratisai.app
+productName: gratisAI
 mac:
   target: dmg
 linux:
@@ -104,7 +104,7 @@ For running tests in Docker or CI, use the setup script:
 # Install system deps (Xvfb, Chromium, cmake), start Xvfb, build node-llama-cpp
 bash scripts/setup_docker_e2e.sh
 
-# Pre-download model files to /tmp/locallm-test-models/ (speeds up Electron tests)
+# Pre-download model files to /tmp/gratisai-test-models/ (speeds up Electron tests)
 bash scripts/download_test_models.sh --fast    # SmolLM2 only (~200 MB)
 bash scripts/download_test_models.sh --medium  # 4 models, no Mistral (~1.7 GB)
 bash scripts/download_test_models.sh --all     # All 5 models (~4.4 GB)

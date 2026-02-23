@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { v4 as uuid } from 'uuid'
 import { get_db } from '../stores/db'
+import { storage_key } from '../utils/branding'
+
+const active_model_key = storage_key( `active_model_id` )
 
 /**
  * Hook for managing chat history in IndexedDB
@@ -52,7 +55,7 @@ export default function use_chat_history() {
             title: title.slice( 0, 100 ),
             created_at: now,
             updated_at: now,
-            model_id: model_id || localStorage.getItem( `locallm:settings:active_model_id` ) || ``,
+            model_id: model_id || localStorage.getItem( active_model_key ) || ``,
         }
 
         const db = await get_db()

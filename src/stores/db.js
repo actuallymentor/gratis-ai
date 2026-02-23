@@ -1,10 +1,10 @@
 import { openDB } from 'idb'
+import { DB_NAME } from '../utils/branding'
 
-const DB_NAME = `locallm-db`
 const DB_VERSION = 1
 
 /**
- * Opens (or creates) the localLM IndexedDB database
+ * Opens (or creates) the gratisAI IndexedDB database
  * @returns {Promise<import('idb').IDBPDatabase>}
  */
 export const get_db = async () => {

@@ -1,6 +1,6 @@
 {
-    "name": "localLM",
-    "short_name": "localLM",
+    "name": "gratisAI",
+    "short_name": "gratisAI",
     "description": "Run AI locally. Your data never leaves your device.",
     "theme_color": "#1a1a2e",
     "background_color": "#1a1a2e",

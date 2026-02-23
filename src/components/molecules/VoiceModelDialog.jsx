@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { Mic, X, AlertCircle } from 'lucide-react'
+import { EVENTS } from '../../utils/branding'
 
 const Overlay = styled.div`
     position: fixed;
@@ -203,8 +204,8 @@ export default function VoiceModelDialog( {
         const handle_close = () => {
             if( is_open && !is_downloading ) on_close()
         }
-        window.addEventListener( `locallm:close-modal`, handle_close )
-        return () => window.removeEventListener( `locallm:close-modal`, handle_close )
+        window.addEventListener( EVENTS.close_modal, handle_close )
+        return () => window.removeEventListener( EVENTS.close_modal, handle_close )
 
     }, [ is_open, is_downloading, on_close ] )
 

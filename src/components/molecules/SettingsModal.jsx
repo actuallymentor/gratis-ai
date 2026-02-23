@@ -5,6 +5,7 @@ import BasicSettings from './BasicSettings'
 import AdvancedSettings from './AdvancedSettings'
 import ModelsSettings from './ModelsSettings'
 import use_settings from '../../hooks/use_settings'
+import { EVENTS } from '../../utils/branding'
 
 const Overlay = styled.div`
     position: fixed;
@@ -106,8 +107,8 @@ export default function SettingsModal( { is_open, on_close, theme_preference, on
         const handle_close = () => {
             if( is_open ) on_close()
         }
-        window.addEventListener( `locallm:close-modal`, handle_close )
-        return () => window.removeEventListener( `locallm:close-modal`, handle_close )
+        window.addEventListener( EVENTS.close_modal, handle_close )
+        return () => window.removeEventListener( EVENTS.close_modal, handle_close )
 
     }, [ is_open, on_close ] )
 

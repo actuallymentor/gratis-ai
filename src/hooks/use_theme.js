@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { dark_theme, light_theme } from '../styles/theme'
+import { storage_key } from '../utils/branding'
 
-const STORAGE_KEY = `locallm:settings:theme`
+const STORAGE_KEY = storage_key( `theme` )
 
 /**
  * Hook for theme management with system detection and persistence

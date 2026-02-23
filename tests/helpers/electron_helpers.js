@@ -61,7 +61,7 @@ export async function get_models_dir( app ) {
  * @param {Object} model - Model fixture from test_models.js
  * @param {string} [cache_dir] - Local cache directory with pre-downloaded GGUFs
  */
-export async function preload_model( app, model, cache_dir = `/tmp/locallm-test-models` ) {
+export async function preload_model( app, model, cache_dir = `/tmp/gratisai-test-models` ) {
 
     const models_dir = await get_models_dir( app )
 

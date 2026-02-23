@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { X, CheckCircle } from 'lucide-react'
 import { download_model, is_model_cached } from '../../utils/model_download'
 import { format_file_size } from '../../utils/model_catalog'
+import { storage_key } from '../../utils/branding'
 
 const Container = styled.div`
     display: flex;
@@ -181,7 +182,7 @@ export default function DownloadPage() {
 
         // Save active model ID to localStorage
         if( model ) {
-            localStorage.setItem( `locallm:settings:active_model_id`, model.id )
+            localStorage.setItem( storage_key( `active_model_id` ), model.id )
         }
 
         // Brief success flash before navigating

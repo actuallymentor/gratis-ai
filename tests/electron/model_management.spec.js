@@ -6,7 +6,7 @@ import { execSync } from 'child_process'
 // Tests Electron filesystem model management via IPC:
 // save, list, delete, and re-download through IPC handlers.
 
-const CACHE_DIR = `/tmp/locallm-test-models`
+const CACHE_DIR = `/tmp/gratisai-test-models`
 
 let app
 let page

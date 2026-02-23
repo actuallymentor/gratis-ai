@@ -15,6 +15,7 @@ import use_settings from '../../hooks/use_settings'
 import use_voice_input from '../../hooks/use_voice_input'
 import { export_conversation } from '../../utils/export'
 import { parse_model_param, resolve_cached_model } from '../../utils/model_param_resolver'
+import { storage_key, EVENTS } from '../../utils/branding'
 
 const Container = styled.div`
     display: flex;
@@ -228,7 +229,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const has_model = model_loaded === true || !!loaded_model_id
 
     // Whether we're in the process of loading a model (includes the initial mount gap)
-    const has_pending_model = !!localStorage.getItem( `locallm:settings:active_model_id` )
+    const has_pending_model = !!localStorage.getItem( storage_key( `active_model_id` ) )
     const is_loading_model = is_model_loading ||  model_loaded === null && has_pending_model 
 
     // Guard against StrictMode double-mount starting two model loads
@@ -240,7 +241,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         if( load_started_ref.current ) return
         load_started_ref.current = true
 
-        const active_id = localStorage.getItem( `locallm:settings:active_model_id` )
+        const active_id = localStorage.getItem( storage_key( `active_model_id` ) )
         if( active_id && !loaded_model_id ) {
             console.info( `[ChatPage] Auto-loading saved model: ${ active_id }` )
             load_model( active_id )
@@ -248,7 +249,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                 .catch( ( err ) => {
                     console.error( `[ChatPage] Auto-load failed:`, err.message )
                     // Clear saved model so we don't retry on every page load
-                    localStorage.removeItem( `locallm:settings:active_model_id` )
+                    localStorage.removeItem( storage_key( `active_model_id` ) )
                     set_model_loaded( false )
                     toast.error( err.message || `Failed to load model` )
                 } )
@@ -263,8 +264,8 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     useEffect( () => {
 
         const handle_stop = () => abort()
-        window.addEventListener( `locallm:stop-generation`, handle_stop )
-        return () => window.removeEventListener( `locallm:stop-generation`, handle_stop )
+        window.addEventListener( EVENTS.stop_generation, handle_stop )
+        return () => window.removeEventListener( EVENTS.stop_generation, handle_stop )
 
     }, [ abort ] )
 
@@ -483,7 +484,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                         try {
                             await load_model( match.id )
                             set_model_loaded( true )
-                            localStorage.setItem( `locallm:settings:active_model_id`, match.id )
+                            localStorage.setItem( storage_key( `active_model_id` ), match.id )
                         } catch {
                             toast.error( `Failed to load model` )
                         }
@@ -549,8 +550,8 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     useEffect( () => {
 
         const on_new_chat = () => handle_new_chat()
-        window.addEventListener( `locallm:new-chat`, on_new_chat )
-        return () => window.removeEventListener( `locallm:new-chat`, on_new_chat )
+        window.addEventListener( EVENTS.new_chat, on_new_chat )
+        return () => window.removeEventListener( EVENTS.new_chat, on_new_chat )
 
     }, [ handle_new_chat ] )
 
@@ -600,7 +601,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         try {
             await load_model( model_id )
             set_model_loaded( true )
-            localStorage.setItem( `locallm:settings:active_model_id`, model_id )
+            localStorage.setItem( storage_key( `active_model_id` ), model_id )
             await refresh_models()
         } catch ( err ) {
             console.error( `[ChatPage] Failed to switch model:`, err )

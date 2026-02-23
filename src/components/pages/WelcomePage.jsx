@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Shield, WifiOff, ChevronDown, ChevronUp } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import DeviceInfo from '../atoms/DeviceInfo'
+import { DISPLAY_NAME } from '../../utils/branding'
 
 const Container = styled.div`
     display: flex;
@@ -169,7 +170,7 @@ export default function WelcomePage() {
 
     return <Container>
 
-        <Title>localLM</Title>
+        <Title>{ DISPLAY_NAME }</Title>
         <Tagline>
             Your own AI assistant that runs entirely on this device.
             Private, fast, and works offline.

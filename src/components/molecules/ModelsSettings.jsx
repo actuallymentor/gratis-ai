@@ -7,6 +7,7 @@ import { format_file_size } from '../../utils/model_catalog'
 import use_model_manager from '../../hooks/use_model_manager'
 import { clear_all_data, get_db } from '../../stores/db'
 import { export_conversation } from '../../utils/export'
+import { storage_key, APP_PREFIX } from '../../utils/branding'
 
 const Section = styled.div`
     margin-bottom: ${ ( { theme } ) => theme.spacing.lg };
@@ -197,7 +198,7 @@ export default function ModelsSettings( { on_close, on_model_switch } ) {
     const { cached_models, storage_used, storage_estimate, delete_model } = use_model_manager()
     const [ confirming, set_confirming ] = useState( null )
     const [ show_danger, set_show_danger ] = useState( false )
-    const active_model_id = localStorage.getItem( `locallm:settings:active_model_id` )
+    const active_model_id = localStorage.getItem( storage_key( `active_model_id` ) )
 
     const handle_add_preset = () => {
         if( on_close ) on_close()
@@ -259,11 +260,11 @@ export default function ModelsSettings( { on_close, on_model_switch } ) {
 
         await clear_all_data()
 
-        // Clear all locallm localStorage keys
+        // Clear all app-owned localStorage keys
         const keys_to_remove = []
         for( let i = 0; i < localStorage.length; i++ ) {
             const key = localStorage.key( i )
-            if( key?.startsWith( `locallm:` ) ) keys_to_remove.push( key )
+            if( key?.startsWith( APP_PREFIX ) ) keys_to_remove.push( key )
         }
         keys_to_remove.forEach( ( k ) => localStorage.removeItem( k ) )
 

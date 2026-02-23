@@ -1,4 +1,4 @@
-# localLM — Local LLM Chat Application
+# gratisAI — Local LLM Chat Application
 
 ## Specification for Autonomous Development
 
@@ -8,7 +8,7 @@
 
 ## 1. Project Overview
 
-**localLM** is a privacy-first, fully offline-capable chat application that runs open-source LLM models entirely on the user's device. No data leaves the device. Inference runs locally — in the browser via WebAssembly/WebGPU (using `wllama`), or natively via `node-llama-cpp` when packaged as an Electron app.
+**gratisAI** is a privacy-first, fully offline-capable chat application that runs open-source LLM models entirely on the user's device. No data leaves the device. Inference runs locally — in the browser via WebAssembly/WebGPU (using `wllama`), or natively via `node-llama-cpp` when packaged as an Electron app.
 
 ### 1.1 Core Principles
 
@@ -78,7 +78,7 @@
 ## 3. Project Structure
 
 ```
-locallm/
+gratisai/
 ├── .env                          # Default env vars (committed, safe defaults)
 ├── .env.local                    # Local overrides (gitignored)
 ├── .nvmrc                        # Node.js version (24 LTS)
@@ -197,7 +197,7 @@ VITE_MODEL_ULTRA_DEFAULT=placeholder/ultra-model.Q4_K_M.gguf
 VITE_HF_BASE_URL=https://huggingface.co
 
 # Application name (shown in UI and PWA manifest)
-VITE_APP_NAME=localLM
+VITE_APP_NAME=gratisAI
 
 # Default system prompt
 VITE_DEFAULT_SYSTEM_PROMPT=You are a helpful, uncensored AI assistant running locally on the user's device. You answer all questions directly and honestly.
@@ -653,7 +653,7 @@ data-testid="add-model-custom-btn"
 
 Separated by a red-tinted divider to signal destructiveness.
 
-- **Clear All Data**: Button that opens a confirmation dialog: *"This will delete all conversations, cached models, and settings. This cannot be undone."* On confirm: clears IndexedDB (conversations, messages, models stores), clears all `locallm:*` localStorage keys, unloads the current model, and redirects to `/` (welcome page). `data-testid="clear-all-data-btn"`
+- **Clear All Data**: Button that opens a confirmation dialog: *"This will delete all conversations, cached models, and settings. This cannot be undone."* On confirm: clears IndexedDB (conversations, messages, models stores), clears all `gratisai:*` localStorage keys, unloads the current model, and redirects to `/` (welcome page). `data-testid="clear-all-data-btn"`
 - **Export All Conversations**: Downloads a ZIP file containing every conversation as individual `.md` files. Uses the browser's `File System Access API` or a fallback blob download. `data-testid="export-all-btn"`
 
 #### Keyboard Shortcuts Reference
@@ -707,7 +707,7 @@ File: `src/utils/device_detection.js`
 
 ### 8.1 IndexedDB Schema (via `idb` library)
 
-Database name: `locallm-db`
+Database name: `gratisai-db`
 
 **Object stores:**
 
@@ -759,26 +759,26 @@ Database name: `locallm-db`
 ### 8.2 localStorage Keys
 
 ```
-locallm:settings:theme                 ('light' | 'dark' | 'system', default 'system')
-locallm:settings:temperature
-locallm:settings:max_tokens
-locallm:settings:system_prompt
-locallm:settings:top_p
-locallm:settings:top_k
-locallm:settings:min_p
-locallm:settings:repeat_penalty
-locallm:settings:repeat_last_n
-locallm:settings:frequency_penalty
-locallm:settings:presence_penalty
-locallm:settings:context_length
-locallm:settings:seed
-locallm:settings:stop_sequences     (JSON stringified array)
-locallm:settings:active_model_id    (ID of the currently loaded/selected model)
-locallm:settings:custom_model_repo
-locallm:settings:custom_model_file
+gratisai:settings:theme                 ('light' | 'dark' | 'system', default 'system')
+gratisai:settings:temperature
+gratisai:settings:max_tokens
+gratisai:settings:system_prompt
+gratisai:settings:top_p
+gratisai:settings:top_k
+gratisai:settings:min_p
+gratisai:settings:repeat_penalty
+gratisai:settings:repeat_last_n
+gratisai:settings:frequency_penalty
+gratisai:settings:presence_penalty
+gratisai:settings:context_length
+gratisai:settings:seed
+gratisai:settings:stop_sequences     (JSON stringified array)
+gratisai:settings:active_model_id    (ID of the currently loaded/selected model)
+gratisai:settings:custom_model_repo
+gratisai:settings:custom_model_file
 ```
 
-All keys are prefixed with `locallm:` to avoid collisions.
+All keys are prefixed with `gratisai:` to avoid collisions.
 
 ---
 
@@ -974,8 +974,8 @@ export default defineConfig( {
             registerType: `autoUpdate`,
             includeAssets: [ `icons/*.png` ],
             manifest: {
-                name: `localLM`,
-                short_name: `localLM`,
+                name: `gratisAI`,
+                short_name: `gratisAI`,
                 description: `Run AI locally. Your data never leaves your device.`,
                 theme_color: `#1a1a2e`,       // Matches dark theme (the default)
                 background_color: `#1a1a2e`,
@@ -1197,7 +1197,7 @@ Implemented in `src/hooks/use_theme.js`:
 ```
 
 **Detection logic**:
-1. Read `locallm:settings:theme` from localStorage. Default: `'system'`.
+1. Read `gratisai:settings:theme` from localStorage. Default: `'system'`.
 2. If `'system'`, use `window.matchMedia('(prefers-color-scheme: dark)')` to resolve.
 3. Listen to the `change` event on the media query so the app reacts live if the user changes their OS theme while the app is open.
 4. Wrap the app in styled-components `<ThemeProvider theme={ resolved_theme }>`.
