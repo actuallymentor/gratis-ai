@@ -1,9 +1,9 @@
-import { memo, useState } from 'react'
-import styled from 'styled-components'
+import { memo, useState, useRef, useEffect } from 'react'
+import styled, { keyframes } from 'styled-components'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
-import { Copy, Check, ChevronRight } from 'lucide-react'
+import { Copy, Check, ChevronRight, Loader } from 'lucide-react'
 import toast from 'react-hot-toast'
 import StreamingIndicator from '../atoms/StreamingIndicator'
 import GenerationStats from '../atoms/GenerationStats'
@@ -162,6 +162,25 @@ const CodeCopyButton = styled.button`
 
 // --- Thinking block styles ---
 
+const spin = keyframes`
+    to { transform: rotate( 360deg ); }
+`
+
+const ThinkingSpinner = styled( Loader )`
+    animation: ${ spin } 1s linear infinite;
+    flex-shrink: 0;
+`
+
+const ThinkingHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
+`
+
 const ThinkingToggle = styled.button`
     display: flex;
     align-items: center;
@@ -200,6 +219,41 @@ const ThinkingContent = styled.div`
     color: ${ ( { theme } ) => theme.colors.text_muted };
     white-space: pre-wrap;
     word-wrap: break-word;
+`
+
+// Truncated view — shows only the last 5 lines during streaming
+const VISIBLE_LINES = 5
+const LINE_HEIGHT_EM = 1.5
+const FONT_SIZE_REM = 0.82
+
+const ThinkingWindow = styled.div`
+    border-left: 2px solid ${ ( { theme } ) => theme.colors.border };
+    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+    font-size: ${ FONT_SIZE_REM }rem;
+    line-height: ${ LINE_HEIGHT_EM };
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    white-space: pre-wrap;
+    word-wrap: break-word;
+
+    /* When not expanded, clip to N visible lines — JS pins scroll to bottom */
+    ${ ( { $expanded } ) => !$expanded && `
+        max-height: calc( ${ VISIBLE_LINES } * ${ LINE_HEIGHT_EM }em * ${ FONT_SIZE_REM } + 0.5rem );
+        overflow-y: auto;
+
+        /* Hide scrollbar so it looks like a clean window */
+        scrollbar-width: none;
+        &::-webkit-scrollbar { display: none; }
+    ` }
+`
+
+const ExpandButton = styled.button`
+    font-size: 0.75rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    padding: ${ ( { theme } ) => `${ theme.spacing.xs } 0` };
+    transition: color 0.15s;
+
+    &:hover { color: ${ ( { theme } ) => theme.colors.text_secondary }; }
 `
 
 
@@ -252,11 +306,24 @@ const MessageBubble = memo( ( {
     const [ is_editing, set_is_editing ] = useState( false )
     const [ edit_text, set_edit_text ] = useState( message.content )
     const [ show_thinking, set_show_thinking ] = useState( false )
+    const [ thinking_expanded, set_thinking_expanded ] = useState( false )
+    const thinking_ref = useRef( null )
 
     // Parse thinking blocks from assistant messages
     const { thinking, response, is_thinking } = is_user
         ? { thinking: null, response: message.content, is_thinking: false }
         : parse_thinking( message.content, is_streaming )
+
+    // Count lines to decide whether truncation is needed
+    const thinking_lines = thinking ? thinking.split( `\n` ).length : 0
+    const needs_truncation = thinking_lines > VISIBLE_LINES
+
+    // Auto-scroll the thinking window to bottom as new lines stream in
+    useEffect( () => {
+        if( is_thinking && !thinking_expanded && thinking_ref.current ) {
+            thinking_ref.current.scrollTop = thinking_ref.current.scrollHeight
+        }
+    }, [ thinking, is_thinking, thinking_expanded ] )
 
     const handle_edit_submit = () => {
         if( on_edit && edit_text.trim() ) {
@@ -308,13 +375,28 @@ const MessageBubble = memo( ( {
             :
             <Bubble data-testid={ testid } $is_user={ is_user }>
 
-                { /* Thinking block — auto-expanded while streaming, collapsed when done */ }
-                { /* Still streaming thinking tokens — show expanded, no toggle */ }
-                { thinking && is_thinking &&
-                    <ThinkingContent data-testid="thinking-content">
+                { /* Thinking block — truncated window while streaming, collapsed when done */ }
+                { thinking && is_thinking && <>
+                    <ThinkingHeader>
+                        <ThinkingSpinner size={ 14 } />
+                        Thinking...
+                    </ThinkingHeader>
+                    <ThinkingWindow
+                        ref={ thinking_ref }
+                        $expanded={ thinking_expanded }
+                        data-testid="thinking-content"
+                    >
                         { thinking }
-                        <StreamingIndicator />
-                    </ThinkingContent> }
+                    </ThinkingWindow>
+                    { needs_truncation && !thinking_expanded &&
+                        <ExpandButton onClick={ () => set_thinking_expanded( true ) }>
+                            Show all thinking
+                        </ExpandButton> }
+                    { thinking_expanded &&
+                        <ExpandButton onClick={ () => set_thinking_expanded( false ) }>
+                            Collapse
+                        </ExpandButton> }
+                </> }
 
                 { /* Thinking complete — collapsible toggle */ }
                 { thinking && !is_thinking && <>
