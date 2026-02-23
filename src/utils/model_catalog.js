@@ -29,7 +29,9 @@
  * | Target Memory | Model            | Why                           |
  * |---------------|------------------|-------------------------------|
  * | ≤ 2 GiB       | Qwen3-0.6B       | Best sub-1B model             |
+ * | ≤ 3 GiB       | Qwen3-1.7B       | Gap filler between 0.6B & 3B  |
  * | ≤ 3.4 GiB     | SmolLM3-3B       | Browser WASM sweet spot       |
+ * | ≤ 5 GiB       | Qwen3-4B         | Matches 7B in smaller package |
  * | ≤ 8 GiB       | Qwen3-8B         | Best-in-class 8B              |
  * | ≤ 16 GiB      | Qwen3-14B        | Rivals 32B models             |
  * | ≤ 24 GiB      | Qwen3-32B        | Outperforms 72B models        |
@@ -97,6 +99,29 @@ export const MODEL_CATALOG = [
         category: `lightweight`,
     },
 
+    // ── Featured: ≤ 3 GiB tier ──────────────────────────────────────────────
+
+    {
+        id: `qwen3-1.7b-q4km`,
+        name: `Qwen3 1.7B`,
+        description: `Sweet spot between speed and smarts. Ideal for quick tasks.`,
+        family: `qwen3`,
+        parameters: 1_700_000_000,
+        parameters_label: `1.7B`,
+        quantization: `Q4_K_M`,
+        bpw: 4.85,
+        file_size_bytes: 1_107_409_472,
+        context_length: 40_960,
+        layers: 28,
+        kv_heads: 8,
+        head_dim: 128,
+        hugging_face_repo: `unsloth/Qwen3-1.7B-GGUF`,
+        file_name: `Qwen3-1.7B-Q4_K_M.gguf`,
+        featured: true,
+        license: `Apache-2.0`,
+        category: `lightweight`,
+    },
+
     // ── Featured: ≤ 3.4 GiB tier (WASM browser sweet spot) ──────────────────
 
     {
@@ -115,6 +140,29 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `bartowski/HuggingFaceTB_SmolLM3-3B-GGUF`,
         file_name: `HuggingFaceTB_SmolLM3-3B-Q4_K_M.gguf`,
+        featured: true,
+        license: `Apache-2.0`,
+        category: `medium`,
+    },
+
+    // ── Featured: ≤ 5 GiB tier ──────────────────────────────────────────────
+
+    {
+        id: `qwen3-4b-q4km`,
+        name: `Qwen3 4B`,
+        description: `Matches 7B model performance in a smaller package.`,
+        family: `qwen3`,
+        parameters: 4_000_000_000,
+        parameters_label: `4B`,
+        quantization: `Q4_K_M`,
+        bpw: 4.85,
+        file_size_bytes: 2_497_280_256,
+        context_length: 32_768,
+        layers: 36,
+        kv_heads: 8,
+        head_dim: 128,
+        hugging_face_repo: `Qwen/Qwen3-4B-GGUF`,
+        file_name: `Qwen3-4B-Q4_K_M.gguf`,
         featured: true,
         license: `Apache-2.0`,
         category: `medium`,
@@ -254,27 +302,6 @@ export const MODEL_CATALOG = [
         file_name: `Phi-4-mini-instruct-Q4_K_M.gguf`,
         featured: false,
         license: `MIT`,
-        category: `medium`,
-    },
-
-    {
-        id: `qwen3-4b-q4km`,
-        name: `Qwen3 4B`,
-        description: `Matches 7B model performance in a smaller package.`,
-        family: `qwen3`,
-        parameters: 4_000_000_000,
-        parameters_label: `4B`,
-        quantization: `Q4_K_M`,
-        bpw: 4.85,
-        file_size_bytes: 2_497_280_256,
-        context_length: 32_768,
-        layers: 36,
-        kv_heads: 8,
-        head_dim: 128,
-        hugging_face_repo: `Qwen/Qwen3-4B-GGUF`,
-        file_name: `Qwen3-4B-Q4_K_M.gguf`,
-        featured: false,
-        license: `Apache-2.0`,
         category: `medium`,
     },
 
@@ -463,6 +490,87 @@ export const get_fitting_models = ( available_bytes ) =>
     MODEL_CATALOG
         .filter( m => can_fit_in_memory( m, available_bytes ) )
         .sort( ( a, b ) => b.parameters - a.parameters || b.bpw - a.bpw )
+
+
+// ─── Pair selection ──────────────────────────────────────────────────────────────
+
+/**
+ * Select a smarter/faster model pair for the two-card recommendation UI.
+ *
+ * - **smarter** = biggest featured model that fits (same as `select_best_model`)
+ * - **faster**  = biggest featured model that fits AND is ≤50% the file size of smarter
+ *
+ * The 50% threshold ensures meaningful differentiation between the two cards.
+ * If no meaningfully smaller model exists, `faster` is `null` → UI falls back
+ * to a single recommendation card.
+ *
+ * @param {number} available_bytes - Memory budget from estimate_max_model_bytes()
+ * @returns {{ smarter: ModelDefinition, faster: ModelDefinition | null }}
+ */
+export const select_model_pair = ( available_bytes ) => {
+
+    const smarter = select_best_model( available_bytes, { featured_only: true } )
+
+    // Find the biggest featured model that fits AND is ≤50% the smarter model's file size
+    const half_size = smarter.file_size_bytes * 0.5
+
+    const faster_candidates = MODEL_CATALOG
+        .filter( m => m.featured && m.id !== smarter.id )
+        .filter( m => can_fit_in_memory( m, available_bytes ) )
+        .filter( m => m.file_size_bytes <= half_size )
+        .sort( ( a, b ) => b.parameters - a.parameters || b.bpw - a.bpw )
+
+    const faster = faster_candidates[ 0 ] ?? null
+
+    return { smarter, faster }
+
+}
+
+
+// ─── Download time estimation ────────────────────────────────────────────────────
+
+/**
+ * Estimate download time for a model file.
+ *
+ * Uses `navigator.connection.downlink` (Mbps, Chromium/Electron) when available
+ * for a concrete time estimate. Falls back to qualitative labels for Safari/Firefox.
+ *
+ * @param {number} file_size_bytes - GGUF file size in bytes
+ * @returns {string} Human-readable download time estimate
+ */
+export const estimate_download_time = ( file_size_bytes ) => {
+
+    // Try Network Information API (Chromium + Electron)
+    const downlink = navigator?.connection?.downlink
+
+    if( downlink && downlink > 0 ) {
+
+        // downlink is in Mbps — convert to bytes per second, apply 70% efficiency
+        const bytes_per_second = ( downlink * 1_000_000 / 8 ) * 0.7
+        const seconds = file_size_bytes / bytes_per_second
+
+        if( seconds < 60 ) return `Less than a minute`
+        if( seconds < 120 ) return `About 1 minute`
+
+        const minutes = Math.round( seconds / 60 )
+        if( minutes < 60 ) return `About ${ minutes } minutes`
+
+        const hours = Math.floor( minutes / 60 )
+        const remaining = minutes % 60
+        if( remaining === 0 ) return `About ${ hours }h`
+        return `About ${ hours }h ${ remaining }m`
+
+    }
+
+    // Fallback: qualitative labels for browsers without Network Information API
+    if( file_size_bytes < 500_000_000 ) return `Quick download`
+    if( file_size_bytes < 2_000_000_000 ) return `1–3 min on broadband`
+    if( file_size_bytes < 5_000_000_000 ) return `3–8 min on broadband`
+    if( file_size_bytes < 15_000_000_000 ) return `10–20 min on broadband`
+    if( file_size_bytes < 30_000_000_000 ) return `20–40 min on broadband`
+    return `Large download (40+ min)`
+
+}
 
 
 // ─── Formatting ─────────────────────────────────────────────────────────────────

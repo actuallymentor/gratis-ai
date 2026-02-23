@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.1.0] - 2026-02-23
+
+### Added
+- two-card "Faster / Smarter" model recommendation UI with side-by-side layout
+- Qwen3-1.7B Q4_K_M to featured catalog — fills 0.6B→3B gap at 1.1 GB
+- download time estimation via Network Information API with broadband fallback labels
+- "Already downloaded" badge for cached models on selection page
+- "Start Chatting" button when selected model is already cached
+
+### Changed
+- promote Qwen3-4B Q4_K_M to featured — fills 3B→8B gap at 2.5 GB
+- featured model ladder expanded from 6 to 8 tiers
+- model selection title changed to "Pick a model" with contextual subtitle
+
 ## [2.0.0] - 2026-02-23
 
 ### Added

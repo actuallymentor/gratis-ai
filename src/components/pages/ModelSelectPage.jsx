@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react'
 import styled, { useTheme } from 'styled-components'
 import { useNavigate } from 'react-router-dom'
-import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, Loader, Link } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, Loader, Link, Zap } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
-import { select_best_model, get_featured_models, format_file_size, can_fit_in_memory } from '../../utils/model_catalog'
+import use_model_manager from '../../hooks/use_model_manager'
+import { select_model_pair, get_featured_models, format_file_size, can_fit_in_memory, estimate_download_time } from '../../utils/model_catalog'
 import { parse_hf_url, resolve_hf_model } from '../../utils/hf_url_parser'
 
 const Container = styled.div`
@@ -31,11 +32,98 @@ const Subtitle = styled.p`
     color: ${ ( { theme } ) => theme.colors.text_secondary };
     margin-bottom: ${ ( { theme } ) => theme.spacing.xl };
     text-align: center;
-    max-width: 460px;
+    max-width: 520px;
     line-height: 1.5;
 `
 
-// The recommended model is shown prominently
+
+// ─── Two-card recommendation layout ─────────────────────────────────────────────
+
+const CardRow = styled.div`
+    display: flex;
+    gap: ${ ( { theme } ) => theme.spacing.md };
+    width: 100%;
+    max-width: 680px;
+    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+
+    @media ( max-width: 680px ) {
+        flex-direction: column;
+    }
+`
+
+const OptionCard = styled.button`
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: ${ ( { theme } ) => theme.spacing.lg };
+    border: 2px solid ${ ( { theme, $active } ) => $active ? theme.colors.accent : theme.colors.border };
+    border-radius: ${ ( { theme } ) => theme.border_radius.lg };
+    text-align: center;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+    background: transparent;
+
+    &:hover {
+        border-color: ${ ( { theme, $active } ) => $active ? theme.colors.accent : theme.colors.text_muted };
+    }
+
+    ${ ( { $active, theme } ) => $active && `
+        box-shadow: 0 0 0 1px ${ theme.colors.accent };
+    ` }
+`
+
+const OptionBadge = styled.div`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+    color: ${ ( { $variant, theme } ) =>
+        $variant === `faster` ? theme.colors.success : theme.colors.accent };
+`
+
+const CardModelName = styled.h2`
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
+`
+
+const CardDescription = styled.p`
+    font-size: 0.85rem;
+    color: ${ ( { theme } ) => theme.colors.text_secondary };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+    line-height: 1.4;
+`
+
+const CardMeta = styled.div`
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+`
+
+const DownloadEstimate = styled.div`
+    font-size: 0.75rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    margin-top: ${ ( { theme } ) => theme.spacing.xs };
+`
+
+const CachedBadge = styled.div`
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: ${ ( { theme } ) => theme.colors.success };
+    margin-top: ${ ( { theme } ) => theme.spacing.sm };
+    padding: 2px 8px;
+    border-radius: ${ ( { theme } ) => theme.border_radius.full };
+    border: 1px solid ${ ( { theme } ) => theme.colors.success };
+`
+
+
+// ─── Single-card fallback (when no faster option exists) ─────────────────────────
+
 const RecommendedCard = styled.div`
     display: flex;
     flex-direction: column;
@@ -76,6 +164,9 @@ const ModelSize = styled.div`
     font-size: 0.85rem;
     color: ${ ( { theme } ) => theme.colors.text_muted };
 `
+
+
+// ─── Shared UI components ────────────────────────────────────────────────────────
 
 const DownloadButton = styled.button`
     background: ${ ( { theme } ) => theme.colors.accent };
@@ -268,10 +359,8 @@ const Spinner = styled( Loader )`
 
 
 /**
- * Model selection page - auto-recommends based on device, hides complexity.
- * Models that fit in memory are recommended first. Oversized models appear
- * lower in the list with a warning label but remain selectable.
- * Supports custom HuggingFace model URLs via inline input.
+ * Model selection page — recommends up to two models (faster + smarter),
+ * auto-detects cached models, estimates download time, and allows alternatives.
  * @returns {JSX.Element}
  */
 export default function ModelSelectPage() {
@@ -280,12 +369,16 @@ export default function ModelSelectPage() {
     const theme = useTheme()
     const [ show_alternatives, set_show_alternatives ] = useState( false )
 
-    // Get capabilities from navigation state or detect fresh
+    // Device memory budget and cached model detection
     const { max_model_bytes } = use_device_capabilities()
+    const { cached_models } = use_model_manager()
 
-    // Auto-select the best featured model for this device's memory budget
-    const recommended_model = useMemo(
-        () => select_best_model( max_model_bytes, { featured_only: true } ),
+    const is_cached = ( model_id ) =>
+        cached_models.some( m => m.id === model_id )
+
+    // Select smarter/faster pair based on device memory
+    const { smarter, faster } = useMemo(
+        () => select_model_pair( max_model_bytes ),
         [ max_model_bytes ],
     )
 
@@ -304,7 +397,7 @@ export default function ModelSelectPage() {
 
     }, [ max_model_bytes ] )
 
-    // Track user selection — null means use the recommendation
+    // Track user selection — defaults to the smarter option
     const [ selected_model_id, set_selected_model_id ] = useState( null )
 
     // Custom model state
@@ -313,12 +406,14 @@ export default function ModelSelectPage() {
     const [ custom_loading, set_custom_loading ] = useState( false )
     const [ custom_error, set_custom_error ] = useState( null )
 
-    // Resolve the active model — custom model takes priority, then user pick, then recommendation
+    // Resolve the active model — custom > user pick > smarter default
     const active_model = custom_model
         ? custom_model
         : selected_model_id
-            ? featured_models.find( m => m.id === selected_model_id )
-            : recommended_model
+            ? [ ...featured_models, faster ].filter( Boolean ).find( m => m.id === selected_model_id ) ?? smarter
+            : smarter
+
+    const active_is_cached = active_model && is_cached( active_model.id )
 
     const handle_download = () => {
         if( !active_model ) return
@@ -326,7 +421,6 @@ export default function ModelSelectPage() {
     }
 
     const handle_select = ( model_id ) => {
-        // Selecting a preset model clears any custom selection
         set_custom_model( null )
         set_custom_error( null )
         set_selected_model_id( model_id )
@@ -359,33 +453,85 @@ export default function ModelSelectPage() {
 
     }
 
-    // All featured models except the currently active one
-    const alternative_models = featured_models.filter( m => m.id !== active_model?.id )
+    // Alternatives exclude both the smarter and faster recommendations
+    const shown_ids = new Set( [ smarter?.id, faster?.id ].filter( Boolean ) )
+    const alternative_models = featured_models.filter( m => !shown_ids.has( m.id ) )
+
+    // Two-card layout when a meaningfully smaller model exists
+    const show_two_cards = faster !== null
 
     return <Container>
 
-        <Title>We found a model for you</Title>
+        <Title>Pick a model</Title>
         <Subtitle>
-            Based on your device, we picked the best AI model.
-            It will be downloaded once and stored locally.
+            { show_two_cards
+                ? `We picked two options based on your device. Choose the balance that works for you.`
+                : `Based on your device, we picked the best AI model. It will be downloaded once and stored locally.` }
         </Subtitle>
 
-        { /* Recommended model card — always visible */ }
-        { active_model && <RecommendedCard>
+        { /* ── Two-card layout ── */ }
+        { show_two_cards && <CardRow>
+
+            { /* Faster option */ }
+            <OptionCard
+                $active={ active_model?.id === faster.id }
+                onClick={ () => handle_select( faster.id ) }
+            >
+                <OptionBadge $variant="faster">
+                    <Zap size={ 14 } />
+                    Faster Option
+                </OptionBadge>
+                <CardModelName>{ faster.name }</CardModelName>
+                <CardDescription>{ faster.description }</CardDescription>
+                <CardMeta>
+                    { format_file_size( faster.file_size_bytes ) } — { faster.quantization }
+                </CardMeta>
+                <DownloadEstimate>{ estimate_download_time( faster.file_size_bytes ) }</DownloadEstimate>
+                { is_cached( faster.id ) && <CachedBadge>
+                    <Check size={ 12 } /> Already downloaded
+                </CachedBadge> }
+            </OptionCard>
+
+            { /* Smarter option */ }
+            <OptionCard
+                $active={ active_model?.id === smarter.id }
+                onClick={ () => handle_select( smarter.id ) }
+            >
+                <OptionBadge $variant="smarter">
+                    <Sparkles size={ 14 } />
+                    Smarter Option
+                </OptionBadge>
+                <CardModelName>{ smarter.name }</CardModelName>
+                <CardDescription>{ smarter.description }</CardDescription>
+                <CardMeta>
+                    { format_file_size( smarter.file_size_bytes ) } — { smarter.quantization }
+                </CardMeta>
+                <DownloadEstimate>{ estimate_download_time( smarter.file_size_bytes ) }</DownloadEstimate>
+                { is_cached( smarter.id ) && <CachedBadge>
+                    <Check size={ 12 } /> Already downloaded
+                </CachedBadge> }
+            </OptionCard>
+
+        </CardRow> }
+
+        { /* ── Single-card fallback (no meaningfully smaller model available) ── */ }
+        { !show_two_cards && active_model && <RecommendedCard>
             <RecommendedBadge>
                 <Sparkles size={ 14 } />
                 { custom_model
                     ? `Custom HuggingFace model`
-                    : active_model.id === recommended_model?.id
-                        ? `Recommended for your device`
-                        : active_model.description }
+                    : `Recommended for your device` }
             </RecommendedBadge>
             <ModelName>{ active_model.name }</ModelName>
             <ModelDescription>{ active_model.description }</ModelDescription>
             <ModelSize>
-                Download size: { format_file_size( active_model.file_size_bytes ) }
+                { format_file_size( active_model.file_size_bytes ) }
                 { active_model.quantization && ` — ${ active_model.quantization }` }
             </ModelSize>
+            <DownloadEstimate>{ estimate_download_time( active_model.file_size_bytes ) }</DownloadEstimate>
+            { is_cached( active_model.id ) && <CachedBadge>
+                <Check size={ 12 } /> Already downloaded
+            </CachedBadge> }
             { !can_fit_in_memory( active_model, max_model_bytes ) && <MemoryWarning>
                 <AlertTriangle size={ 14 } />
                 May be too large for this browser
@@ -396,7 +542,7 @@ export default function ModelSelectPage() {
             data-testid="model-select-confirm-btn"
             onClick={ handle_download }
         >
-            Download & Start <ArrowRight size={ 18 } />
+            { active_is_cached ? `Start Chatting` : `Download & Start` } <ArrowRight size={ 18 } />
         </DownloadButton>
 
         { /* Step progress */ }
@@ -422,7 +568,6 @@ export default function ModelSelectPage() {
                 <ModelList>
                     { alternative_models.map( ( model ) => {
                         const is_selected = model.id === active_model?.id
-                        const is_recommended = model.id === recommended_model?.id
                         const too_large = !can_fit_in_memory( model, max_model_bytes )
                         return <ModelOption
                             key={ model.id }
@@ -430,13 +575,11 @@ export default function ModelSelectPage() {
                             onClick={ () => handle_select( model.id ) }
                         >
                             <OptionInfo>
-                                <OptionName>
-                                    { model.name }
-                                    { is_recommended ? ` (recommended)` : `` }
-                                </OptionName>
+                                <OptionName>{ model.name }</OptionName>
                                 <OptionMeta>
                                     { model.parameters_label } — { format_file_size( model.file_size_bytes ) }
                                     { too_large ? ` — may not fit in memory` : `` }
+                                    { is_cached( model.id ) ? ` — ✓ downloaded` : `` }
                                 </OptionMeta>
                             </OptionInfo>
                             { is_selected && <CheckIcon><Check size={ 16 } /></CheckIcon> }
