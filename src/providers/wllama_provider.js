@@ -288,11 +288,18 @@ export default class WllamaProvider {
         const sampling = this._build_sampling( opts )
         const prompt = this._format_chat( messages )
 
+        const t0 = performance.now()
+
         const response = await this._wllama.createCompletion( prompt, {
             nPredict: opts.max_tokens || 2048,
             sampling,
             stream: false,
         } )
+
+        // Rough token estimate — wllama doesn't expose token count for non-streaming
+        const elapsed_s = ( performance.now() - t0 ) / 1000
+        const approx_tokens = response.split( /\s+/ ).length
+        console.info( `[wllama] Chat complete — ~${ approx_tokens } tokens in ${ elapsed_s.toFixed( 1 ) }s (~${ ( approx_tokens / elapsed_s ).toFixed( 1 ) } tk/s)` )
 
         return response
 
@@ -321,6 +328,8 @@ export default class WllamaProvider {
 
         let last_text = ``
         let token_count = 0
+        const t0 = performance.now()
+        let ttft = null // time to first token
 
         const stream = await this._wllama.createCompletion( prompt, {
             nPredict: opts.max_tokens || 2048,
@@ -336,6 +345,9 @@ export default class WllamaProvider {
                 // Yield only the new portion of text
                 const new_text = chunk.currentText || ``
                 if( new_text.length > last_text.length ) {
+
+                    if( ttft === null ) ttft = performance.now() - t0
+
                     yield new_text.slice( last_text.length )
                     last_text = new_text
                     token_count++
@@ -343,8 +355,20 @@ export default class WllamaProvider {
 
             }
 
-            // Warn when the model produced nothing — helps diagnose template issues
-            if( token_count === 0 ) {
+            // Performance summary for this generation
+            const elapsed_ms = performance.now() - t0
+            if( token_count > 0 ) {
+
+                // tk/s excludes the prompt processing time (TTFT) so it reflects
+                // pure decode throughput — the number the user "feels"
+                const decode_ms = elapsed_ms - ( ttft || 0 )
+                const tks = decode_ms > 0 ? ( token_count / ( decode_ms / 1000 ) ).toFixed( 1 ) : `∞`
+
+                console.info(
+                    `[wllama] ${ token_count } tokens — ttft ${ ttft.toFixed( 0 ) }ms, ${ tks } tk/s (${ ( elapsed_ms / 1000 ).toFixed( 1 ) }s total)`
+                )
+
+            } else {
                 console.warn( `[wllama] Model generated 0 tokens. Template type: ${ this._template_type }` )
             }
 
