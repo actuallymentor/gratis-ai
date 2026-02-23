@@ -73,39 +73,21 @@ const OptionCard = styled.button`
     ` }
 `
 
-const OptionBadge = styled.div`
+const CardLabel = styled.h2`
     display: flex;
     align-items: center;
-    gap: ${ ( { theme } ) => theme.spacing.xs };
-    font-size: 0.8rem;
+    gap: ${ ( { theme } ) => theme.spacing.sm };
+    font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
     color: ${ ( { $variant, theme } ) =>
         $variant === `faster` ? theme.colors.success : theme.colors.accent };
 `
 
-const CardModelName = styled.h2`
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
-`
-
-const CardDescription = styled.p`
+const DownloadEstimate = styled.p`
     font-size: 0.85rem;
     color: ${ ( { theme } ) => theme.colors.text_secondary };
-    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
-    line-height: 1.4;
-`
-
-const CardMeta = styled.div`
-    font-size: 0.8rem;
-    color: ${ ( { theme } ) => theme.colors.text_muted };
-`
-
-const DownloadEstimate = styled.div`
-    font-size: 0.75rem;
-    color: ${ ( { theme } ) => theme.colors.text_muted };
-    margin-top: ${ ( { theme } ) => theme.spacing.xs };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
 `
 
 const CachedBadge = styled.div`
@@ -115,10 +97,33 @@ const CachedBadge = styled.div`
     font-size: 0.75rem;
     font-weight: 500;
     color: ${ ( { theme } ) => theme.colors.success };
-    margin-top: ${ ( { theme } ) => theme.spacing.sm };
-    padding: 2px 8px;
-    border-radius: ${ ( { theme } ) => theme.border_radius.full };
-    border: 1px solid ${ ( { theme } ) => theme.colors.success };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
+`
+
+const CardDetailsToggle = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    margin-top: ${ ( { theme } ) => theme.spacing.xs };
+    transition: color 0.15s;
+
+    &:hover { color: ${ ( { theme } ) => theme.colors.text_secondary }; }
+`
+
+const CardDetails = styled.div`
+    overflow: hidden;
+    max-height: ${ ( { $open } ) => $open ? `60px` : `0px` };
+    opacity: ${ ( { $open } ) => $open ? 1 : 0 };
+    transition: max-height 0.2s ease, opacity 0.15s ease;
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    margin-top: ${ ( { $open, theme } ) => $open ? theme.spacing.xs : `0` };
+
+    @media ( prefers-reduced-motion: reduce ) {
+        transition: none;
+    }
 `
 
 
@@ -145,26 +150,6 @@ const RecommendedBadge = styled.div`
     font-weight: 600;
     margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
 `
-
-const ModelName = styled.h2`
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
-`
-
-const ModelDescription = styled.p`
-    font-size: 0.9rem;
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
-    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
-    text-align: center;
-    line-height: 1.4;
-`
-
-const ModelSize = styled.div`
-    font-size: 0.85rem;
-    color: ${ ( { theme } ) => theme.colors.text_muted };
-`
-
 
 // ─── Shared UI components ────────────────────────────────────────────────────────
 
@@ -400,6 +385,10 @@ export default function ModelSelectPage() {
     // Track user selection — defaults to the smarter option
     const [ selected_model_id, set_selected_model_id ] = useState( null )
 
+    // Per-card "show details" toggle
+    const [ details_open, set_details_open ] = useState( {} )
+    const toggle_details = ( id ) => set_details_open( prev => ( { ...prev, [ id ]: !prev[ id ] } ) )
+
     // Custom model state
     const [ custom_url, set_custom_url ] = useState( `` )
     const [ custom_model, set_custom_model ] = useState( null )
@@ -477,19 +466,19 @@ export default function ModelSelectPage() {
                 $active={ active_model?.id === faster.id }
                 onClick={ () => handle_select( faster.id ) }
             >
-                <OptionBadge $variant="faster">
-                    <Zap size={ 14 } />
+                <CardLabel $variant="faster">
+                    <Zap size={ 18 } />
                     Faster Option
-                </OptionBadge>
-                <CardModelName>{ faster.name }</CardModelName>
-                <CardDescription>{ faster.description }</CardDescription>
-                <CardMeta>
-                    { format_file_size( faster.file_size_bytes ) } — { faster.quantization }
-                </CardMeta>
-                <DownloadEstimate>{ estimate_download_time( faster.file_size_bytes ) }</DownloadEstimate>
-                { is_cached( faster.id ) && <CachedBadge>
-                    <Check size={ 12 } /> Already downloaded
-                </CachedBadge> }
+                </CardLabel>
+                { is_cached( faster.id )
+                    ? <CachedBadge><Check size={ 12 } /> Already downloaded</CachedBadge>
+                    : <DownloadEstimate>Initial download takes { estimate_download_time( faster.file_size_bytes ) }</DownloadEstimate> }
+                <CardDetailsToggle onClick={ ( e ) => { e.stopPropagation(); toggle_details( faster.id ) } }>
+                    Show details { details_open[ faster.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
+                </CardDetailsToggle>
+                <CardDetails $open={ !!details_open[ faster.id ] }>
+                    { faster.name } — { format_file_size( faster.file_size_bytes ) } — { faster.quantization }
+                </CardDetails>
             </OptionCard>
 
             { /* Smarter option */ }
@@ -497,19 +486,19 @@ export default function ModelSelectPage() {
                 $active={ active_model?.id === smarter.id }
                 onClick={ () => handle_select( smarter.id ) }
             >
-                <OptionBadge $variant="smarter">
-                    <Sparkles size={ 14 } />
+                <CardLabel $variant="smarter">
+                    <Sparkles size={ 18 } />
                     Smarter Option
-                </OptionBadge>
-                <CardModelName>{ smarter.name }</CardModelName>
-                <CardDescription>{ smarter.description }</CardDescription>
-                <CardMeta>
-                    { format_file_size( smarter.file_size_bytes ) } — { smarter.quantization }
-                </CardMeta>
-                <DownloadEstimate>{ estimate_download_time( smarter.file_size_bytes ) }</DownloadEstimate>
-                { is_cached( smarter.id ) && <CachedBadge>
-                    <Check size={ 12 } /> Already downloaded
-                </CachedBadge> }
+                </CardLabel>
+                { is_cached( smarter.id )
+                    ? <CachedBadge><Check size={ 12 } /> Already downloaded</CachedBadge>
+                    : <DownloadEstimate>Initial download takes { estimate_download_time( smarter.file_size_bytes ) }</DownloadEstimate> }
+                <CardDetailsToggle onClick={ ( e ) => { e.stopPropagation(); toggle_details( smarter.id ) } }>
+                    Show details { details_open[ smarter.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
+                </CardDetailsToggle>
+                <CardDetails $open={ !!details_open[ smarter.id ] }>
+                    { smarter.name } — { format_file_size( smarter.file_size_bytes ) } — { smarter.quantization }
+                </CardDetails>
             </OptionCard>
 
         </CardRow> }
@@ -518,20 +507,18 @@ export default function ModelSelectPage() {
         { !show_two_cards && active_model && <RecommendedCard>
             <RecommendedBadge>
                 <Sparkles size={ 14 } />
-                { custom_model
-                    ? `Custom HuggingFace model`
-                    : `Recommended for your device` }
+                { custom_model ? `Custom HuggingFace model` : `Recommended for your device` }
             </RecommendedBadge>
-            <ModelName>{ active_model.name }</ModelName>
-            <ModelDescription>{ active_model.description }</ModelDescription>
-            <ModelSize>
-                { format_file_size( active_model.file_size_bytes ) }
+            { is_cached( active_model.id )
+                ? <CachedBadge><Check size={ 12 } /> Already downloaded</CachedBadge>
+                : <DownloadEstimate>Initial download takes { estimate_download_time( active_model.file_size_bytes ) }</DownloadEstimate> }
+            <CardDetailsToggle onClick={ () => toggle_details( active_model.id ) }>
+                Show details { details_open[ active_model.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
+            </CardDetailsToggle>
+            <CardDetails $open={ !!details_open[ active_model.id ] }>
+                { active_model.name } — { format_file_size( active_model.file_size_bytes ) }
                 { active_model.quantization && ` — ${ active_model.quantization }` }
-            </ModelSize>
-            <DownloadEstimate>{ estimate_download_time( active_model.file_size_bytes ) }</DownloadEstimate>
-            { is_cached( active_model.id ) && <CachedBadge>
-                <Check size={ 12 } /> Already downloaded
-            </CachedBadge> }
+            </CardDetails>
             { !can_fit_in_memory( active_model, max_model_bytes ) && <MemoryWarning>
                 <AlertTriangle size={ 14 } />
                 May be too large for this browser
