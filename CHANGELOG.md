@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0] - 2026-02-23
+
+### Added
+- collapsible thinking block for reasoning models (Qwen3, DeepSeek-R1 distills)
+- GGUF magic number validation on downloaded model files
+- Electron model management via IPC — list and delete from filesystem
+
+### Changed
+- e2e tests use `waitForURL` instead of brittle `waitForTimeout`
+- Playwright config supports system Chromium via env var
+
+### Removed
+- `ensure_platform_deps.js` postinstall script
+
 ## [1.3.0] - 2026-02-23
 
 ### Added

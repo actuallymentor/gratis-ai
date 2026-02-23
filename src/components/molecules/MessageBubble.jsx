@@ -3,11 +3,48 @@ import styled from 'styled-components'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
-import { Copy, Check } from 'lucide-react'
+import { Copy, Check, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import StreamingIndicator from '../atoms/StreamingIndicator'
 import GenerationStats from '../atoms/GenerationStats'
 import MessageActions from './MessageActions'
+
+
+/**
+ * Extract <think>...</think> blocks from model output.
+ * Some models (Qwen3, DeepSeek-R1 distills) emit thinking tokens
+ * before their actual response — we surface these in a collapsible block.
+ */
+const parse_thinking = ( content, is_streaming ) => {
+
+    // Completed think block — closing tag present
+    const closed = content.match( /^<think>([\s\S]*?)<\/think>\s*([\s\S]*)$/ )
+
+    if( closed ) {
+        const thinking = closed[1].trim()
+        const has_content = thinking.replace( /\s/g, `` ).length > 1
+        return {
+            thinking: has_content ? thinking : null,
+            response: closed[2],
+            is_thinking: false,
+        }
+    }
+
+    // Still streaming inside a think block (no closing tag yet)
+    if( is_streaming && content.startsWith( `<think>` ) ) {
+        const thinking = content.slice( 7 ).trim()
+        const has_content = thinking.replace( /\s/g, `` ).length > 1
+        return {
+            thinking: has_content ? thinking : null,
+            response: ``,
+            is_thinking: true,
+        }
+    }
+
+    // No think block at all — pass through unchanged
+    return { thinking: null, response: content, is_thinking: false }
+
+}
 
 const BubbleContainer = styled.div`
     display: flex;
@@ -123,6 +160,49 @@ const CodeCopyButton = styled.button`
     &:hover { color: ${ ( { theme } ) => theme.colors.text }; }
 `
 
+// --- Thinking block styles ---
+
+const ThinkingToggle = styled.button`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    font-size: 0.75rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    padding: ${ ( { theme } ) => `${ theme.spacing.xs } 0` };
+    transition: color 0.15s;
+
+    &:hover { color: ${ ( { theme } ) => theme.colors.text_secondary }; }
+
+    svg {
+        transition: transform 0.2s ease;
+        transform: rotate( ${ ( { $expanded } ) => $expanded ? `90deg` : `0deg` } );
+    }
+`
+
+const ThinkingPanel = styled.div`
+    overflow: hidden;
+    max-height: ${ ( { $expanded } ) => $expanded ? `2000px` : `0px` };
+    opacity: ${ ( { $expanded } ) => $expanded ? 1 : 0 };
+    visibility: ${ ( { $expanded } ) => $expanded ? `visible` : `hidden` };
+    transition: max-height 0.3s ease, opacity 0.2s ease, visibility 0.3s ease;
+
+    @media ( prefers-reduced-motion: reduce ) {
+        transition: none;
+    }
+`
+
+const ThinkingContent = styled.div`
+    border-left: 2px solid ${ ( { theme } ) => theme.colors.border };
+    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    white-space: pre-wrap;
+    word-wrap: break-word;
+`
+
+
 /**
  * Custom pre component with copy button for code blocks
  */
@@ -171,6 +251,12 @@ const MessageBubble = memo( ( {
     const is_user = message.role === `user`
     const [ is_editing, set_is_editing ] = useState( false )
     const [ edit_text, set_edit_text ] = useState( message.content )
+    const [ show_thinking, set_show_thinking ] = useState( false )
+
+    // Parse thinking blocks from assistant messages
+    const { thinking, response, is_thinking } = is_user
+        ? { thinking: null, response: message.content, is_thinking: false }
+        : parse_thinking( message.content, is_streaming )
 
     const handle_edit_submit = () => {
         if( on_edit && edit_text.trim() ) {
@@ -221,14 +307,44 @@ const MessageBubble = memo( ( {
             </EditContainer>
             :
             <Bubble data-testid={ testid } $is_user={ is_user }>
-                <ReactMarkdown
+
+                { /* Thinking block — auto-expanded while streaming, collapsed when done */ }
+                { /* Still streaming thinking tokens — show expanded, no toggle */ }
+                { thinking && is_thinking &&
+                    <ThinkingContent data-testid="thinking-content">
+                        { thinking }
+                        <StreamingIndicator />
+                    </ThinkingContent> }
+
+                { /* Thinking complete — collapsible toggle */ }
+                { thinking && !is_thinking && <>
+                    <ThinkingToggle
+                        data-testid="thinking-toggle"
+                        $expanded={ show_thinking }
+                        onClick={ () => set_show_thinking( !show_thinking ) }
+                    >
+                        <ChevronRight size={ 14 } />
+                        { show_thinking ? `Hide thinking` : `Show thinking` }
+                    </ThinkingToggle>
+                    <ThinkingPanel $expanded={ show_thinking }>
+                        <ThinkingContent data-testid="thinking-content">
+                            { thinking }
+                        </ThinkingContent>
+                    </ThinkingPanel>
+                </> }
+
+                { /* Main response content */ }
+                { response && <ReactMarkdown
                     remarkPlugins={ [ remarkGfm ] }
                     rehypePlugins={ [ rehypeHighlight ] }
                     components={ { pre: CodeBlock } }
                 >
-                    { message.content }
-                </ReactMarkdown>
-                { is_streaming && <StreamingIndicator /> }
+                    { response }
+                </ReactMarkdown> }
+
+                { /* Streaming indicator — only when response is actively streaming (not during thinking) */ }
+                { is_streaming && !is_thinking && <StreamingIndicator /> }
+
             </Bubble> }
 
         { /* Generation stats for completed assistant messages */ }
