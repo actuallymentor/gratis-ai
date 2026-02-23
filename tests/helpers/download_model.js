@@ -39,25 +39,57 @@ export async function download_model_via_ui( page, model, opts = {} ) {
 
 /**
  * Select a specific model on the model select page.
- * Expands the alternatives list and clicks the model by name.
- * If the model is already the recommended one, does nothing.
+ *
+ * The page may show a two-card layout ("Faster Option" / "Smarter Option")
+ * or a single-card layout. Model names are inside the card details block,
+ * which is collapsed by default. We check the page text content without
+ * expanding toggles, then fall back to the alternatives list.
  *
  * @param {import('@playwright/test').Page} page
  * @param {Object} model - Model fixture from test_models.js
  */
 export async function select_model_on_page( page, model ) {
 
-    // Check if the model is already recommended (shown in the card)
-    const card_text = await page.locator( `h2` ).first().textContent()
-    if( card_text?.includes( model.name ) ) return
+    // Strategy 1 — Check if the model name appears in the full page text.
+    // The card details are in the DOM even when visually collapsed, so we can
+    // read the page text without clicking any toggles.
+    const page_text = await page.locator( `body` ).textContent()
 
-    // Expand alternatives list
-    await page.getByTestId( `change-model-toggle` ).click()
+    if( page_text?.includes( model.name ) ) {
 
-    // Click the model option by matching its name text
-    const option = page.locator( `button`, { hasText: model.name } )
-    await expect( option ).toBeVisible( { timeout: 5_000 } )
-    await option.click()
+        // The model is somewhere on the page (likely a recommendation card).
+        // Check if it's inside one of the two OptionCards (two-card layout).
+        // OptionCards are direct-child buttons of the CardRow.
+        const card_buttons = page.locator( `button`, { hasText: model.name } )
+        const card_count = await card_buttons.count()
+
+        // Filter to only the recommendation cards (not alternatives, not confirm)
+        // by checking they contain "Show details" (a card-specific toggle)
+        for( let i = 0; i < card_count; i++ ) {
+            const btn = card_buttons.nth( i )
+            const inner = await btn.textContent()
+            if( inner?.includes( `Show details` ) ) {
+                await btn.click()
+                return
+            }
+        }
+
+        // If we're here, the name appeared in a non-button element (RecommendedCard <div>).
+        // That means it's the single-card recommendation — already selected, nothing to do.
+        return
+
+    }
+
+    // Strategy 2 — Model is not a recommendation. Open alternatives and pick from list.
+    const toggle = page.getByTestId( `change-model-toggle` )
+    if( await toggle.isVisible() ) {
+        await toggle.click()
+    }
+
+    // Alternatives are plain buttons inside the expand panel, each containing the model name
+    const alternative = page.locator( `button`, { hasText: model.name } )
+    await expect( alternative.first() ).toBeVisible( { timeout: 5_000 } )
+    await alternative.first().click()
 
 }
 

@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.5.0] - 2026-02-23
+
+### Added
+- 4 small test-friendly models to catalog: SmolLM2 360M, TinyLlama 1.1B, Llama 3.2 1B, DeepSeek R1 1.5B
+- browser E2E tests: multi-turn conversation, message actions, conversation suggestions, model persistence, clear-all-data
+- Electron E2E tests: chat history persistence, model switching, settings + inference
+- keyboard shortcut tests (Ctrl+, for settings, Ctrl+N for new chat)
+- Llama 3.2 1B to Electron multi-architecture test suite
+
+### Fixed
+- stale "We found a model for you" assertions → "Pick a model" in 5 test files
+- `select_model_on_page` helper broken by two-card layout (h2 says "Faster Option" not model name)
+- Electron `preload_model` using wrong field name (`size_bytes` → `file_size_bytes`)
+
+### Changed
+- test fixtures now include `file_name` and `file_size_bytes` matching catalog entries
+- `download_test_models.sh` uses Q4_K_M quantisations matching catalog (was Q2_K)
+- `model_switching.spec.js` refactored to use `switch_model` dropdown helper
+- test config match patterns updated for new test files
+
+### Removed
+- legacy `tests/fixtures/test_model.js` (superseded by `test_models.js`)
+
 ## [2.4.0] - 2026-02-23
 
 ### Added

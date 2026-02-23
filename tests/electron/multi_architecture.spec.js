@@ -9,7 +9,7 @@ import { wait_for_inference } from '../helpers/wait_for_inference'
 // Covers: SmolLM2 (ChatML), TinyLlama (Zephyr), DeepSeek R1 (ChatML/Qwen).
 
 const CACHE_DIR = `/tmp/gratisai-test-models`
-const MODELS_TO_TEST = [ MODELS.smollm2, MODELS.tinyllama, MODELS.deepseek ]
+const MODELS_TO_TEST = [ MODELS.smollm2, MODELS.tinyllama, MODELS.llama32, MODELS.deepseek ]
 
 // Skip if no pre-downloaded models available
 const has_cache = fs.existsSync( CACHE_DIR )

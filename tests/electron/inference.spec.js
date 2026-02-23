@@ -36,7 +36,7 @@ test.describe( `Electron Inference`, () => {
 
         // Model select — confirm the auto-recommended model
         await expect( page ).toHaveURL( /\/select-model/ )
-        await expect( page.getByText( `We found a model for you` ) ).toBeVisible()
+        await expect( page.getByText( `Pick a model` ) ).toBeVisible()
         await page.getByTestId( `model-select-confirm-btn` ).click()
 
         // Download — wait for it to complete (Electron downloads to filesystem)

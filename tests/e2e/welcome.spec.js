@@ -60,7 +60,7 @@ test.describe( `Welcome Page`, () => {
 
         // Model select page
         await page.goto( `/select-model` )
-        await expect( page.getByText( `We found a model for you` ) ).toBeVisible()
+        await expect( page.getByText( `Pick a model` ) ).toBeVisible()
 
         // Download page redirects to model select when no model in state
         await page.goto( `/download` )

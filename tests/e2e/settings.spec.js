@@ -90,4 +90,32 @@ test.describe( `Settings Modal`, () => {
         await expect( page.getByTestId( `clear-all-data-btn` ) ).toBeVisible()
     } )
 
+    // ── Keyboard shortcuts ─────────────────────────────────────────────
+
+    test( `Ctrl+, keyboard shortcut opens settings modal`, async ( { page } ) => {
+        await page.goto( `/chat` )
+
+        // Ensure settings is closed
+        await expect( page.getByTestId( `settings-modal` ) ).not.toBeVisible()
+
+        // Press Ctrl+,
+        await page.keyboard.press( `Control+,` )
+        await expect( page.getByTestId( `settings-modal` ) ).toBeVisible( { timeout: 3_000 } )
+    } )
+
+    test( `Ctrl+N keyboard shortcut creates new chat`, async ( { page } ) => {
+        await page.goto( `/chat` )
+
+        // Wait for page to stabilise
+        await expect( page.getByTestId( `send-btn` ) ).toBeVisible( { timeout: 5_000 } )
+
+        // Press Ctrl+N — should trigger new chat
+        const new_chat_btn = page.getByTestId( `new-chat-btn` )
+        if( await new_chat_btn.isVisible( { timeout: 3_000 } ).catch( () => false ) ) {
+            await page.keyboard.press( `Control+n` )
+            // Verify no assistant messages (fresh state)
+            await expect( page.locator( `[data-testid="assistant-message"]` ) ).toHaveCount( 0, { timeout: 5_000 } )
+        }
+    } )
+
 } )

@@ -7,48 +7,56 @@
  * correct timeouts based on real file sizes.
  *
  * Architecture coverage:
- * - SmolLM2 360M  → ChatML template (Q4_K_M, ~271 MB)
- * - TinyLlama 1.1B → Zephyr template (Q4_K_M, ~670 MB)
- * - Llama 3.2 1B  → Llama3 template (Q4_K_M, ~808 MB)
- * - DeepSeek R1 Qwen 1.5B → ChatML template (Q4_K_M, ~1.1 GB)
+ * - SmolLM2 360M  → ChatML template (Q4_K_M, ~248 MB)
+ * - TinyLlama 1.1B → Zephyr template (Q4_K_M, ~614 MB)
+ * - Llama 3.2 1B  → Llama3 template (Q4_K_M, ~740 MB)
+ * - DeepSeek R1 Qwen 1.5B → ChatML+think template (Q4_K_M, ~1.0 GB)
  * - Mistral 7B    → Mistral template (Q5_K_M, ~5.1 GB)
  */
 
 export const MODELS = {
 
     smollm2: {
-        id: `smollm2-360m`,
-        name: `SmolLM2 360M`,
+        id: `smollm2-360m-q4km`,
+        name: `SmolLM2 360M Instruct`,
         architecture: `smollm`,
         template: `chatml`,
-        size_mb: 271,
+        size_mb: 248,
+        file_name: `SmolLM2-360M-Instruct-Q4_K_M.gguf`,
+        file_size_bytes: 259_915_680,
         tier: `fast`,
     },
 
     tinyllama: {
-        id: `tinyllama-1.1b`,
+        id: `tinyllama-1.1b-q4km`,
         name: `TinyLlama 1.1B Chat`,
         architecture: `llama`,
         template: `zephyr`,
-        size_mb: 670,
+        size_mb: 614,
+        file_name: `tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf`,
+        file_size_bytes: 643_728_768,
         tier: `medium`,
     },
 
     llama32: {
-        id: `llama-3.2-1b-instruct`,
+        id: `llama-3.2-1b-q4km`,
         name: `Llama 3.2 1B Instruct`,
         architecture: `llama`,
         template: `llama3`,
-        size_mb: 808,
+        size_mb: 740,
+        file_name: `Llama-3.2-1B-Instruct-Q4_K_M.gguf`,
+        file_size_bytes: 775_647_360,
         tier: `medium`,
     },
 
     deepseek: {
-        id: `deepseek-r1-1.5b`,
+        id: `deepseek-r1-1.5b-q4km`,
         name: `DeepSeek R1 Distill Qwen 1.5B`,
         architecture: `qwen`,
         template: `chatml`,
-        size_mb: 1120,
+        size_mb: 1022,
+        file_name: `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf`,
+        file_size_bytes: 1_071_584_864,
         tier: `medium`,
     },
 
@@ -58,6 +66,8 @@ export const MODELS = {
         architecture: `mistral`,
         template: `mistral`,
         size_mb: 5130,
+        file_name: `mistral-7b-instruct-v0.2.Q5_K_M.gguf`,
+        file_size_bytes: 5_131_000_000,
         tier: `heavy`,
     },
 

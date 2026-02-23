@@ -21,7 +21,7 @@ test.describe( `E2E Inference`, () => {
 
         // Step 2 — Model select page: explicitly pick SmolLM2 (smallest, Docker-friendly)
         await expect( page ).toHaveURL( /\/select-model/ )
-        await expect( page.getByText( `We found a model for you` ) ).toBeVisible()
+        await expect( page.getByText( `Pick a model` ) ).toBeVisible()
         await select_model_on_page( page, MODELS.smollm2 )
 
         // Confirm the selected model to start download

@@ -95,7 +95,7 @@ export async function preload_model( app, model, cache_dir = `/tmp/gratisai-test
         id: model.id,
         name: model.name,
         file_name: model.file_name,
-        file_size_bytes: model.size_bytes,
+        file_size_bytes: model.file_size_bytes,
         cached_at: now,
         last_used_at: now,
     } )

@@ -11,23 +11,34 @@ set -euo pipefail
 CACHE_DIR="/tmp/gratisai-test-models"
 mkdir -p "$CACHE_DIR"
 
-# Model URLs — Q2_K quantisation for smallest file sizes
+# ── Q4_K_M models (matching MODEL_CATALOG entries) ──────────────────────────
+# These are the canonical quantisations used by the app.
+
 declare -A MODELS
-MODELS[SmolLM2-360M-Instruct.Q2_K.gguf]="https://huggingface.co/QuantFactory/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct.Q2_K.gguf"
-MODELS[TinyLlama-1.1B-Chat-v1.0.Q2_K.gguf]="https://huggingface.co/QuantFactory/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/TinyLlama-1.1B-Chat-v1.0.Q2_K.gguf"
-MODELS[Llama-3.2-1B-Instruct-Q2_K.gguf]="https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q2_K.gguf"
-MODELS[DeepSeek-R1-Distill-Qwen-1.5B-Q2_K.gguf]="https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q2_K.gguf"
-MODELS[mistral-7b-instruct-v0.2.Q2_K.gguf]="https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q2_K.gguf"
 
-# Fast models only (for quick testing)
-FAST_MODELS=("SmolLM2-360M-Instruct.Q2_K.gguf")
+# Sub-1B
+MODELS[SmolLM2-360M-Instruct-Q4_K_M.gguf]="https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct-Q4_K_M.gguf"
 
-# Medium models (for architecture coverage without heavy download)
+# 1-2B
+MODELS[tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf]="https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+MODELS[Llama-3.2-1B-Instruct-Q4_K_M.gguf]="https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+MODELS[DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf]="https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf"
+
+# 7B (heavy)
+MODELS[mistral-7b-instruct-v0.2.Q5_K_M.gguf]="https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q5_K_M.gguf"
+
+
+# ── Tier definitions ─────────────────────────────────────────────────────────
+
+# Fast: just SmolLM2 for quick smoke tests
+FAST_MODELS=("SmolLM2-360M-Instruct-Q4_K_M.gguf")
+
+# Medium: all sub-2B models for architecture coverage without heavy download
 MEDIUM_MODELS=(
-    "SmolLM2-360M-Instruct.Q2_K.gguf"
-    "TinyLlama-1.1B-Chat-v1.0.Q2_K.gguf"
-    "Llama-3.2-1B-Instruct-Q2_K.gguf"
-    "DeepSeek-R1-Distill-Qwen-1.5B-Q2_K.gguf"
+    "SmolLM2-360M-Instruct-Q4_K_M.gguf"
+    "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+    "Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+    "DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf"
 )
 
 # Parse args

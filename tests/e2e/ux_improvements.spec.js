@@ -31,7 +31,7 @@ test.describe( `UX Improvements - Progressive Disclosure`, () => {
 
     test( `model select auto-recommends a model`, async ( { page } ) => {
         await page.goto( `/select-model` )
-        await expect( page.getByText( `We found a model for you` ) ).toBeVisible()
+        await expect( page.getByText( `Pick a model` ) ).toBeVisible()
         // Should have a confirm button
         await expect( page.getByTestId( `model-select-confirm-btn` ) ).toBeVisible()
     } )
@@ -122,7 +122,7 @@ test.describe( `UX Improvements - Mobile & Touch`, () => {
 
     test( `model select page is usable on mobile`, async ( { page } ) => {
         await page.goto( `/select-model` )
-        await expect( page.getByText( `We found a model for you` ) ).toBeVisible()
+        await expect( page.getByText( `Pick a model` ) ).toBeVisible()
         await expect( page.getByTestId( `model-select-confirm-btn` ) ).toBeVisible()
     } )
 

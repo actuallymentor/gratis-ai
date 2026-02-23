@@ -52,7 +52,7 @@ test.describe( `Error Handling`, () => {
     test( `direct navigation to /select-model works`, async ( { page } ) => {
 
         await page.goto( `/select-model` )
-        await expect( page.getByText( `We found a model for you` ) ).toBeVisible()
+        await expect( page.getByText( `Pick a model` ) ).toBeVisible()
         await expect( page.getByTestId( `model-select-confirm-btn` ) ).toBeVisible()
 
     } )
