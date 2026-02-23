@@ -13,29 +13,7 @@
  * 2. Copy an existing entry and fill in: `parameters`, `layers`, `kv_heads`, `head_dim`
  * 3. Find the GGUF repo (common publishers: unsloth, bartowski, Qwen, ggml-org)
  * 4. Use the exact `file_size_bytes` from the GGUF file listing
- * 5. Set `featured: true` if this model should appear in the UI selection list
- *    (keep one featured model per memory tier — see the table below)
- * 6. Run `npm run build` to verify no issues
- *
- * ### When to update
- *
- * - Every 2-3 months, or when a major model release lands
- * - See `.notes/MODEL_SELECTION.md` §8 for the full chore procedure
- *
- * ### Featured model guidelines
- *
- * One `featured: true` model per memory tier, chosen by best benchmark performance:
- *
- * | Target Memory | Model            | Why                           |
- * |---------------|------------------|-------------------------------|
- * | ≤ 2 GiB       | Qwen3-0.6B       | Best sub-1B model             |
- * | ≤ 3 GiB       | Qwen3-1.7B       | Gap filler between 0.6B & 3B  |
- * | ≤ 3.4 GiB     | SmolLM3-3B       | Browser WASM sweet spot       |
- * | ≤ 5 GiB       | Qwen3-4B         | Matches 7B in smaller package |
- * | ≤ 8 GiB       | Qwen3-8B         | Best-in-class 8B              |
- * | ≤ 16 GiB      | Qwen3-14B        | Rivals 32B models             |
- * | ≤ 24 GiB      | Qwen3-32B        | Outperforms 72B models        |
- * | ≤ 48 GiB      | Llama-3.3-70B    | Strong general-purpose        |
+ * 5. Run `npm run build` to verify no issues
  *
  * @module model_catalog
  */
@@ -60,7 +38,6 @@
  * @property {number} head_dim - Dimension per attention head
  * @property {string} hugging_face_repo - HF repo path (org/name)
  * @property {string} file_name - GGUF filename
- * @property {boolean} featured - Whether to show in the model selection UI
  * @property {boolean} reasoning - Whether the model supports native thinking/reasoning mode (<think> tags)
  * @property {string} license - License identifier
  * @property {string} [category] - Legacy tier label for backward compat with cached IndexedDB data
@@ -71,13 +48,12 @@
 
 /**
  * Complete model catalog — all preset models available in gratisAI.
- * Featured models appear in the selection UI. Non-featured models are
- * still auto-selectable by the recommendation engine.
+ * The selection engine picks from the full catalog based on memory budget.
  * @type {ModelDefinition[]}
  */
 export const MODEL_CATALOG = [
 
-    // ── Featured: ≤ 2 GiB tier ──────────────────────────────────────────────
+    // ── Sub-1B models ─────────────────────────────────────────────────────
 
     {
         id: `qwen3-0.6b-q4km`,
@@ -95,13 +71,13 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-0.6B-GGUF`,
         file_name: `Qwen3-0.6B-Q4_K_M.gguf`,
-        featured: true,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `lightweight`,
     },
 
-    // ── Featured: ≤ 3 GiB tier ──────────────────────────────────────────────
+    // ── 1–2B models ──────────────────────────────────────────────────────
 
     {
         id: `qwen3-1.7b-q4km`,
@@ -119,13 +95,13 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-1.7B-GGUF`,
         file_name: `Qwen3-1.7B-Q4_K_M.gguf`,
-        featured: true,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `lightweight`,
     },
 
-    // ── Featured: ≤ 3.4 GiB tier (WASM browser sweet spot) ──────────────────
+    // ── 3B models ───────────────────────────────────────────────────────
 
     {
         id: `smollm3-3b-q4km`,
@@ -143,13 +119,13 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `bartowski/HuggingFaceTB_SmolLM3-3B-GGUF`,
         file_name: `HuggingFaceTB_SmolLM3-3B-Q4_K_M.gguf`,
-        featured: true,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `medium`,
     },
 
-    // ── Featured: ≤ 5 GiB tier ──────────────────────────────────────────────
+    // ── 4B models ───────────────────────────────────────────────────────
 
     {
         id: `qwen3-4b-q4km`,
@@ -167,13 +143,13 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `Qwen/Qwen3-4B-GGUF`,
         file_name: `Qwen3-4B-Q4_K_M.gguf`,
-        featured: true,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `medium`,
     },
 
-    // ── Featured: ≤ 8 GiB tier ──────────────────────────────────────────────
+    // ── 8B models ───────────────────────────────────────────────────────
 
     {
         id: `qwen3-8b-q4km`,
@@ -191,13 +167,13 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `Qwen/Qwen3-8B-GGUF`,
         file_name: `Qwen3-8B-Q4_K_M.gguf`,
-        featured: true,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `heavy`,
     },
 
-    // ── Featured: ≤ 16 GiB tier ─────────────────────────────────────────────
+    // ── 14B models ──────────────────────────────────────────────────────
 
     {
         id: `qwen3-14b-q4km`,
@@ -215,13 +191,13 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-14B-GGUF`,
         file_name: `Qwen3-14B-Q4_K_M.gguf`,
-        featured: true,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `heavy`,
     },
 
-    // ── Featured: ≤ 24 GiB tier ─────────────────────────────────────────────
+    // ── 32B models ──────────────────────────────────────────────────────
 
     {
         id: `qwen3-32b-q4km`,
@@ -239,13 +215,13 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-32B-GGUF`,
         file_name: `Qwen3-32B-Q4_K_M.gguf`,
-        featured: true,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `ultra`,
     },
 
-    // ── Featured: ≤ 48 GiB tier ─────────────────────────────────────────────
+    // ── 70B models ──────────────────────────────────────────────────────
 
     {
         id: `llama-3.3-70b-q4km`,
@@ -263,14 +239,14 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Llama-3.3-70B-Instruct-GGUF`,
         file_name: `Llama-3.3-70B-Instruct-Q4_K_M.gguf`,
-        featured: true,
+
         reasoning: false,
         license: `Llama`,
         category: `ultra`,
     },
 
 
-    // ── Non-featured alternatives (auto-selectable, hidden in UI) ───────────
+    // ── Higher-quality quantization variants ────────────────────────────
 
     {
         id: `qwen3-0.6b-q8`,
@@ -288,7 +264,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-0.6B-GGUF`,
         file_name: `Qwen3-0.6B-Q8_0.gguf`,
-        featured: false,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `lightweight`,
@@ -310,7 +286,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Phi-4-mini-instruct-GGUF`,
         file_name: `Phi-4-mini-instruct-Q4_K_M.gguf`,
-        featured: false,
+
         reasoning: false,
         license: `MIT`,
         category: `medium`,
@@ -332,7 +308,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `bartowski/HuggingFaceTB_SmolLM3-3B-GGUF`,
         file_name: `HuggingFaceTB_SmolLM3-3B-Q8_0.gguf`,
-        featured: false,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `medium`,
@@ -354,7 +330,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `Qwen/Qwen3-8B-GGUF`,
         file_name: `Qwen3-8B-Q5_K_M.gguf`,
-        featured: false,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `heavy`,
@@ -376,7 +352,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-14B-GGUF`,
         file_name: `Qwen3-14B-Q5_K_M.gguf`,
-        featured: false,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `heavy`,
@@ -398,7 +374,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-32B-GGUF`,
         file_name: `Qwen3-32B-Q5_K_M.gguf`,
-        featured: false,
+
         reasoning: true,
         license: `Apache-2.0`,
         category: `ultra`,
@@ -467,34 +443,21 @@ export const can_fit_in_memory = ( model, max_bytes, context_length ) =>
  * If nothing fits, returns the smallest model as a fallback.
  *
  * @param {number} available_bytes - Memory budget from estimate_max_model_bytes()
- * @param {Object} [opts]
- * @param {boolean} [opts.featured_only=false] - Only consider featured models
  * @returns {ModelDefinition}
  */
-export const select_best_model = ( available_bytes, { featured_only = false } = {} ) => {
-
-    const candidates = featured_only
-        ? MODEL_CATALOG.filter( m => m.featured )
-        : MODEL_CATALOG
+export const select_best_model = ( available_bytes ) => {
 
     // Models that fit, sorted by parameter count desc → bpw desc
-    const fitting = candidates
+    const fitting = MODEL_CATALOG
         .filter( m => can_fit_in_memory( m, available_bytes ) )
         .sort( ( a, b ) => b.parameters - a.parameters || b.bpw - a.bpw )
 
     if( fitting.length > 0 ) return fitting[ 0 ]
 
     // Nothing fits — return the smallest model as a graceful fallback
-    return [ ...candidates ].sort( ( a, b ) => a.file_size_bytes - b.file_size_bytes )[ 0 ]
+    return [ ...MODEL_CATALOG ].sort( ( a, b ) => a.file_size_bytes - b.file_size_bytes )[ 0 ]
 
 }
-
-/**
- * Get all featured models (for the selection UI).
- * @returns {ModelDefinition[]}
- */
-export const get_featured_models = () =>
-    MODEL_CATALOG.filter( m => m.featured )
 
 /**
  * Get all models that fit in the available memory, sorted best-first.
