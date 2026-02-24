@@ -9,3 +9,7 @@ compatibility_date = "2026-02-24"
 
 [assets]
 directory = "./dist"
+
+# SPA routing — serve index.html for any path that doesn't match a static file.
+# Without this, direct navigation to /chat or lazy-loaded chunks on sub-routes 404.
+not_found_handling = "single-page-application"
