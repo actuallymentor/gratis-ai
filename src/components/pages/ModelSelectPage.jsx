@@ -13,6 +13,7 @@ const Container = styled.div`
     flex-direction: column;
     align-items: center;
     height: 100vh;
+    height: 100dvh;
     padding: ${ ( { theme } ) => theme.spacing.xl };
     overflow-y: auto;
 

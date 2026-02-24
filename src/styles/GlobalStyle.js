@@ -35,11 +35,13 @@ const GlobalStyle = createGlobalStyle`
         letter-spacing: 0.012em;
         word-spacing: 0.16em;
         min-height: 100vh;
+        min-height: 100dvh;
         overflow: hidden;
     }
 
     #root {
         min-height: 100vh;
+        min-height: 100dvh;
         display: flex;
         flex-direction: column;
     }
