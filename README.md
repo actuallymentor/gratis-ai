@@ -133,9 +133,9 @@ tests/
 
 Both workflows trigger when a version bump lands on `main` (the `package.json` version must actually change, not just the file).
 
-### Web → Cloudflare Pages
+### Web → Cloudflare Workers (Static Assets)
 
-The `deploy-web` workflow builds with Vite and deploys to Cloudflare Pages. The `public/_headers` file sets `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy` so `SharedArrayBuffer` works for multi-threaded WASM inference.
+The `deploy-web` workflow builds with Vite and deploys to Cloudflare Workers via `wrangler deploy`. The project name and asset directory are configured in `wrangler.toml`. The `public/_headers` file sets `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy` so `SharedArrayBuffer` works for multi-threaded WASM inference.
 
 ### Electron → GitHub Releases
 
@@ -145,8 +145,8 @@ The `release-electron` workflow builds for macOS (arm64 + x64), Windows (x64), a
 
 | Secret | Platform | How to obtain |
 |--------|----------|---------------|
-| `CLOUDFLARE_API_TOKEN` | Web | [Cloudflare dashboard](https://dash.cloudflare.com/profile/api-tokens) → Create Token → Edit Cloudflare Pages |
-| `CLOUDFLARE_ACCOUNT_ID` | Web | Cloudflare dashboard → any zone → Overview sidebar |
+| `CLOUDFLARE_API_TOKEN` | Web | [Cloudflare dashboard](https://dash.cloudflare.com/profile/api-tokens) → Create Token → Edit Cloudflare Workers |
+| `CLOUDFLARE_ACCOUNT_ID` | Web | Cloudflare dashboard → Workers & Pages → Account ID in sidebar |
 | `MAC_CERTIFICATE_P12` | macOS | Export "Developer ID Application" cert from Keychain Access as .p12, then `base64 -i cert.p12` |
 | `MAC_CERTIFICATE_PASSWORD` | macOS | Password you set when exporting the .p12 |
 | `APPLE_ID` | macOS | Your Apple ID email (used for notarization) |
@@ -154,12 +154,6 @@ The `release-electron` workflow builds for macOS (arm64 + x64), Windows (x64), a
 | `APPLE_TEAM_ID` | macOS | [developer.apple.com](https://developer.apple.com/account) → Membership → Team ID (10-char) |
 | `WIN_CERTIFICATE_PFX` | Windows | Base64-encoded code signing cert (.pfx) — `base64 -i cert.pfx` |
 | `WIN_CERTIFICATE_PASSWORD` | Windows | Password for the .pfx |
-
-### Variables
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `CLOUDFLARE_PROJECT_NAME` | `gratisai` | Cloudflare Pages project name |
 
 ## Model Selection
 

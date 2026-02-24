@@ -1,7 +1,8 @@
-# Deploy web app to Cloudflare Pages when a version bump lands on main.
+# Deploy web app to Cloudflare Workers (Static Assets) when a version
+# bump lands on main.  Project name is defined in wrangler.toml.
 #
 # Requires:
-#   Secrets  — CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_PROJECT_NAME
+#   Secrets  — CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 
 name: Deploy Web
 
@@ -39,7 +40,7 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-  # ── Build & deploy to Cloudflare Pages ──
+  # ── Build & deploy to Cloudflare Workers (Static Assets) ──
   deploy:
     needs: check-version
     if: needs.check-version.outputs.changed == 'true'
@@ -69,21 +70,9 @@ jobs:
             exit 1
           fi
 
-      - name: Debug — list all projects
-        run: |
-          echo "=== Pages projects ==="
-          curl -s -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects" \
-            | node -p "JSON.stringify(JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')),null,2)"
-
-          echo "=== Workers projects ==="
-          curl -s -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/workers/scripts" \
-            | node -p "JSON.stringify(JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')),null,2)"
-
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist/ --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+          command: deploy
