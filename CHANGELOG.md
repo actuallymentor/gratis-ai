@@ -10,6 +10,7 @@
 - Llama 3.2 1B to Electron multi-architecture test suite
 
 ### Fixed
+- build failure: ONNX Runtime WASM file (21.6 MB) exceeding workbox precache limit — excluded from service worker precaching via `globIgnores`
 - stale "We found a model for you" assertions → "Pick a model" in 5 test files
 - `select_model_on_page` helper broken by two-card layout (h2 says "Faster Option" not model name)
 - Electron `preload_model` using wrong field name (`size_bytes` → `file_size_bytes`)

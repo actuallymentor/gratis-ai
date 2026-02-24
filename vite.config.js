@@ -29,6 +29,8 @@ export default defineConfig( ( { mode } ) => {
                 },
                 workbox: {
                     globPatterns: [ `**/*.{js,css,html,wasm}` ],
+                    // Exclude large ONNX Runtime WASM binaries from precaching — they're loaded on demand
+                    globIgnores: [ `**/*ort-wasm*.wasm` ],
                     maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
                     runtimeCaching: [
                         {
