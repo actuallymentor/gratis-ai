@@ -1,6 +1,6 @@
 {
   "name": "gratisai",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Privacy-first, offline-capable local LLM chat application",
   "main": "out/main/main.js",
   "type": "module",
