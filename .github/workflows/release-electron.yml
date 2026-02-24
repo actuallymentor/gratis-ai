@@ -84,6 +84,25 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      # ── Caching: Electron binary + electron-builder packaging tools ──
+      - name: Cache Electron binary
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/AppData/Local/electron/Cache
+          key: electron-${{ matrix.platform }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: electron-${{ matrix.platform }}-
+
+      - name: Cache electron-builder
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron-builder
+            ~/AppData/Local/electron-builder/Cache
+          key: electron-builder-${{ matrix.platform }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: electron-builder-${{ matrix.platform }}-
+
       # macOS: import Developer ID certificate for codesigning
       - name: Import macOS codesign certificate
         if: matrix.platform == 'mac'

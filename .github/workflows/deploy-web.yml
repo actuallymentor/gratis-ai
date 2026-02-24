@@ -69,6 +69,18 @@ jobs:
             exit 1
           fi
 
+      - name: Debug — list Pages projects
+        run: |
+          curl -s -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects" \
+            | node -e "
+              let d=''; process.stdin.on('data',c=>d+=c);
+              process.stdin.on('end',()=>{
+                const r=JSON.parse(d);
+                if(!r.success) { console.log('API ERROR:', JSON.stringify(r.errors,null,2)); process.exit(1); }
+                r.result.forEach(p=>console.log(p.name));
+              })"
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
