@@ -125,7 +125,6 @@ const build_model_def = ( repo, file_name, file_size_bytes ) => ( {
     context_length: 4096,
     parameters_label: extract_parameters( repo ),
     quantization: extract_quantization( file_name ) || `unknown`,
-    featured: false,
     is_custom: true,
 } )
 

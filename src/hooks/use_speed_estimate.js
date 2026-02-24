@@ -89,7 +89,7 @@ export default function use_speed_estimate() {
             // Use whatever we got — last file is always accepted
             if( measured_bps !== null ) {
                 set_speed_bps( measured_bps )
-                set_speed_mbps( ( measured_bps * 8 ) / 1_000_000 )
+                set_speed_mbps(  measured_bps * 8  / 1_000_000 )
             }
 
         } catch ( err ) {

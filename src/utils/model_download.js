@@ -178,6 +178,13 @@ export const download_model = async ( model, on_progress, signal ) => {
     // Combine chunks into a single blob
     const blob = new Blob( chunks )
 
+    // Validate GGUF magic number — catches corrupt downloads, HTML error pages, or redirect bodies
+    const header = new Uint8Array( await blob.slice( 0, 4 ).arrayBuffer() )
+    const is_valid_gguf = header[ 0 ] === 0x47 && header[ 1 ] === 0x47 && header[ 2 ] === 0x55 && header[ 3 ] === 0x46
+    if( !is_valid_gguf ) {
+        throw new Error( `Downloaded file is not a valid GGUF model. The file may be corrupted or the URL may have redirected to an error page.` )
+    }
+
     const now = Date.now()
     const db = await get_db()
     await db.put( `models`, {

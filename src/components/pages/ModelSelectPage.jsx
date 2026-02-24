@@ -405,7 +405,9 @@ export default function ModelSelectPage() {
 
     // Measure real download speed for accurate time estimates
     const { speed_bps, run_estimate } = use_speed_estimate()
-    useEffect( () => { run_estimate() }, [ run_estimate ] )
+    useEffect( () => {
+        run_estimate() 
+    }, [ run_estimate ] )
 
     const is_cached = ( model_id ) =>
         cached_models.some( m => m.id === model_id )

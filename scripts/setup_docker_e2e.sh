@@ -63,13 +63,6 @@ if command -v chromium > /dev/null 2>&1; then
     echo "System Chromium at: $CHROMIUM_PATH"
 fi
 
-# ── Platform-specific npm dependencies ───────────────────────────────────────
-
-echo "==> Ensuring platform-specific rollup binary..."
-npm install @rollup/rollup-linux-arm64-gnu 2>/dev/null || \
-npm install @rollup/rollup-linux-x64-gnu 2>/dev/null || \
-echo "Rollup platform binary already available"
-
 # ── Electron binary ─────────────────────────────────────────────────────────
 
 echo "==> Ensuring Electron binary is installed..."
@@ -77,9 +70,10 @@ npx electron --version 2>/dev/null || echo "Electron binary check done"
 
 # ── node-llama-cpp build ─────────────────────────────────────────────────────
 
-echo "==> Building node-llama-cpp (GGML_NATIVE=OFF for Docker compatibility)..."
+echo "==> Building node-llama-cpp..."
 if [ -d "node_modules/node-llama-cpp" ]; then
-    GGML_NATIVE=OFF npx node-llama-cpp download 2>/dev/null || \
+    # If compilation fails (e.g. GCC FP16 NEON bug under emulation), re-add GGML_NATIVE=OFF
+    npx node-llama-cpp download 2>/dev/null || \
     echo "node-llama-cpp build skipped (may not be needed for browser-only tests)"
 fi
 
