@@ -139,7 +139,7 @@ The `deploy-web` workflow builds with Vite and deploys to Cloudflare Workers via
 
 ### Electron → GitHub Releases
 
-The `release-electron` workflow builds for macOS (arm64 + x64), Windows (x64), and Linux (x64). macOS builds are signed and notarized. Windows builds are code-signed. Artifacts are uploaded to a GitHub Release tagged `v{version}`.
+The `release-electron` workflow builds for macOS (arm64 + x64), Windows (x64), and Linux (x64). When signing secrets are configured, macOS builds are signed and notarized and Windows builds are code-signed. When secrets are absent (e.g. in forks), unsigned builds are produced instead. Artifacts are uploaded to a GitHub Release tagged `v{version}`.
 
 ### Secrets
 
@@ -154,6 +154,8 @@ The `release-electron` workflow builds for macOS (arm64 + x64), Windows (x64), a
 | `APPLE_TEAM_ID` | macOS | [developer.apple.com](https://developer.apple.com/account) → Membership → Team ID (10-char) |
 | `WIN_CERTIFICATE_PFX` | Windows | Base64-encoded code signing cert (.pfx) — `base64 -i cert.pfx` |
 | `WIN_CERTIFICATE_PASSWORD` | Windows | Password for the .pfx |
+
+> **Note:** Electron signing secrets are optional. Forks and new setups can build and release unsigned artifacts without configuring any of the macOS/Windows secrets above. The workflow emits a warning annotation when signing is skipped.
 
 ## Model Selection
 

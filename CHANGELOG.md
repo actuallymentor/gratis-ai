@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- make Electron code signing optional — forks build unsigned when secrets are absent
+
 ## [0.0.8] - 2026-02-24
 
 ### Fixed
