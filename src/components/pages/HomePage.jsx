@@ -24,8 +24,14 @@ const Title = styled.h1`
     font-size: clamp( 2.5rem, 2rem + 3vw, 4rem );
     font-weight: 700;
     color: ${ ( { theme } ) => theme.colors.text };
-    margin-bottom: ${ ( { theme } ) => theme.spacing.xl };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
     letter-spacing: -0.02em;
+`
+
+const Tagline = styled.p`
+    font-size: clamp( 1rem, 0.9rem + 0.3vw, 1.2rem );
+    color: ${ ( { theme } ) => theme.colors.text_secondary };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.xl };
 `
 
 // ── Model status ────────────────────────────────────────────────────
@@ -320,6 +326,10 @@ export default function HomePage() {
     return <Container>
 
         <Title>{ DISPLAY_NAME }</Title>
+        <Tagline>
+            Your own AI assistant that runs entirely on this device.
+            Private, fast, and works offline.
+        </Tagline>
 
         <ChatInput
             on_send={ handle_send }
