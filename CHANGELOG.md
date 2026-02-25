@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.1] - 2026-02-25
+
+### Fixed
+- "Module is already initialized" error on chat page — store dedup race condition
+- stale "Failed to load model" banner on HomePage after concurrent load succeeds
+
+## [0.3.0] - 2026-02-25
+
+### Added
+- centered chat input on empty chat — bar sits mid-screen until first message is sent
+- smooth slide-to-bottom animation when user submits first message (flex-grow transition)
+- welcome text + suggestions collapse with opacity/max-height transition on submit
+- `prefers-reduced-motion` support — all chat input transitions respect user preference
+
 ## [0.2.2] - 2026-02-25
 
 ### Fixed

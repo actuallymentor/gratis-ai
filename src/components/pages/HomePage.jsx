@@ -244,9 +244,17 @@ export default function HomePage() {
             set_load_error( err.message )
         } )
 
-        return () => { cancelled = true }
+        return () => {
+            cancelled = true 
+        }
 
     }, [] )
+
+    // Clear stale error if the model loaded via a concurrent path
+    // (e.g. StrictMode double-mount or navigation race)
+    useEffect( () => {
+        if( loaded_model_id && load_error ) set_load_error( null )
+    }, [ loaded_model_id ] )
 
     // ── Auto-focus the search input ─────────────────────────────────
 

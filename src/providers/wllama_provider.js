@@ -196,6 +196,16 @@ export default class WllamaProvider {
 
         } catch ( load_err ) {
 
+            // "Module is already initialized" — a concurrent load booted
+            // the WASM runtime before this call could. Safe to bail out:
+            // the winning call will complete the load and the store's dedup
+            // will surface its result to all callers.
+            if( load_err.message?.includes( `already initialized` ) ) {
+                console.warn( `[wllama] Module already initialized — concurrent load detected, deferring` )
+                this._wllama = null
+                return
+            }
+
             // WASM heap overflow produces a RangeError when the model is too large
             const is_memory_error = load_err instanceof RangeError
                 || load_err.message?.includes( `memory` )

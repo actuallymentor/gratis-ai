@@ -73,8 +73,6 @@ const use_llm_store = create( ( set, get ) => ( {
 
             const provider = await get().ensure_provider()
 
-            set( { is_loading: true, error: null, _loading_model_id: model_id } )
-
             console.info( `[use_llm] Loading model: ${ model_id }` )
 
             try {
@@ -91,7 +89,12 @@ const use_llm_store = create( ( set, get ) => ( {
 
         } )()
 
-        set( { _load_promise: promise } )
+        // Set ALL loading state in one synchronous call — prevents a race
+        // where a concurrent caller sees _load_promise but _loading_model_id
+        // hasn't been set yet (it was previously inside the async IIFE,
+        // after the first `await`, giving a window for the dedup to miss)
+        set( { is_loading: true, error: null, _loading_model_id: model_id, _load_promise: promise } )
+
         return promise
 
     },
