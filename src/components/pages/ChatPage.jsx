@@ -526,10 +526,11 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
      * Handle new chat — clear messages and navigate
      */
     const handle_new_chat = useCallback( () => {
+        abort()
         set_current_conversation_id( null )
         set_messages( [] )
         navigate( `/chat` )
-    }, [ navigate ] )
+    }, [ navigate, abort ] )
 
     // Listen for global new-chat shortcut (Ctrl+N)
     useEffect( () => {
