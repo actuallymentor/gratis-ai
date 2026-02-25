@@ -13,7 +13,6 @@ const SidebarContainer = styled.aside`
     border-right: 1px solid ${ ( { theme } ) => theme.colors.border_subtle };
     transition: all 0.2s ease;
     overflow: hidden;
-    height: 100%;
 
     @media ( prefers-reduced-motion: reduce ) {
         transition: none;
@@ -22,7 +21,8 @@ const SidebarContainer = styled.aside`
     @media ( max-width: ${ ( { theme } ) => theme.breakpoints.mobile } ) {
         position: absolute;
         z-index: 100;
-        height: 100%;
+        top: 0;
+        bottom: 0;
         width: ${ ( { $collapsed } ) => $collapsed ? `0px` : `260px` };
     }
 `
