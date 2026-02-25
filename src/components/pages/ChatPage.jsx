@@ -232,33 +232,43 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const has_pending_model = !!localStorage.getItem( storage_key( `active_model_id` ) )
     const is_loading_model = is_model_loading ||  model_loaded === null && has_pending_model 
 
-    // Guard against StrictMode double-mount starting two model loads
-    const load_started_ref = useRef( false )
-
-    // Try loading the active model on mount
+    // Try loading the active model on mount.
+    // The store deduplicates — if HomePage already started a load, this is a no-op.
     useEffect( () => {
 
-        if( load_started_ref.current ) return
-        load_started_ref.current = true
-
         const active_id = localStorage.getItem( storage_key( `active_model_id` ) )
-        if( active_id && !loaded_model_id ) {
+
+        // Store already has the model loaded — sync local flag
+        if( loaded_model_id ) {
+            set_model_loaded( true )
+            return
+        }
+
+        // Store is already loading — wait for it (reactive via Zustand)
+        if( is_model_loading ) return
+
+        if( active_id ) {
             console.info( `[ChatPage] Auto-loading saved model: ${ active_id }` )
             load_model( active_id )
                 .then( () => set_model_loaded( true ) )
                 .catch( ( err ) => {
                     console.error( `[ChatPage] Auto-load failed:`, err.message )
-                    // Clear saved model so we don't retry on every page load
                     localStorage.removeItem( storage_key( `active_model_id` ) )
                     set_model_loaded( false )
                     toast.error( err.message || `Failed to load model` )
                 } )
-        } else if( !active_id ) {
+        } else {
             // No model configured — transition from null (unknown) to false (no model)
             set_model_loaded( false )
         }
 
     }, [] )
+
+    // Sync local model_loaded flag when the store finishes loading
+    // (e.g. a load started by HomePage completes after ChatPage mounts)
+    useEffect( () => {
+        if( loaded_model_id && model_loaded !== true ) set_model_loaded( true )
+    }, [ loaded_model_id ] )
 
     // Listen for global stop-generation shortcut (Ctrl+Shift+Backspace)
     useEffect( () => {

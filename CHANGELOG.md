@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0] - 2026-02-25
+
+### Added
+- Google-style search home page for returning users — preloads model on mount
+- Zustand LLM store for shared provider state across pages (`llm_store.js`)
+- model load deduplication — navigating from HomePage to ChatPage reuses in-flight load
+
+### Changed
+- `use_llm` hook rewritten as thin wrapper around Zustand store (same API)
+- ChatPage auto-load simplified — leans on store dedup instead of `load_started_ref`
+- WelcomePage renders HomePage (lazy-loaded) when `active_model_id` exists
+
 ## [0.1.0] - 2026-02-25
 
 ### Added

@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Shield, WifiOff, ChevronDown, ChevronUp } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import DeviceInfo from '../atoms/DeviceInfo'
-import { DISPLAY_NAME } from '../../utils/branding'
+import { DISPLAY_NAME, storage_key } from '../../utils/branding'
+
+// Lazy-load HomePage so first-time users don't pay for the extra bundle
+const HomePage = lazy( () => import( './HomePage' ) )
 
 const Container = styled.div`
     display: flex;
@@ -164,6 +167,10 @@ export default function WelcomePage() {
     const navigate = useNavigate()
     const { capabilities, is_detecting } = use_device_capabilities()
     const [ show_details, set_show_details ] = useState( false )
+
+    // Returning users who already have a model go straight to the search home
+    const active_id = localStorage.getItem( storage_key( `active_model_id` ) )
+    if( active_id ) return <Suspense fallback={ <div /> }><HomePage /></Suspense>
 
     const handle_start = () => {
         if( !is_detecting ) navigate( `/select-model`, { state: { capabilities } } )
