@@ -234,20 +234,19 @@ export default function HomePage() {
 
         if( !active_id ) return
 
-        // Don't nuke localStorage on failure — the user chose this model,
-        // a transient WASM init failure shouldn't reset their preference
+        // Cleanup flag prevents the superseded first call (StrictMode double-mount)
+        // from flashing the error banner before the real call completes
+        let cancelled = false
+
         load_model( active_id ).catch( ( err ) => {
+            if( cancelled ) return
             console.error( `[HomePage] Preload failed:`, err.message )
             set_load_error( err.message )
         } )
 
+        return () => { cancelled = true }
+
     }, [] )
-
-    // ── Clear error when model loads successfully ───────────────────
-
-    useEffect( () => {
-        if( loaded_model_id === active_id && load_error ) set_load_error( null )
-    }, [ loaded_model_id ] )
 
     // ── Auto-focus the search input ─────────────────────────────────
 
@@ -412,8 +411,8 @@ export default function HomePage() {
 
         </ModelRow>
 
-        { /* Error banner — shown when model preload fails */ }
-        { load_error && <ErrorBanner data-testid="home-load-error">
+        { /* Error banner — only after loading settles, never mid-load */ }
+        { !is_loading && load_error && <ErrorBanner data-testid="home-load-error">
             <AlertCircle size={ 14 } />
             <span>Failed to load model</span>
             <ErrorAction onClick={ handle_retry } data-testid="home-retry-btn">
