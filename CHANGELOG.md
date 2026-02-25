@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1] - 2026-02-25
+
+### Fixed
+- returning users seeing onboarding instead of HomePage — stop clearing `active_model_id` on transient load failure
+- HomePage shows inline error banner with Retry / Choose another on model load failure
+- ModelSelectPage skips download page round-trip for already-cached models
+
 ## [0.2.0] - 2026-02-25
 
 ### Added

@@ -7,6 +7,7 @@ import use_model_manager from '../../hooks/use_model_manager'
 import use_speed_estimate from '../../hooks/use_speed_estimate'
 import { MODEL_CATALOG, select_model_pair, format_file_size, can_fit_in_memory, estimate_download_time, quality_score } from '../../utils/model_catalog'
 import { parse_hf_url, resolve_hf_model } from '../../utils/hf_url_parser'
+import { storage_key } from '../../utils/branding'
 
 const Container = styled.div`
     display: flex;
@@ -457,8 +458,18 @@ export default function ModelSelectPage() {
     const active_is_cached = active_model && is_cached( active_model.id )
 
     const handle_download = () => {
+
         if( !active_model ) return
+
+        // Cached models can skip the download page entirely
+        if( active_is_cached ) {
+            localStorage.setItem( storage_key( `active_model_id` ), active_model.id )
+            navigate( `/chat` )
+            return
+        }
+
         navigate( `/download`, { state: { model: active_model } } )
+
     }
 
     const handle_select = ( model_id ) => {

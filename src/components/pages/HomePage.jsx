@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { useNavigate } from 'react-router-dom'
-import { SendHorizonal, RefreshCw } from 'lucide-react'
+import { SendHorizonal, RefreshCw, AlertCircle, RotateCcw } from 'lucide-react'
 import use_llm from '../../hooks/use_llm'
 import use_model_manager from '../../hooks/use_model_manager'
 import { DISPLAY_NAME, storage_key } from '../../utils/branding'
@@ -176,6 +176,32 @@ const LoadingDot = styled.span`
     }
 `
 
+// ── Error banner ────────────────────────────────────────────────────
+
+const ErrorBanner = styled.div`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.sm };
+    margin-top: ${ ( { theme } ) => theme.spacing.lg };
+    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    background: ${ ( { theme } ) => theme.colors.error_background || `rgba( 200, 60, 60, 0.08 )` };
+    color: ${ ( { theme } ) => theme.colors.error || `#b85c5c` };
+    font-size: 0.85rem;
+    max-width: 540px;
+    width: 100%;
+`
+
+const ErrorAction = styled.button`
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.accent };
+    white-space: nowrap;
+    transition: opacity 0.15s;
+
+    &:hover { opacity: 0.7; }
+`
+
 // ── Component ───────────────────────────────────────────────────────
 
 /**
@@ -194,6 +220,8 @@ export default function HomePage() {
     const { load_model, is_loading, loaded_model_id } = use_llm()
     const { cached_models } = use_model_manager()
 
+    const [ load_error, set_load_error ] = useState( null )
+
     // Resolve active model name for display
     const active_id = localStorage.getItem( storage_key( `active_model_id` ) )
     const active_model = cached_models.find( ( m ) => m.id === active_id )
@@ -205,10 +233,11 @@ export default function HomePage() {
 
         if( !active_id ) return
 
+        // Don't nuke localStorage on failure — the user chose this model,
+        // a transient WASM init failure shouldn't reset their preference
         load_model( active_id ).catch( ( err ) => {
             console.error( `[HomePage] Preload failed:`, err.message )
-            localStorage.removeItem( storage_key( `active_model_id` ) )
-            navigate( `/select-model`, { replace: true } )
+            set_load_error( err.message )
         } )
 
     }, [] )
@@ -266,6 +295,19 @@ export default function HomePage() {
         }
 
     }, [ handle_submit ] )
+
+    // Retry loading after a transient failure
+    const handle_retry = useCallback( () => {
+
+        if( !active_id ) return
+
+        set_load_error( null )
+        load_model( active_id ).catch( ( err ) => {
+            console.error( `[HomePage] Retry failed:`, err.message )
+            set_load_error( err.message )
+        } )
+
+    }, [ active_id, load_model ] )
 
     const handle_switch = useCallback( ( model_id ) => {
 
@@ -362,6 +404,18 @@ export default function HomePage() {
             { cached_models.length === 1 && <span>{ model_name }</span> }
 
         </ModelRow>
+
+        { /* Error banner — shown when model preload fails */ }
+        { load_error && <ErrorBanner data-testid="home-load-error">
+            <AlertCircle size={ 14 } />
+            <span>Failed to load model</span>
+            <ErrorAction onClick={ handle_retry } data-testid="home-retry-btn">
+                <RotateCcw size={ 12 } /> Retry
+            </ErrorAction>
+            <ErrorAction onClick={ () => navigate( `/select-model` ) } data-testid="home-choose-another-btn">
+                Choose another
+            </ErrorAction>
+        </ErrorBanner> }
 
     </Container>
 
