@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { v4 as uuid } from 'uuid'
 import toast from 'react-hot-toast'
-import { ArrowRight, MessageSquare, Loader } from 'lucide-react'
+import { ArrowRight, Loader } from 'lucide-react'
 import AppLayout from '../molecules/AppLayout'
 import MessageList from '../molecules/MessageList'
 import ChatInput from '../molecules/ChatInput'
@@ -66,50 +66,6 @@ const WelcomeTitle = styled.h1`
     margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
 `
 
-const WelcomeSubtitle = styled.p`
-    color: ${ ( { theme } ) => theme.colors.text_muted };
-    margin-bottom: ${ ( { theme } ) => theme.spacing.xl };
-    font-size: 0.95rem;
-`
-
-// Conversation starter suggestions
-const Suggestions = styled.div`
-    display: grid;
-    grid-template-columns: repeat( auto-fit, minmax( 200px, 1fr ) );
-    gap: ${ ( { theme } ) => theme.spacing.sm };
-    max-width: 500px;
-    width: 100%;
-
-    @media ( max-width: ${ ( { theme } ) => theme.breakpoints.mobile } ) {
-        grid-template-columns: 1fr;
-    }
-`
-
-const SuggestionButton = styled.button`
-    display: flex;
-    align-items: flex-start;
-    gap: ${ ( { theme } ) => theme.spacing.sm };
-    padding: ${ ( { theme } ) => theme.spacing.md };
-    border: 1px solid ${ ( { theme } ) => theme.colors.border };
-    border-radius: ${ ( { theme } ) => theme.border_radius.md };
-    text-align: left;
-    font-size: 0.85rem;
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
-    line-height: 1.4;
-    transition: border-color 0.15s, color 0.15s;
-    min-height: 2.75rem;
-
-    &:hover {
-        border-color: ${ ( { theme } ) => theme.colors.text_muted };
-        color: ${ ( { theme } ) => theme.colors.text };
-    }
-`
-
-const SuggestionIcon = styled.div`
-    color: ${ ( { theme } ) => theme.colors.text_muted };
-    flex-shrink: 0;
-    margin-top: 1px;
-`
 
 // No model CTA — replaces the old dismissive banner
 const NoModelContainer = styled.div`
@@ -182,13 +138,6 @@ const SpinnerIcon = styled.div`
     }
 `
 
-// Conversation starter prompts
-const SUGGESTIONS = [
-    `Explain something complex in simple terms`,
-    `Help me write a message`,
-    `Brainstorm ideas for a project`,
-    `Summarise a topic I'm curious about`,
-]
 
 /**
  * Main chat interface page with layout shell
@@ -686,13 +635,6 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         set_voice_download_error( false )
     }, [] )
 
-    /**
-     * Handle clicking a conversation starter suggestion
-     */
-    const handle_suggestion = useCallback( ( text ) => {
-        if( has_model ) send_message( text )
-    }, [ has_model, send_message ] )
-
     const has_messages = messages.length > 0
 
     // Render the main content area based on state
@@ -761,19 +703,6 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
                 <WelcomeContent $visible={ should_center }>
                     <WelcomeTitle>What can I help with?</WelcomeTitle>
-                    <WelcomeSubtitle>Ask me anything, or try one of these:</WelcomeSubtitle>
-                    <Suggestions data-testid="suggestions">
-                        { SUGGESTIONS.map( ( suggestion ) =>
-                            <SuggestionButton
-                                key={ suggestion }
-                                data-testid="suggestion-btn"
-                                onClick={ () => handle_suggestion( suggestion ) }
-                            >
-                                <SuggestionIcon><MessageSquare size={ 14 } /></SuggestionIcon>
-                                { suggestion }
-                            </SuggestionButton>
-                        ) }
-                    </Suggestions>
                 </WelcomeContent>
 
                 <ChatInput
