@@ -65,12 +65,6 @@ const WelcomeContent = styled.div`
 const WelcomeTitle = styled.h1`
     font-size: clamp( 1.5rem, 1.2rem + 1vw, 2rem );
     color: ${ ( { theme } ) => theme.colors.text };
-    margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
-`
-
-const WelcomeTagline = styled.p`
-    font-size: clamp( 0.95rem, 0.85rem + 0.3vw, 1.1rem );
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
     margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
 `
 
@@ -712,10 +706,6 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
                 <WelcomeContent $visible={ should_center }>
                     <WelcomeTitle>What can I help with?</WelcomeTitle>
-                    <WelcomeTagline>
-                        Your own AI assistant that runs entirely on this device.
-                        Private, fast, and works offline.
-                    </WelcomeTagline>
                 </WelcomeContent>
 
                 <ChatInput
