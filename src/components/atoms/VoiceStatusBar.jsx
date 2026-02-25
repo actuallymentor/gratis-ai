@@ -9,11 +9,11 @@ const StatusArea = styled.div`
     display: flex;
     align-items: center;
     gap: ${ ( { theme } ) => theme.spacing.sm };
-    min-height: 2.75rem;
-    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
-    background: ${ ( { theme } ) => theme.colors.input_background };
-    border-radius: ${ ( { theme } ) => theme.border_radius.lg };
-    border: 1px solid transparent;
+    min-height: 1.5rem;
+    padding: ${ ( { theme } ) => `${ theme.spacing.xs } 0` };
+    background: transparent;
+    border: none;
+    border-radius: 0;
     font-size: 0.85rem;
 `
 

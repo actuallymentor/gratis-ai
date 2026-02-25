@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.0] - 2026-02-25
+
+### Added
+- unified pill-shaped input bar — textarea + buttons float inside a single rounded container
+- voice input on home page — mic button, recording status, transcription via shared `ChatInput`
+- `focus-within` accent border highlight on input pill
+- `ChatInput` config props: `as_form`, `max_width`, `placeholder`, `auto_focus`
+
+### Changed
+- `ChatInput` pill layout replaces flat `InputContainer` (buttons inside bar, not beside it)
+- `VoiceStatusBar` renders transparent — delegates visual styling to parent pill
+- `InputSection` on chat page owns background/padding (prevents message bleed-through)
+- home page uses `ChatInput` component instead of bespoke `SearchForm` / `SubmitButton`
+
 ## [0.3.1] - 2026-02-25
 
 ### Fixed

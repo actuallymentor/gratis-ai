@@ -3,45 +3,62 @@ import styled, { keyframes, css } from 'styled-components'
 import { SendHorizonal, Square, Mic, Loader } from 'lucide-react'
 import VoiceStatusBar from '../atoms/VoiceStatusBar'
 
-const InputContainer = styled.div`
+// ── Pill container — owns all visual appearance ─────────────────────
+
+const InputPill = styled.div`
     display: flex;
     align-items: flex-end;
-    gap: ${ ( { theme } ) => theme.spacing.sm };
-    padding: ${ ( { theme } ) => theme.spacing.md };
-    background: ${ ( { theme } ) => theme.colors.background };
-    max-width: 65ch;
+    max-width: ${ ( { $max_width } ) => $max_width || `65ch` };
     width: 100%;
     margin: 0 auto;
+    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.sm } ${ theme.spacing.sm } ${ theme.spacing.md }` };
+    background: ${ ( { theme } ) => theme.colors.input_background };
+    border: 1px solid ${ ( { theme } ) => theme.colors.border };
+    border-radius: ${ ( { theme } ) => theme.border_radius.xl };
+    transition: border-color 0.15s;
+
+    &:focus-within {
+        border-color: ${ ( { theme } ) => theme.colors.accent };
+    }
 `
+
+// ── Transparent textarea — text lives inside the pill ───────────────
 
 const TextArea = styled.textarea`
     flex: 1;
-    min-height: 2.75rem;
+    min-height: 1.5rem;
     max-height: 200px;
-    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
-    background: ${ ( { theme } ) => theme.colors.input_background };
+    padding: ${ ( { theme } ) => `${ theme.spacing.xs } 0` };
+    background: transparent;
     color: ${ ( { theme } ) => theme.colors.text };
-    border: 1px solid transparent;
-    border-radius: ${ ( { theme } ) => theme.border_radius.lg };
+    border: none;
+    outline: none;
     resize: none;
     line-height: 1.5;
 
     &::placeholder {
         color: ${ ( { theme } ) => theme.colors.text_muted };
     }
-
-    &:focus {
-        outline: none;
-        border-color: ${ ( { theme } ) => theme.colors.border };
-    }
 `
+
+// ── Button row — mic + send/stop, bottom-right inside the pill ──────
+
+const ButtonRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    flex-shrink: 0;
+    align-self: flex-end;
+`
+
+// ── Action buttons — smaller to fit inside the pill ─────────────────
 
 const SendButton = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 2rem;
+    height: 2rem;
     border-radius: ${ ( { theme } ) => theme.border_radius.full };
     background: ${ ( { theme } ) => theme.colors.primary };
     color: ${ ( { theme } ) => theme.colors.background };
@@ -72,8 +89,8 @@ const MicButton = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 2rem;
+    height: 2rem;
     border-radius: ${ ( { theme } ) => theme.border_radius.full };
     background: transparent;
     color: ${ ( { theme, $is_recording } ) => $is_recording
@@ -86,7 +103,7 @@ const MicButton = styled.button`
         color: ${ ( { theme, $is_recording } ) => $is_recording
         ? theme.colors.error
         : theme.colors.text };
-        background: ${ ( { theme } ) => theme.colors.input_background };
+        background: ${ ( { theme } ) => theme.colors.surface_hover };
     }
 
     &:disabled {
@@ -118,14 +135,18 @@ const SpinnerIcon = styled( Loader )`
 `
 
 /**
- * Chat input bar with mic, send, and stop buttons.
- * When voice is active, the textarea is replaced by an inline status indicator
- * so the feedback sits in the same visual slot, aligned with the action buttons.
+ * Unified pill-shaped chat input with mic, send, and stop buttons inside.
+ * Used on both HomePage (as_form) and ChatPage (default).
+ *
  * @param {Object} props
  * @param {Function} props.on_send - Handler for sending a message
- * @param {Function} props.on_stop - Handler for stopping generation
- * @param {boolean} props.is_generating - Whether currently generating
- * @param {boolean} props.disabled - Disable input
+ * @param {Function} [props.on_stop] - Handler for stopping generation
+ * @param {boolean} [props.is_generating] - Whether currently generating
+ * @param {boolean} [props.disabled] - Disable input
+ * @param {boolean} [props.as_form] - Render as <form> with onSubmit
+ * @param {string} [props.max_width] - Override pill max-width (default '65ch')
+ * @param {string} [props.placeholder] - Textarea placeholder text
+ * @param {boolean} [props.auto_focus] - Auto-focus textarea on mount
  * @param {Function} [props.on_mic_click] - Handler when mic button is clicked (not recording)
  * @param {Function} [props.on_mic_stop] - Handler when mic button is clicked to stop recording
  * @param {boolean} [props.is_recording] - Whether mic is actively recording
@@ -141,6 +162,10 @@ export default function ChatInput( {
     on_stop,
     is_generating,
     disabled,
+    as_form = false,
+    max_width,
+    placeholder = `Type a message...`,
+    auto_focus = false,
     on_mic_click,
     on_mic_stop,
     is_recording = false,
@@ -178,6 +203,11 @@ export default function ChatInput( {
 
     }, [ append_text ] )
 
+    // Auto-focus textarea on mount when requested
+    useEffect( () => {
+        if( auto_focus ) textarea_ref.current?.focus()
+    }, [] )
+
     const handle_send = () => {
         if( text.trim() && !disabled ) {
             on_send( text.trim() )
@@ -192,6 +222,11 @@ export default function ChatInput( {
         }
     }
 
+    const handle_submit = ( e ) => {
+        e.preventDefault()
+        handle_send()
+    }
+
     const handle_mic = () => {
         if( is_recording ) {
             on_mic_stop?.()
@@ -200,7 +235,13 @@ export default function ChatInput( {
         }
     }
 
-    return <InputContainer>
+    // Form mode renders the pill as a <form> element
+    const pill_props = {
+        $max_width: max_width,
+        ... as_form && { as: `form`, onSubmit: handle_submit } ,
+    }
+
+    return <InputPill { ...pill_props }>
 
         { /* Textarea or inline voice status — they share the same flex slot */ }
         { voice_active ?
@@ -218,46 +259,53 @@ export default function ChatInput( {
                 value={ text }
                 onChange={ ( e ) => set_text( e.target.value ) }
                 onKeyDown={ handle_keydown }
-                placeholder="Type a message..."
+                placeholder={ placeholder }
                 disabled={ disabled || is_generating }
                 rows={ 1 }
             /> }
 
-        { /* Mic button — shows spinner when transcribing or loading model */ }
-        { is_transcribing || is_loading_model ?
-            <MicButton disabled aria-label={ is_transcribing ? `Transcribing` : `Loading voice model` }>
-                <SpinnerIcon size={ 18 } />
-            </MicButton>
-            :
-            <MicButton
-                data-testid="mic-btn"
-                onClick={ handle_mic }
-                $is_recording={ is_recording }
-                disabled={ disabled || is_generating }
-                aria-label={ is_recording ? `Stop recording` : `Voice input` }
-            >
-                <Mic size={ 18 } />
-            </MicButton> }
+        <ButtonRow>
 
-        { /* Send or Stop button */ }
-        { is_generating ?
-            <StopButton
-                data-testid="stop-btn"
-                onClick={ on_stop }
-                aria-label="Stop generation"
-            >
-                <Square size={ 18 } />
-            </StopButton>
-            :
-            <SendButton
-                data-testid="send-btn"
-                onClick={ handle_send }
-                disabled={ !text.trim() || disabled }
-                aria-label="Send message"
-            >
-                <SendHorizonal size={ 18 } />
-            </SendButton> }
+            { /* Mic button — shows spinner when transcribing or loading model */ }
+            { is_transcribing || is_loading_model ?
+                <MicButton disabled type="button" aria-label={ is_transcribing ? `Transcribing` : `Loading voice model` }>
+                    <SpinnerIcon size={ 16 } />
+                </MicButton>
+                :
+                <MicButton
+                    data-testid="mic-btn"
+                    type="button"
+                    onClick={ handle_mic }
+                    $is_recording={ is_recording }
+                    disabled={ disabled || is_generating }
+                    aria-label={ is_recording ? `Stop recording` : `Voice input` }
+                >
+                    <Mic size={ 16 } />
+                </MicButton> }
 
-    </InputContainer>
+            { /* Send or Stop button */ }
+            { is_generating ?
+                <StopButton
+                    data-testid="stop-btn"
+                    type="button"
+                    onClick={ on_stop }
+                    aria-label="Stop generation"
+                >
+                    <Square size={ 16 } />
+                </StopButton>
+                :
+                <SendButton
+                    data-testid="send-btn"
+                    type={ as_form ? `submit` : `button` }
+                    onClick={ as_form ? undefined : handle_send }
+                    disabled={ !text.trim() || disabled }
+                    aria-label="Send message"
+                >
+                    <SendHorizonal size={ 16 } />
+                </SendButton> }
+
+        </ButtonRow>
+
+    </InputPill>
 
 }

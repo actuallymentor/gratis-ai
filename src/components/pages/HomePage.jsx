@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { useNavigate } from 'react-router-dom'
-import { SendHorizonal, RefreshCw, AlertCircle, RotateCcw } from 'lucide-react'
+import { RefreshCw, AlertCircle, RotateCcw } from 'lucide-react'
+import ChatInput from '../molecules/ChatInput'
+import VoiceModelDialog from '../molecules/VoiceModelDialog'
 import use_llm from '../../hooks/use_llm'
 import use_model_manager from '../../hooks/use_model_manager'
+import use_voice_input from '../../hooks/use_voice_input'
 import { DISPLAY_NAME, storage_key } from '../../utils/branding'
 
 // ── Layout ──────────────────────────────────────────────────────────
@@ -23,67 +26,6 @@ const Title = styled.h1`
     color: ${ ( { theme } ) => theme.colors.text };
     margin-bottom: ${ ( { theme } ) => theme.spacing.xl };
     letter-spacing: -0.02em;
-`
-
-// ── Search bar ──────────────────────────────────────────────────────
-
-const SearchForm = styled.form`
-    display: flex;
-    align-items: flex-end;
-    gap: ${ ( { theme } ) => theme.spacing.sm };
-    width: 100%;
-    max-width: 540px;
-`
-
-const InputWrapper = styled.div`
-    flex: 1;
-    position: relative;
-`
-
-const TextArea = styled.textarea`
-    width: 100%;
-    min-height: 3rem;
-    max-height: 200px;
-    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
-    background: ${ ( { theme } ) => theme.colors.input_background };
-    color: ${ ( { theme } ) => theme.colors.text };
-    border: 1px solid ${ ( { theme } ) => theme.colors.border };
-    border-radius: ${ ( { theme } ) => theme.border_radius.lg };
-    font-size: 1rem;
-    line-height: 1.5;
-    resize: none;
-    font-family: inherit;
-
-    &::placeholder {
-        color: ${ ( { theme } ) => theme.colors.text_muted };
-    }
-
-    &:focus {
-        outline: none;
-        border-color: ${ ( { theme } ) => theme.colors.accent };
-    }
-`
-
-const SubmitButton = styled.button`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 3rem;
-    min-height: 3rem;
-    border: 1px solid transparent;
-    border-radius: ${ ( { theme } ) => theme.border_radius.full };
-    background: ${ ( { theme } ) => theme.colors.primary };
-    color: ${ ( { theme } ) => theme.colors.background };
-    transition: opacity 0.15s;
-    flex-shrink: 0;
-    align-self: flex-end;
-
-    &:hover { opacity: 0.85; }
-
-    &:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
 `
 
 // ── Model status ────────────────────────────────────────────────────
@@ -212,9 +154,7 @@ const ErrorAction = styled.button`
 export default function HomePage() {
 
     const navigate = useNavigate()
-    const textarea_ref = useRef( null )
 
-    const [ query, set_query ] = useState( `` )
     const [ show_dropdown, set_show_dropdown ] = useState( false )
     const dropdown_ref = useRef( null )
 
@@ -222,6 +162,26 @@ export default function HomePage() {
     const { cached_models } = use_model_manager()
 
     const [ load_error, set_load_error ] = useState( null )
+
+    // Voice input hook
+    const {
+        is_model_cached: is_voice_cached,
+        is_downloading: is_voice_downloading,
+        download_progress: voice_download_progress,
+        is_recording,
+        is_transcribing,
+        is_loading_model: is_voice_loading_model,
+        audio_level: voice_audio_level,
+        recording_start_time: voice_recording_start_time,
+        download_model: download_voice_model,
+        start_recording,
+        stop_and_transcribe,
+    } = use_voice_input()
+
+    // Voice dialog and transcription state
+    const [ show_voice_dialog, set_show_voice_dialog ] = useState( false )
+    const [ voice_download_error, set_voice_download_error ] = useState( false )
+    const [ voice_text, set_voice_text ] = useState( null )
 
     // Resolve active model name for display
     const active_id = localStorage.getItem( storage_key( `active_model_id` ) )
@@ -245,7 +205,7 @@ export default function HomePage() {
         } )
 
         return () => {
-            cancelled = true 
+            cancelled = true
         }
 
     }, [] )
@@ -255,12 +215,6 @@ export default function HomePage() {
     useEffect( () => {
         if( loaded_model_id && load_error ) set_load_error( null )
     }, [ loaded_model_id ] )
-
-    // ── Auto-focus the search input ─────────────────────────────────
-
-    useEffect( () => {
-        textarea_ref.current?.focus()
-    }, [] )
 
     // ── Close dropdown on outside click ─────────────────────────────
 
@@ -289,26 +243,9 @@ export default function HomePage() {
 
     // ── Handlers ────────────────────────────────────────────────────
 
-    const handle_submit = useCallback( ( e ) => {
-
-        e?.preventDefault()
-
-        const trimmed = query.trim()
-        if( !trimmed ) return
-
-        navigate( `/chat?q=${ encodeURIComponent( trimmed ) }` )
-
-    }, [ query, navigate ] )
-
-    const handle_keydown = useCallback( ( e ) => {
-
-        // Enter submits, Shift+Enter inserts newline
-        if( e.key === `Enter` && !e.shiftKey ) {
-            e.preventDefault()
-            handle_submit()
-        }
-
-    }, [ handle_submit ] )
+    const handle_send = useCallback( ( text ) => {
+        navigate( `/chat?q=${ encodeURIComponent( text ) }` )
+    }, [ navigate ] )
 
     // Retry loading after a transient failure
     const handle_retry = useCallback( () => {
@@ -336,16 +273,46 @@ export default function HomePage() {
 
     }, [ active_id, load_model ] )
 
-    // Auto-resize textarea
-    const handle_input = useCallback( ( e ) => {
+    // ── Voice input handlers ────────────────────────────────────────
 
-        set_query( e.target.value )
+    const handle_mic_click = useCallback( async () => {
 
-        // Reset then grow
-        const el = e.target
-        el.style.height = `auto`
-        el.style.height = `${ el.scrollHeight }px`
+        if( !is_voice_cached ) {
+            set_show_voice_dialog( true )
+            return
+        }
 
+        await start_recording()
+
+    }, [ is_voice_cached, start_recording ] )
+
+    const handle_mic_stop = useCallback( async () => {
+
+        const text = await stop_and_transcribe()
+        set_voice_text( null )
+        if( text ) set_voice_text( text )
+
+    }, [ stop_and_transcribe ] )
+
+    const handle_voice_confirm = useCallback( async () => {
+
+        set_voice_download_error( false )
+
+        try {
+
+            await download_voice_model()
+            set_show_voice_dialog( false )
+            await start_recording()
+
+        } catch {
+            set_voice_download_error( true )
+        }
+
+    }, [ download_voice_model, start_recording ] )
+
+    const handle_voice_dialog_close = useCallback( () => {
+        set_show_voice_dialog( false )
+        set_voice_download_error( false )
     }, [] )
 
     // ── Render ──────────────────────────────────────────────────────
@@ -354,30 +321,32 @@ export default function HomePage() {
 
         <Title>{ DISPLAY_NAME }</Title>
 
-        <SearchForm onSubmit={ handle_submit } data-testid="home-search-form">
+        <ChatInput
+            on_send={ handle_send }
+            as_form
+            max_width="540px"
+            placeholder="Ask anything..."
+            auto_focus
+            on_mic_click={ handle_mic_click }
+            on_mic_stop={ handle_mic_stop }
+            is_recording={ is_recording }
+            is_transcribing={ is_transcribing }
+            is_loading_model={ is_voice_loading_model }
+            audio_level={ voice_audio_level }
+            recording_start_time={ voice_recording_start_time }
+            append_text={ voice_text }
+        />
 
-            <InputWrapper>
-                <TextArea
-                    ref={ textarea_ref }
-                    value={ query }
-                    onChange={ handle_input }
-                    onKeyDown={ handle_keydown }
-                    placeholder="Ask anything..."
-                    rows={ 1 }
-                    data-testid="home-search-input"
-                />
-            </InputWrapper>
-
-            <SubmitButton
-                type="submit"
-                disabled={ !query.trim() }
-                data-testid="home-search-submit"
-                aria-label="Start chat"
-            >
-                <SendHorizonal size={ 18 } />
-            </SubmitButton>
-
-        </SearchForm>
+        { /* Voice model download dialog */ }
+        <VoiceModelDialog
+            is_open={ show_voice_dialog }
+            on_close={ handle_voice_dialog_close }
+            on_confirm={ handle_voice_confirm }
+            is_downloading={ is_voice_downloading }
+            download_progress={ voice_download_progress }
+            has_error={ voice_download_error }
+            on_retry={ handle_voice_confirm }
+        />
 
         { /* Model status row */ }
         <ModelRow>

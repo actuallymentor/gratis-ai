@@ -35,6 +35,8 @@ const InputSection = styled.div`
     flex: ${ ( { $centered } ) => $centered ? '1 0 auto' : '0 0 auto' };
     transition: flex-grow 0.4s cubic-bezier( 0.4, 0, 0.2, 1 );
     min-height: 0;
+    padding: ${ ( { theme } ) => theme.spacing.md };
+    background: ${ ( { theme } ) => theme.colors.background };
 
     @media ( prefers-reduced-motion: reduce ) {
         transition: none;
