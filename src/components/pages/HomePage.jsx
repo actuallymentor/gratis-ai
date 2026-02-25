@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { useNavigate } from 'react-router-dom'
-import { RefreshCw, AlertCircle, RotateCcw } from 'lucide-react'
+import { ArrowLeftRight, AlertCircle, RotateCcw } from 'lucide-react'
 import ChatInput from '../molecules/ChatInput'
 import VoiceModelDialog from '../molecules/VoiceModelDialog'
 import use_llm from '../../hooks/use_llm'
@@ -46,63 +46,19 @@ const ModelRow = styled.div`
     min-height: 1.5rem;
 `
 
-const SwitchButton = styled.button`
+const SwitchIcon = styled.button`
     display: inline-flex;
     align-items: center;
-    gap: ${ ( { theme } ) => theme.spacing.xs };
-    color: ${ ( { theme } ) => theme.colors.text_secondary };
-    font-size: 0.85rem;
-    transition: color 0.15s;
-
-    &:hover { color: ${ ( { theme } ) => theme.colors.text }; }
-`
-
-// ── Model dropdown (reused from ModelSelector pattern) ──────────────
-
-const DropdownWrapper = styled.div`
-    position: relative;
-    display: inline-block;
-`
-
-const Dropdown = styled.div`
-    position: absolute;
-    bottom: calc( 100% + 4px );
-    left: 50%;
-    transform: translateX( -50% );
-    min-width: 220px;
-    max-height: min( 300px, 50vh );
-    overflow-y: auto;
-    background: ${ ( { theme } ) => theme.colors.background };
-    border: 1px solid ${ ( { theme } ) => theme.colors.border };
-    border-radius: ${ ( { theme } ) => theme.border_radius.lg };
-    box-shadow: ${ ( { theme } ) => theme.mode === `dark`
-        ? `0 2px 8px rgba( 0, 0, 0, 0.3 )`
-        : `0 2px 8px rgba( 0, 0, 0, 0.08 )` };
-    z-index: 500;
-`
-
-const ModelOption = styled.button`
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
-    text-align: left;
-    font-size: 0.85rem;
-    color: ${ ( { theme } ) => theme.colors.text };
-    transition: background 0.15s;
-    min-height: 2.75rem;
+    justify-content: center;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    padding: 2px;
+    border-radius: ${ ( { theme } ) => theme.border_radius.sm };
+    transition: color 0.15s, background 0.15s;
 
     &:hover {
+        color: ${ ( { theme } ) => theme.colors.text };
         background: ${ ( { theme } ) => theme.colors.surface_hover };
     }
-`
-
-const ModelOptionName = styled.span`
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: ${ ( { $active } ) => $active ? 600 : 400 };
 `
 
 // ── Pulsing loading dot ─────────────────────────────────────────────
@@ -160,9 +116,6 @@ const ErrorAction = styled.button`
 export default function HomePage() {
 
     const navigate = useNavigate()
-
-    const [ show_dropdown, set_show_dropdown ] = useState( false )
-    const dropdown_ref = useRef( null )
 
     const { load_model, is_loading, loaded_model_id } = use_llm()
     const { cached_models } = use_model_manager()
@@ -222,31 +175,6 @@ export default function HomePage() {
         if( loaded_model_id && load_error ) set_load_error( null )
     }, [ loaded_model_id ] )
 
-    // ── Close dropdown on outside click ─────────────────────────────
-
-    useEffect( () => {
-
-        if( !show_dropdown ) return
-
-        const handle_click = ( e ) => {
-            if( dropdown_ref.current && !dropdown_ref.current.contains( e.target ) ) {
-                set_show_dropdown( false )
-            }
-        }
-
-        const handle_escape = ( e ) => {
-            if( e.key === `Escape` ) set_show_dropdown( false )
-        }
-
-        document.addEventListener( `mousedown`, handle_click )
-        document.addEventListener( `keydown`, handle_escape )
-        return () => {
-            document.removeEventListener( `mousedown`, handle_click )
-            document.removeEventListener( `keydown`, handle_escape )
-        }
-
-    }, [ show_dropdown ] )
-
     // ── Handlers ────────────────────────────────────────────────────
 
     const handle_send = useCallback( ( text ) => {
@@ -262,19 +190,6 @@ export default function HomePage() {
         load_model( active_id ).catch( ( err ) => {
             console.error( `[HomePage] Retry failed:`, err.message )
             set_load_error( err.message )
-        } )
-
-    }, [ active_id, load_model ] )
-
-    const handle_switch = useCallback( ( model_id ) => {
-
-        set_show_dropdown( false )
-
-        if( model_id === active_id ) return
-
-        localStorage.setItem( storage_key( `active_model_id` ), model_id )
-        load_model( model_id ).catch( ( err ) => {
-            console.error( `[HomePage] Model switch failed:`, err.message )
         } )
 
     }, [ active_id, load_model ] )
@@ -358,43 +273,24 @@ export default function HomePage() {
             on_retry={ handle_voice_confirm }
         />
 
-        { /* Model status row */ }
+        { /* Model status row — name, ready state, switch icon */ }
         <ModelRow>
 
             { is_loading && <>
                 <LoadingDot />
-                <span>Loading model...</span>
+                <span>Loading { model_name }...</span>
             </> }
 
-            { !is_loading && loaded_model_id && <span>Ready</span> }
-
-            { /* Switch model button with dropdown */ }
-            { cached_models.length > 1 && <DropdownWrapper ref={ dropdown_ref }>
-                <SwitchButton
-                    onClick={ () => set_show_dropdown( !show_dropdown ) }
+            { !is_loading && loaded_model_id && <>
+                <span>{ model_name } — Ready</span>
+                <SwitchIcon
+                    onClick={ () => navigate( `/select-model` ) }
+                    title="Switch model"
                     data-testid="home-switch-model"
                 >
-                    <RefreshCw size={ 12 } />
-                    { model_name }
-                </SwitchButton>
-
-                { show_dropdown && <Dropdown>
-                    { cached_models.map( ( m ) =>
-                        <ModelOption
-                            key={ m.id }
-                            onClick={ () => handle_switch( m.id ) }
-                            data-testid={ `home-model-option-${ m.id }` }
-                        >
-                            <ModelOptionName $active={ m.id === active_id }>
-                                { m.name }
-                            </ModelOptionName>
-                        </ModelOption>
-                    ) }
-                </Dropdown> }
-            </DropdownWrapper> }
-
-            { /* Single model — just show the name */ }
-            { cached_models.length === 1 && <span>{ model_name }</span> }
+                    <ArrowLeftRight size={ 14 } />
+                </SwitchIcon>
+            </> }
 
         </ModelRow>
 
