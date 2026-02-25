@@ -24,15 +24,40 @@ const Container = styled.div`
     overflow: hidden;
 `
 
-// Empty state with conversation starters
-const EmptyState = styled.div`
+// Wrapper around ChatInput — centers it vertically when no messages,
+// then smoothly transitions to bottom-pinned when the user sends a message
+const InputSection = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex: 1;
-    padding: ${ ( { theme } ) => theme.spacing.xl };
+    width: 100%;
+    flex: ${ ( { $centered } ) => $centered ? '1 0 auto' : '0 0 auto' };
+    transition: flex-grow 0.4s cubic-bezier( 0.4, 0, 0.2, 1 );
+    min-height: 0;
+
+    @media ( prefers-reduced-motion: reduce ) {
+        transition: none;
+    }
+`
+
+// Welcome text + suggestions that collapse when the first message is sent
+const WelcomeContent = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
+    overflow: hidden;
+    max-height: ${ ( { $visible } ) => $visible ? '500px' : '0' };
+    opacity: ${ ( { $visible } ) => $visible ? 1 : 0 };
+    margin-bottom: ${ ( { $visible, theme } ) => $visible ? theme.spacing.xl : '0' };
+    transition: max-height 0.4s cubic-bezier( 0.4, 0, 0.2, 1 ),
+                opacity 0.25s ease,
+                margin-bottom 0.4s cubic-bezier( 0.4, 0, 0.2, 1 );
+
+    @media ( prefers-reduced-motion: reduce ) {
+        transition: none;
+    }
 `
 
 const WelcomeTitle = styled.h1`
@@ -698,25 +723,9 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             </NoModelContainer>
         }
 
-        // Model loaded but no messages — show welcome with suggestions
-        if( !has_messages ) {
-            return <EmptyState>
-                <WelcomeTitle>What can I help with?</WelcomeTitle>
-                <WelcomeSubtitle>Ask me anything, or try one of these:</WelcomeSubtitle>
-                <Suggestions data-testid="suggestions">
-                    { SUGGESTIONS.map( ( suggestion ) =>
-                        <SuggestionButton
-                            key={ suggestion }
-                            data-testid="suggestion-btn"
-                            onClick={ () => handle_suggestion( suggestion ) }
-                        >
-                            <SuggestionIcon><MessageSquare size={ 14 } /></SuggestionIcon>
-                            { suggestion }
-                        </SuggestionButton>
-                    ) }
-                </Suggestions>
-            </EmptyState>
-        }
+        // Model loaded but no messages — welcome content is rendered
+        // inside InputSection (below) so the chat bar can center vertically
+        if( !has_messages ) return null
 
         // Messages exist — show the message list
         return <MessageList
@@ -726,6 +735,9 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             on_edit={ handle_edit }
         />
     }
+
+    // Center the input bar when the model is ready but no messages yet
+    const should_center = !has_messages && has_model && !is_loading_model
 
     return <AppLayout
         theme_preference={ theme_preference }
@@ -745,20 +757,41 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
             { render_content() }
 
-            <ChatInput
-                on_send={ send_message }
-                on_stop={ handle_stop }
-                is_generating={ is_generating }
-                disabled={ !has_model }
-                on_mic_click={ handle_mic_click }
-                on_mic_stop={ handle_mic_stop }
-                is_recording={ is_recording }
-                is_transcribing={ is_transcribing }
-                is_loading_model={ is_voice_loading_model }
-                audio_level={ voice_audio_level }
-                recording_start_time={ voice_recording_start_time }
-                append_text={ voice_text }
-            />
+            <InputSection $centered={ should_center }>
+
+                <WelcomeContent $visible={ should_center }>
+                    <WelcomeTitle>What can I help with?</WelcomeTitle>
+                    <WelcomeSubtitle>Ask me anything, or try one of these:</WelcomeSubtitle>
+                    <Suggestions data-testid="suggestions">
+                        { SUGGESTIONS.map( ( suggestion ) =>
+                            <SuggestionButton
+                                key={ suggestion }
+                                data-testid="suggestion-btn"
+                                onClick={ () => handle_suggestion( suggestion ) }
+                            >
+                                <SuggestionIcon><MessageSquare size={ 14 } /></SuggestionIcon>
+                                { suggestion }
+                            </SuggestionButton>
+                        ) }
+                    </Suggestions>
+                </WelcomeContent>
+
+                <ChatInput
+                    on_send={ send_message }
+                    on_stop={ handle_stop }
+                    is_generating={ is_generating }
+                    disabled={ !has_model }
+                    on_mic_click={ handle_mic_click }
+                    on_mic_stop={ handle_mic_stop }
+                    is_recording={ is_recording }
+                    is_transcribing={ is_transcribing }
+                    is_loading_model={ is_voice_loading_model }
+                    audio_level={ voice_audio_level }
+                    recording_start_time={ voice_recording_start_time }
+                    append_text={ voice_text }
+                />
+
+            </InputSection>
 
         </Container>
 
