@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.0] - 2026-02-25
+
+### Added
+- desktop app promo banner in web version — hidden in Electron, dismissible with localStorage persistence
+- `/get-app` download page with OS-detected platform cards linking to GitHub Releases
+- `DesktopAppBanner` atom component matching `UpdateBanner` visual style
+- `GetAppPage` standalone page with macOS/Windows/Linux download cards
+
 ## [0.0.11] - 2026-02-25
 
 ### Added

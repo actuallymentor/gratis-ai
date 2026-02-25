@@ -72,7 +72,7 @@ export default function UpdateBanner( {
     // Nothing to show
     if( !available_update || dismissed ) return null
 
-    const version = available_update.version
+    const { version } = available_update
 
     // Ready to install — prompt restart
     if( is_ready_to_install ) return <Banner>

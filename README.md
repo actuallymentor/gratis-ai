@@ -33,6 +33,10 @@ The Electron app checks GitHub Releases for new versions on launch. When an upda
 
 The Electron code lives in `electron/` — `main.js` (window + IPC), `preload.js` (context bridge), and `native_inference.js` (node-llama-cpp wrapper). The renderer auto-detects Electron at runtime and swaps providers.
 
+### Desktop App Promotion
+
+Web users see a slim accent-colored banner encouraging them to try the desktop app. The banner links to `/get-app`, a download page with OS-specific cards (macOS, Windows, Linux) linking to the latest GitHub Release. The banner is hidden in Electron and can be permanently dismissed. Download links require `VITE_GITHUB_REPO` to be set at build time.
+
 ## Scripts
 
 | Command | Description |

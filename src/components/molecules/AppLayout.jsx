@@ -4,6 +4,7 @@ import TopBar from './TopBar'
 import Sidebar from './Sidebar'
 import SettingsModal from './SettingsModal'
 import UpdateBanner from '../atoms/UpdateBanner'
+import DesktopAppBanner from '../atoms/DesktopAppBanner'
 import use_auto_updater from '../../hooks/use_auto_updater'
 import { EVENTS } from '../../utils/branding'
 
@@ -104,6 +105,8 @@ export default function AppLayout( {
             is_model_switching={ is_model_switching }
             on_model_switch={ on_model_switch }
         />
+
+        <DesktopAppBanner />
 
         <UpdateBanner
             available_update={ updater.available_update }
