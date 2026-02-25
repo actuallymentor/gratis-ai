@@ -6,16 +6,22 @@ import { storage_key } from '../../utils/branding'
 
 const DISMISSED_KEY = storage_key( `desktop_banner_dismissed` )
 
+const is_mobile_os = () => /Android|iPhone|iPad|iPod/i.test( navigator.userAgent || `` )
+
 const Banner = styled.div`
     display: flex;
     align-items: center;
     gap: ${ p => p.theme.spacing.sm };
     padding: ${ p => p.theme.spacing.xs } ${ p => p.theme.spacing.md };
     background: ${ p => p.theme.colors.accent };
-    color: #fff;
+    color: #1a1a1a;
     font-size: 0.8125rem;
     line-height: 1.4;
     min-height: 2rem;
+
+    @media ( max-width: 768px ) {
+        display: none;
+    }
 `
 
 const Message = styled.span`
@@ -45,12 +51,12 @@ const DismissButton = styled.button`
     align-items: center;
     padding: 0.15rem;
     background: none;
-    color: rgba( 255, 255, 255, 0.7 );
+    color: rgba( 0, 0, 0, 0.5 );
     border: none;
     cursor: pointer;
     border-radius: ${ p => p.theme.border_radius.sm };
 
-    &:hover { color: #fff; }
+    &:hover { color: #1a1a1a; }
 `
 
 /**
@@ -66,6 +72,9 @@ export default function DesktopAppBanner() {
 
     // Hide in Electron — native inference means the desktop app is already running
     if( window.electronAPI?.native_inference ) return null
+
+    // Desktop app promo is useless on mobile devices
+    if( is_mobile_os() ) return null
 
     if( dismissed ) return null
 

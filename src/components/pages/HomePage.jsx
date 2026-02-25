@@ -13,8 +13,7 @@ const Container = styled.div`
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    min-height: 100dvh;
+    flex: 1;
     padding: ${ ( { theme } ) => theme.spacing.xl };
 `
 
@@ -70,12 +69,14 @@ const SubmitButton = styled.button`
     align-items: center;
     justify-content: center;
     width: 3rem;
-    height: 3rem;
+    min-height: 3rem;
+    border: 1px solid transparent;
     border-radius: ${ ( { theme } ) => theme.border_radius.full };
     background: ${ ( { theme } ) => theme.colors.primary };
     color: ${ ( { theme } ) => theme.colors.background };
     transition: opacity 0.15s;
     flex-shrink: 0;
+    align-self: flex-end;
 
     &:hover { opacity: 0.85; }
 
@@ -241,6 +242,12 @@ export default function HomePage() {
         } )
 
     }, [] )
+
+    // ── Clear error when model loads successfully ───────────────────
+
+    useEffect( () => {
+        if( loaded_model_id === active_id && load_error ) set_load_error( null )
+    }, [ loaded_model_id ] )
 
     // ── Auto-focus the search input ─────────────────────────────────
 

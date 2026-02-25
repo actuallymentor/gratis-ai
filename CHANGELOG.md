@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.2] - 2026-02-25
+
+### Fixed
+- "Failed to load model" banner persists after successful load — clear error on store confirmation
+- "Module is already initialised" WASM error — skip reload when model already loaded and healthy
+- viewport overflow when DesktopAppBanner visible — replace 100dvh with flex-based layout
+- banner text low contrast (white on teal) — switch to dark text for WCAG AA compliance
+- banner shown on mobile where desktop app promo is useless — hide via JS + CSS media query
+- search bar submit button misaligned with textarea — match box model (border, min-height, align-self)
+
 ## [0.2.1] - 2026-02-25
 
 ### Fixed

@@ -13,8 +13,8 @@ const Container = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100vh;
-    height: 100dvh;
+    flex: 1;
+    min-height: 0;
     padding: ${ ( { theme } ) => theme.spacing.xl };
     overflow-y: auto;
 

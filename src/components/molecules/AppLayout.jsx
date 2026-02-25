@@ -10,8 +10,8 @@ import { EVENTS } from '../../utils/branding'
 const LayoutContainer = styled.div`
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    height: 100dvh;
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
 `
 

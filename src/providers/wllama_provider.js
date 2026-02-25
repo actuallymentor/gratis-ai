@@ -138,6 +138,13 @@ export default class WllamaProvider {
      */
     async load_model( model_id, on_progress ) {
 
+        // Skip reload if this exact model is already loaded and healthy
+        if( this._loaded_model_id === model_id && this._wllama?.isModelLoaded() ) {
+            console.info( `[wllama] Model ${ model_id } already loaded, skipping reload` )
+            if( on_progress ) on_progress( { progress: 1, status: `Model ready` } )
+            return
+        }
+
         // Unload any existing model first
         if( this._wllama ) await this.unload_model()
 
