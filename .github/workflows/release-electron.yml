@@ -142,6 +142,8 @@ jobs:
 
       - name: Build Electron app
         run: npx electron-vite build
+        env:
+          VITE_GITHUB_REPO: ${{ github.repository }}
 
       - name: Package with electron-builder (signed)
         if: steps.signing.outputs.can-sign == 'true'
@@ -167,5 +169,7 @@ jobs:
           tag_name: v${{ needs.check-version.outputs.version }}
           files: |
             release/*.dmg
+            release/*.zip
             release/*.exe
             release/*.AppImage
+            release/latest*.yml

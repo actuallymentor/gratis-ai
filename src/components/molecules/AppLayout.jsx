@@ -3,6 +3,8 @@ import styled from 'styled-components'
 import TopBar from './TopBar'
 import Sidebar from './Sidebar'
 import SettingsModal from './SettingsModal'
+import UpdateBanner from '../atoms/UpdateBanner'
+import use_auto_updater from '../../hooks/use_auto_updater'
 import { EVENTS } from '../../utils/branding'
 
 const LayoutContainer = styled.div`
@@ -50,6 +52,8 @@ export default function AppLayout( {
     conversations, on_export, on_delete, on_delete_all,
     cached_models, active_model_id, is_model_switching, on_model_switch,
 } ) {
+
+    const updater = use_auto_updater()
 
     const [ sidebar_collapsed, set_sidebar_collapsed ] = useState( () =>
         typeof window !== `undefined` && window.innerWidth < 768
@@ -99,6 +103,17 @@ export default function AppLayout( {
             active_model_id={ active_model_id }
             is_model_switching={ is_model_switching }
             on_model_switch={ on_model_switch }
+        />
+
+        <UpdateBanner
+            available_update={ updater.available_update }
+            is_downloading={ updater.is_downloading }
+            download_progress={ updater.download_progress }
+            is_ready_to_install={ updater.is_ready_to_install }
+            dismissed={ updater.dismissed }
+            on_download={ updater.download_update }
+            on_install={ updater.install_update }
+            on_dismiss={ updater.dismiss }
         />
 
         <MainArea>

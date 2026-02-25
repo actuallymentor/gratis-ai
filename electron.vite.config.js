@@ -7,6 +7,9 @@ export default defineConfig( {
     // Main process
     main: {
         plugins: [ externalizeDepsPlugin() ],
+        define: {
+            __GITHUB_REPO__: JSON.stringify( process.env.VITE_GITHUB_REPO || `` ),
+        },
         build: {
             rollupOptions: {
                 input: path.resolve( `electron/main.js` ),

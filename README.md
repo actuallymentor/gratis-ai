@@ -25,7 +25,11 @@ npm run dev:electron
 npm run build:electron
 ```
 
-Build targets are configured in `electron-builder.yml` (macOS dmg, Windows nsis, Linux AppImage). See the [CI/CD](#cicd) section for automated release builds.
+Build targets are configured in `electron-builder.yml` (macOS dmg + zip, Windows nsis, Linux AppImage). See the [CI/CD](#cicd) section for automated release builds.
+
+### Auto-Updates
+
+The Electron app checks GitHub Releases for new versions on launch. When an update is available, a slim banner appears below the top bar with options to download and install. Updates require code-signed builds — unsigned dev/fork builds skip the check silently. Set `VITE_GITHUB_REPO=owner/repo` at build time (the CI workflow does this automatically via `github.repository`).
 
 The Electron code lives in `electron/` — `main.js` (window + IPC), `preload.js` (context bridge), and `native_inference.js` (node-llama-cpp wrapper). The renderer auto-detects Electron at runtime and swaps providers.
 

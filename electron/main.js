@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require( `electron` )
+const { autoUpdater } = require( `electron-updater` )
 const path = require( `path` )
 const fs = require( `fs` )
 const os = require( `os` )
@@ -6,6 +7,8 @@ const os = require( `os` )
 let main_window = null
 let native_provider = null
 let active_download_controller = null
+
+/* global __GITHUB_REPO__ */
 
 // ---------------------------------------------------
 // Native inference provider using node-llama-cpp
@@ -556,12 +559,75 @@ const register_ipc_handlers = () => {
 
 }
 
+// ---------------------------------------------------
+// Auto-updater — checks GitHub Releases for new versions
+// ---------------------------------------------------
+
+const setup_auto_updater = () => {
+
+    // Skip in dev — no packaged app to update
+    if( !app.isPackaged ) return
+
+    // Parse owner/repo from build-time define
+    const repo = typeof __GITHUB_REPO__ !== `undefined` ? __GITHUB_REPO__ : ``
+    const [ owner, name ] = repo.split( `/` )
+    if( !owner || !name ) return
+
+    autoUpdater.setFeedURL( {
+        provider: `github`,
+        owner,
+        repo: name,
+    } )
+
+    autoUpdater.autoDownload = false
+    autoUpdater.autoInstallOnAppQuit = true
+
+    // Forward updater events to the renderer
+    const send = ( channel, data ) => {
+        main_window?.webContents?.send( channel, data )
+    }
+
+    autoUpdater.on( `update-available`, ( info ) => {
+        send( `updater:available`, {
+            version: info.version,
+            release_notes: info.releaseNotes || ``,
+        } )
+    } )
+
+    autoUpdater.on( `download-progress`, ( progress ) => {
+        send( `updater:download-progress`, {
+            percent: Math.round( progress.percent ),
+            bytes_per_second: progress.bytesPerSecond,
+            transferred: progress.transferred,
+            total: progress.total,
+        } )
+    } )
+
+    autoUpdater.on( `update-downloaded`, ( info ) => {
+        send( `updater:downloaded`, { version: info.version } )
+    } )
+
+    autoUpdater.on( `error`, ( err ) => {
+        send( `updater:error`, { message: err?.message || `Update check failed` } )
+    } )
+
+    // IPC handlers for renderer-initiated actions
+    ipcMain.handle( `updater:check`, () => autoUpdater.checkForUpdates() )
+    ipcMain.handle( `updater:download`, () => autoUpdater.downloadUpdate() )
+    ipcMain.handle( `updater:install`, () => autoUpdater.quitAndInstall() )
+
+    // Auto-check 5 seconds after launch
+    setTimeout( () => autoUpdater.checkForUpdates().catch( () => {} ), 5000 )
+
+}
+
 // App lifecycle
 app.whenReady().then( () => {
 
     ensure_models_dir()
     register_ipc_handlers()
     create_window()
+    setup_auto_updater()
 
     app.on( `activate`, () => {
         if( BrowserWindow.getAllWindows().length === 0 ) create_window()

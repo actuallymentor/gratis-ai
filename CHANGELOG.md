@@ -1,11 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [0.0.11] - 2026-02-25
 
-### Changed
-- make Electron code signing optional — forks build unsigned when secrets are absent
-
-## [0.0.8] - 2026-02-24
-
-### Fixed
-- fix chat input hidden on Android mobile — add `100dvh` progressive enhancement to all viewport-height declarations
+### Added
+- auto-update via electron-updater — checks GitHub Releases on launch
+- update banner between TopBar and MainArea (download / install / dismiss)
+- `use_auto_updater` hook for update lifecycle state
+- macOS `.zip` target for electron-updater compatibility
+- CI uploads `latest*.yml` manifests + `.zip` artifacts to GitHub Releases

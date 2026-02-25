@@ -34,4 +34,37 @@ contextBridge.exposeInMainWorld( `electronAPI`, {
         return () => ipcRenderer.removeListener( `llm:download-progress`, handler )
     },
 
+    // Auto-updater — checks GitHub Releases for new app versions
+    updater: {
+
+        check_for_updates: () => ipcRenderer.invoke( `updater:check` ),
+        download_update: () => ipcRenderer.invoke( `updater:download` ),
+        install_update: () => ipcRenderer.invoke( `updater:install` ),
+
+        on_update_available: ( callback ) => {
+            const handler = ( _, data ) => callback( data )
+            ipcRenderer.on( `updater:available`, handler )
+            return () => ipcRenderer.removeListener( `updater:available`, handler )
+        },
+
+        on_download_progress: ( callback ) => {
+            const handler = ( _, data ) => callback( data )
+            ipcRenderer.on( `updater:download-progress`, handler )
+            return () => ipcRenderer.removeListener( `updater:download-progress`, handler )
+        },
+
+        on_update_downloaded: ( callback ) => {
+            const handler = ( _, data ) => callback( data )
+            ipcRenderer.on( `updater:downloaded`, handler )
+            return () => ipcRenderer.removeListener( `updater:downloaded`, handler )
+        },
+
+        on_update_error: ( callback ) => {
+            const handler = ( _, data ) => callback( data )
+            ipcRenderer.on( `updater:error`, handler )
+            return () => ipcRenderer.removeListener( `updater:error`, handler )
+        },
+
+    },
+
 } )

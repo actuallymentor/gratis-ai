@@ -1,6 +1,6 @@
 {
   "name": "gratisai",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Privacy-first, offline-capable local LLM chat application",
   "main": "out/main/main.js",
   "type": "module",
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@wllama/wllama": "^2.3.7",
+    "electron-updater": "^6.8.3",
     "idb": "^8.0.1",
     "less-lazy": "^0.0.2",
     "lucide-react": "^0.468.0",
