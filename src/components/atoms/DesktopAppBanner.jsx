@@ -76,16 +76,16 @@ export default function DesktopAppBanner() {
 
     return <Banner>
 
+        <DismissButton onClick={ dismiss } aria-label="Dismiss">
+            <X size={ 14 } />
+        </DismissButton>
+
         <Message>
             <Monitor size={ 14 } />
             Get more power with the same privacy — try the desktop app
         </Message>
 
         <AppLink to="/get-app">Get the app</AppLink>
-
-        <DismissButton onClick={ dismiss } aria-label="Dismiss">
-            <X size={ 14 } />
-        </DismissButton>
 
     </Banner>
 
