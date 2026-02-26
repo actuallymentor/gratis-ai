@@ -156,7 +156,7 @@ const SidebarFooter = styled.div`
 const WipeButton = styled.button`
     display: flex;
     align-items: center;
-    gap: ${ ( { theme } ) => theme.spacing.xs };
+    gap: ${ ( { theme } ) => theme.spacing.sm };
     width: 100%;
     padding: ${ ( { theme } ) => `${ theme.spacing.xs } ${ theme.spacing.sm }` };
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
@@ -174,7 +174,7 @@ const WipeButton = styled.button`
 const DownloadAppLink = styled( Link )`
     display: flex;
     align-items: center;
-    gap: ${ ( { theme } ) => theme.spacing.xs };
+    gap: ${ ( { theme } ) => theme.spacing.sm };
     width: 100%;
     padding: ${ ( { theme } ) => `${ theme.spacing.xs } ${ theme.spacing.sm }` };
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
