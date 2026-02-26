@@ -18,7 +18,6 @@ const Container = styled.div`
 
 const Title = styled.h1`
     font-size: clamp( 2rem, 1.5rem + 2.5vw, 3rem );
-    font-weight: 700;
     color: ${ ( { theme } ) => theme.colors.text };
     margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
 `
