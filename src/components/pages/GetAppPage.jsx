@@ -1,7 +1,8 @@
-import styled from 'styled-components'
+import { useState, useEffect, useCallback } from 'react'
+import styled, { keyframes } from 'styled-components'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Apple, Monitor, Terminal } from 'lucide-react'
-import { DISPLAY_NAME } from '../../utils/branding'
+import { ArrowLeft, Apple, Monitor, Terminal, FolderDown } from 'lucide-react'
+import { DISPLAY_NAME, EVENTS } from '../../utils/branding'
 
 const GITHUB_REPO = import.meta.env.VITE_GITHUB_REPO || ``
 
@@ -195,6 +196,88 @@ const Footnote = styled.p`
     }
 `
 
+// ── Download-started modal ──────────────────────────────────
+
+const fade_in = keyframes`
+    from { opacity: 0; transform: scale( 0.95 ) translateY( 8px ); }
+    to   { opacity: 1; transform: scale( 1 ) translateY( 0 ); }
+`
+
+const Overlay = styled.div`
+    position: fixed;
+    inset: 0;
+    background: ${ ( { theme } ) => theme.colors.modal_overlay };
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+`
+
+const Modal = styled.div`
+    animation: ${ fade_in } 0.2s ease-out;
+    background: ${ ( { theme } ) => theme.colors.background };
+    border-radius: ${ ( { theme } ) => theme.border_radius.lg };
+    border: 1px solid ${ ( { theme } ) => theme.colors.border };
+    box-shadow: ${ ( { theme } ) => theme.mode === `dark`
+        ? `0 4px 24px rgba( 0, 0, 0, 0.4 )`
+        : `0 4px 24px rgba( 0, 0, 0, 0.1 )` };
+    width: min( 380px, 90vw );
+    padding: ${ ( { theme } ) => theme.spacing.lg };
+    text-align: center;
+`
+
+const ModalIcon = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: ${ ( { theme } ) => theme.border_radius.full };
+    background: ${ ( { theme } ) => theme.colors.input_background };
+    color: ${ ( { theme } ) => theme.colors.accent };
+    margin: 0 auto ${ ( { theme } ) => theme.spacing.md };
+`
+
+const ModalTitle = styled.h2`
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.text };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+`
+
+const ModalDescription = styled.p`
+    color: ${ ( { theme } ) => theme.colors.text_secondary };
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: ${ ( { theme } ) => theme.spacing.lg };
+`
+
+const ModalFilename = styled.code`
+    display: inline-block;
+    padding: ${ ( { theme } ) => `${ theme.spacing.xs } ${ theme.spacing.sm }` };
+    background: ${ ( { theme } ) => theme.colors.code_background };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    font-size: 0.8rem;
+    font-family: ${ ( { theme } ) => theme.fonts.mono };
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.lg };
+`
+
+const ModalDismiss = styled.button`
+    padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.lg }` };
+    background: ${ ( { theme } ) => theme.colors.input_background };
+    color: ${ ( { theme } ) => theme.colors.text };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: opacity 0.15s;
+    min-height: 2.5rem;
+
+    &:hover { opacity: 0.8; }
+`
+
+const AUTO_DISMISS_MS = 8000
+
 // ── Component ───────────────────────────────────────────────────
 
 /**
@@ -206,6 +289,31 @@ export default function GetAppPage() {
 
     const navigate = useNavigate()
     const current_os = detect_os()
+
+    // Download-started modal state
+    const [ downloading_file, set_downloading_file ] = useState( null )
+
+    const dismiss_modal = useCallback( () => set_downloading_file( null ), [] )
+
+    // Auto-dismiss after a few seconds
+    useEffect( () => {
+        if( !downloading_file ) return
+        const timer = setTimeout( dismiss_modal, AUTO_DISMISS_MS )
+        return () => clearTimeout( timer )
+    }, [ downloading_file, dismiss_modal ] )
+
+    // Close on Escape key
+    useEffect( () => {
+        if( !downloading_file ) return
+        const handle_close = () => dismiss_modal()
+        window.addEventListener( EVENTS.close_modal, handle_close )
+        return () => window.removeEventListener( EVENTS.close_modal, handle_close )
+    }, [ downloading_file, dismiss_modal ] )
+
+    // Intercept download click — let the native link proceed, then show the modal
+    const handle_download_click = ( filename ) => {
+        set_downloading_file( filename )
+    }
 
     // Reorder so the detected OS sits in the center
     const ordered_platforms = [
@@ -238,7 +346,10 @@ export default function GetAppPage() {
                     <PlatformDetail>{ detail } ({ file_hint })</PlatformDetail>
 
                     { href
-                        ? <DownloadButton href={ href }>
+                        ? <DownloadButton
+                            href={ href }
+                            onClick={ () => handle_download_click( filename ) }
+                        >
                             Download for { label }
                         </DownloadButton>
                         : <DisabledButton>Not configured</DisabledButton> }
@@ -249,8 +360,10 @@ export default function GetAppPage() {
         </CardGrid>
 
         { GITHUB_REPO && <Footnote>
-            Running an Intel Mac? <a
+            Running an Intel Mac?{ ` ` }
+            <a
                 href={ download_url( `gratisAI-mac-intel.dmg` ) }
+                onClick={ () => handle_download_click( `gratisAI-mac-intel.dmg` ) }
             >Download the Intel build</a>
         </Footnote> }
 
@@ -263,6 +376,33 @@ export default function GetAppPage() {
             <ArrowLeft size={ 16 } />
             Or continue in your browser
         </BackButton>
+
+        { /* Download-started confirmation modal */ }
+        { downloading_file && <Overlay onClick={ ( e ) => {
+            if( e.target === e.currentTarget ) dismiss_modal()
+        } }
+        >
+            <Modal>
+
+                <ModalIcon>
+                    <FolderDown size={ 24 } />
+                </ModalIcon>
+
+                <ModalTitle>Download started</ModalTitle>
+
+                <ModalDescription>
+                    Your file is downloading to your Downloads folder.
+                    Open it once it finishes to install { DISPLAY_NAME }.
+                </ModalDescription>
+
+                <ModalFilename>{ downloading_file }</ModalFilename>
+
+                <div>
+                    <ModalDismiss onClick={ dismiss_modal }>Got it</ModalDismiss>
+                </div>
+
+            </Modal>
+        </Overlay> }
 
     </Container>
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.3] - 2026-02-26
+
+### Added
+- Download-started confirmation modal on `/get-app` page — shows filename and install hint after clicking download
+
 ## [0.6.0] - 2026-02-26
 
 ### Added
