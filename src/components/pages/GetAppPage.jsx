@@ -93,7 +93,6 @@ const Card = styled.div`
     align-items: center;
     gap: ${ ( { theme } ) => theme.spacing.md };
     padding: ${ ( { theme } ) => `${ theme.spacing.xl } ${ theme.spacing.lg }` };
-    padding-top: ${ ( { theme } ) => `calc( ${ theme.spacing.xl } + 0.5rem )` };
     border: 2px solid ${ ( { theme, $active } ) =>
         $active ? theme.colors.accent : theme.colors.border };
     border-radius: ${ ( { theme } ) => theme.border_radius.lg };
@@ -163,16 +162,6 @@ const DisabledButton = styled.span`
     cursor: default;
 `
 
-const YourOS = styled.span`
-    position: absolute;
-    top: ${ ( { theme } ) => theme.spacing.sm };
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: ${ ( { theme } ) => theme.colors.accent };
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-`
-
 const BackButton = styled.button`
     display: flex;
     align-items: center;
@@ -234,9 +223,7 @@ export default function GetAppPage() {
 
                 return <Card key={ id } $active={ is_current }>
 
-                    { is_current && <YourOS>Your OS</YourOS> }
-
-                    <PlatformIcon>
+<PlatformIcon>
                         <Icon size={ 28 } />
                     </PlatformIcon>
 
