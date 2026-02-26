@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.4] - 2026-02-26
+
+### Changed
+- Move technical README to DOCUMENTATION.md, replace with user-friendly README
+
 ## [0.4.3] - 2026-02-26
 
 ### Fixed
