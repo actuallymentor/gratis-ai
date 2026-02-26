@@ -64,12 +64,15 @@ jobs:
 
             Click the link for your device to start downloading:
 
-            - 🍎 [**Mac (Apple Silicon)**](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/gratisAI-${{ needs.check-version.outputs.version }}-arm64.dmg) — M1, M2, M3, M4 Macs
-            - 🍎 [**Mac (Intel)**](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/gratisAI-${{ needs.check-version.outputs.version }}.dmg) — older Intel-based Macs
-            - 🪟 [**Windows**](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/gratisAI-Setup-${{ needs.check-version.outputs.version }}.exe)
-            - 🐧 [**Linux**](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/gratisAI-${{ needs.check-version.outputs.version }}.AppImage)
+            - 🍎 [**Mac (Apple Silicon)**](https://github.com/${{ github.repository }}/releases/latest/download/gratisAI-mac.dmg) — M1, M2, M3, M4 Macs
+            - 🪟 [**Windows**](https://github.com/${{ github.repository }}/releases/latest/download/gratisAI-win.exe)
+            - 🐧 [**Linux**](https://github.com/${{ github.repository }}/releases/latest/download/gratisAI-linux.AppImage)
 
-            > **Not sure which Mac you have?** Click the Apple menu → "About This Mac". If it says M1/M2/M3/M4, grab the Apple Silicon version. Otherwise, pick Intel.
+            <details><summary>Intel Mac</summary>
+
+            - 🍎 [**Mac (Intel)**](https://github.com/${{ github.repository }}/releases/latest/download/gratisAI-mac-intel.dmg) — older Intel-based Macs
+
+            </details>
 
             ---
 
@@ -179,6 +182,17 @@ jobs:
         run: npx electron-builder --${{ matrix.platform }} --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      # Rename mac assets to user-friendly names (arm64 → default, x64 → intel)
+      - name: Rename macOS assets
+        if: matrix.platform == 'mac'
+        run: |
+          cd release
+          mv gratisAI-mac-arm64.dmg gratisAI-mac.dmg
+          mv gratisAI-mac-x64.dmg gratisAI-mac-intel.dmg
+          mv gratisAI-mac-arm64.zip gratisAI-mac.zip
+          mv gratisAI-mac-x64.zip gratisAI-mac-intel.zip
+          sed -i '' 's/gratisAI-mac-arm64/gratisAI-mac/g; s/gratisAI-mac-x64/gratisAI-mac-intel/g' latest*.yml
 
       - name: Upload artifacts to release
         uses: softprops/action-gh-release@v2

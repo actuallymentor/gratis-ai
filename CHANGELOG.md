@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0] - 2026-02-26
+
+### Added
+- Direct per-platform download links on `/get-app` page
+- Versionless artifact names for stable GitHub download URLs
+- Intel Mac footnote on download page for legacy hardware users
+
+### Changed
+- Release body uses `/releases/latest/download/` URLs instead of versioned paths
+- macOS card label from "Universal" to "Apple Silicon (M1–M4)"
+- Intel Mac de-emphasised to collapsed section in release notes
+
 ## [0.4.4] - 2026-02-26
 
 ### Changed

@@ -4,8 +4,10 @@ import { ArrowLeft, Apple, Monitor, Terminal } from 'lucide-react'
 import { DISPLAY_NAME } from '../../utils/branding'
 
 const GITHUB_REPO = import.meta.env.VITE_GITHUB_REPO || ``
-const RELEASES_URL = GITHUB_REPO
-    ? `https://github.com/${ GITHUB_REPO }/releases/latest`
+
+// Stable download URL that always points to the latest release asset
+const download_url = ( filename ) => GITHUB_REPO
+    ? `https://github.com/${ GITHUB_REPO }/releases/latest/download/${ filename }`
     : ``
 
 // ── OS detection ────────────────────────────────────────────────
@@ -24,8 +26,9 @@ const PLATFORMS = [
     {
         id: `macos`,
         label: `macOS`,
-        detail: `Universal (Apple Silicon & Intel)`,
+        detail: `Apple Silicon (M1–M4)`,
         file_hint: `.dmg`,
+        filename: `gratisAI-mac.dmg`,
         Icon: Apple,
     },
     {
@@ -33,6 +36,7 @@ const PLATFORMS = [
         label: `Windows`,
         detail: `64-bit (x64)`,
         file_hint: `.exe`,
+        filename: `gratisAI-win.exe`,
         Icon: Monitor,
     },
     {
@@ -40,6 +44,7 @@ const PLATFORMS = [
         label: `Linux`,
         detail: `AppImage (x64)`,
         file_hint: `.AppImage`,
+        filename: `gratisAI-linux.AppImage`,
         Icon: Terminal,
     },
 ]
@@ -188,6 +193,18 @@ const Notice = styled.p`
     line-height: 1.5;
 `
 
+const Footnote = styled.p`
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+
+    a {
+        color: ${ ( { theme } ) => theme.colors.text_secondary };
+        text-decoration: underline;
+        &:hover { color: ${ ( { theme } ) => theme.colors.text }; }
+    }
+`
+
 // ── Component ───────────────────────────────────────────────────
 
 /**
@@ -209,9 +226,10 @@ export default function GetAppPage() {
         </Tagline>
 
         <CardGrid>
-            { PLATFORMS.map( ( { id, label, detail, file_hint, Icon } ) => {
+            { PLATFORMS.map( ( { id, label, detail, file_hint, filename, Icon } ) => {
 
                 const is_current = id === current_os
+                const href = download_url( filename )
 
                 return <Card key={ id } $active={ is_current }>
 
@@ -224,12 +242,8 @@ export default function GetAppPage() {
                     <PlatformName>{ label }</PlatformName>
                     <PlatformDetail>{ detail } ({ file_hint })</PlatformDetail>
 
-                    { RELEASES_URL
-                        ? <DownloadButton
-                            href={ RELEASES_URL }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
+                    { href
+                        ? <DownloadButton href={ href }>
                             Download for { label }
                         </DownloadButton>
                         : <DisabledButton>Not configured</DisabledButton> }
@@ -239,7 +253,13 @@ export default function GetAppPage() {
             } ) }
         </CardGrid>
 
-        { !RELEASES_URL && <Notice>
+        { GITHUB_REPO && <Footnote>
+            Running an Intel Mac? <a
+                href={ download_url( `gratisAI-mac-intel.dmg` ) }
+            >Download the Intel build</a>
+        </Footnote> }
+
+        { !GITHUB_REPO && <Notice>
             Release downloads are not configured for this deployment.
             Build the desktop app from source or check the project repository.
         </Notice> }
