@@ -109,15 +109,16 @@ jobs:
         id: signing
         shell: bash
         run: |
-          case "$PLATFORM" in
-            mac) [ -n "$MAC_CERT" ] && CAN_SIGN=true || CAN_SIGN=false ;;
-            win) [ -n "$WIN_CERT" ] && CAN_SIGN=true || CAN_SIGN=false ;;
-            *)   CAN_SIGN=false ;;
-          esac
-          echo "can-sign=$CAN_SIGN" >> "$GITHUB_OUTPUT"
+          [ -n "$MAC_CERT" ] && echo "can-sign-mac=true" >> "$GITHUB_OUTPUT" \
+                             || echo "can-sign-mac=false" >> "$GITHUB_OUTPUT"
+          [ -n "$WIN_CERT" ] && echo "can-sign-win=true" >> "$GITHUB_OUTPUT" \
+                             || echo "can-sign-win=false" >> "$GITHUB_OUTPUT"
 
-          if [ "$CAN_SIGN" = "false" ] && [ "$PLATFORM" != "linux" ]; then
-            echo "::warning::No signing secrets found for $PLATFORM — building unsigned"
+          # Warn when the current platform lacks its signing secret
+          if [ "$PLATFORM" = "mac" ] && [ -z "$MAC_CERT" ]; then
+            echo "::warning::No signing secrets found for mac — building unsigned"
+          elif [ "$PLATFORM" = "win" ] && [ -z "$WIN_CERT" ]; then
+            echo "::warning::No signing secrets found for win — building unsigned"
           fi
         env:
           PLATFORM: ${{ matrix.platform }}
@@ -126,7 +127,7 @@ jobs:
 
       # macOS: import Developer ID certificate for codesigning
       - name: Import macOS codesign certificate
-        if: matrix.platform == 'mac' && steps.signing.outputs.can-sign == 'true'
+        if: matrix.platform == 'mac' && steps.signing.outputs.can-sign-mac == 'true'
         uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.MAC_CERTIFICATE_P12 }}
@@ -145,20 +146,23 @@ jobs:
         env:
           VITE_GITHUB_REPO: ${{ github.repository }}
 
-      - name: Package with electron-builder (signed)
-        if: steps.signing.outputs.can-sign == 'true'
-        run: npx electron-builder --${{ matrix.platform }} --publish never
+      - name: Package with electron-builder (macOS signed)
+        if: matrix.platform == 'mac' && steps.signing.outputs.can-sign-mac == 'true'
+        run: npx electron-builder --mac --publish never
         env:
-          # macOS notarization
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # Windows code signing
+
+      - name: Package with electron-builder (Windows signed)
+        if: matrix.platform == 'win' && steps.signing.outputs.can-sign-win == 'true'
+        run: npx electron-builder --win --publish never
+        env:
           CSC_LINK: ${{ secrets.WIN_CERTIFICATE_PFX }}
           CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
 
       - name: Package with electron-builder (unsigned)
-        if: steps.signing.outputs.can-sign != 'true'
+        if: matrix.platform == 'linux' || (matrix.platform == 'mac' && steps.signing.outputs.can-sign-mac != 'true') || (matrix.platform == 'win' && steps.signing.outputs.can-sign-win != 'true')
         run: npx electron-builder --${{ matrix.platform }} --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
