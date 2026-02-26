@@ -53,7 +53,8 @@ const SidebarToggle = styled.button`
 const Title = styled.h1`
     font-size: clamp( 2.5rem, 2rem + 3vw, 4rem );
     color: ${ ( { theme } ) => theme.colors.text };
-    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+    border-bottom: 3px solid ${ ( { theme } ) => theme.colors.accent };
+    margin-bottom: 2rem;
     letter-spacing: -0.02em;
 `
 

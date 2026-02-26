@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.2] - 2026-02-26
+
+### Fixed
+- h1 accent border-bottom not rendering — move from global rule to each styled.h1 component to win CSS specificity
+
 ## [0.9.1] - 2026-02-26
 
 ### Fixed

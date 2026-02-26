@@ -19,7 +19,8 @@ const Container = styled.div`
 const Title = styled.h1`
     font-size: clamp( 1.5rem, 1.2rem + 1.5vw, 2rem );
     color: ${ ( { theme } ) => theme.colors.text };
-    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+    border-bottom: 3px solid ${ ( { theme } ) => theme.colors.accent };
+    margin-bottom: 2rem;
 `
 
 const StatusMessage = styled.p`

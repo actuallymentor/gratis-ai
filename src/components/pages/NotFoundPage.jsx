@@ -22,8 +22,9 @@ const Code = styled.span`
 const Title = styled.h1`
     font-size: clamp( 1.2rem, 1rem + 1vw, 1.5rem );
     color: ${ ( { theme } ) => theme.colors.text };
+    border-bottom: 3px solid ${ ( { theme } ) => theme.colors.accent };
     margin-top: ${ ( { theme } ) => theme.spacing.md };
-    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+    margin-bottom: 2rem;
 `
 
 const Description = styled.p`
