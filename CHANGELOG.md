@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.0] - 2026-02-26
+
+### Added
+- Switch-model icon during model loading on homepage — cancel in-progress load and pick a different model
+
 ## [0.7.1] - 2026-02-26
 
 ### Fixed

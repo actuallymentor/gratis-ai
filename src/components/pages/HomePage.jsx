@@ -148,7 +148,7 @@ export default function HomePage() {
 
     const navigate = useNavigate()
 
-    const { load_model, is_loading, loaded_model_id } = use_llm()
+    const { load_model, unload_model, is_loading, loaded_model_id } = use_llm()
     const { cached_models } = use_model_manager()
     const { conversations, load_messages, delete_conversation, delete_all_conversations } = use_chat_history()
 
@@ -226,6 +226,12 @@ export default function HomePage() {
         } )
 
     }, [ active_id, load_model ] )
+
+    // Cancel any in-progress load and jump to model picker
+    const handle_switch_model = useCallback( () => {
+        unload_model()
+        navigate( '/select-model' )
+    }, [ unload_model, navigate ] )
 
     // ── Voice input handlers ────────────────────────────────────────
 
@@ -356,12 +362,19 @@ export default function HomePage() {
                 { is_loading && <>
                     <LoadingDot />
                     <span>Loading { model_name }...</span>
+                    <SwitchIcon
+                        onClick={ handle_switch_model }
+                        title="Switch model"
+                        data-testid="home-switch-model"
+                    >
+                        <ArrowLeftRight size={ 14 } />
+                    </SwitchIcon>
                 </> }
 
                 { !is_loading && loaded_model_id && <>
                     <span>{ model_name } — Ready</span>
                     <SwitchIcon
-                        onClick={ () => navigate( `/select-model` ) }
+                        onClick={ handle_switch_model }
                         title="Switch model"
                         data-testid="home-switch-model"
                     >
