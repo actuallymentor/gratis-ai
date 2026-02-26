@@ -29,6 +29,7 @@ const Tagline = styled.p`
     margin-bottom: ${ ( { theme } ) => theme.spacing.lg };
     max-width: 500px;
     line-height: 1.6;
+    text-align: center;
 `
 
 // Simple value props that anyone can understand

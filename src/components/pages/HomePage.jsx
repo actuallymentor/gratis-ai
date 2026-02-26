@@ -62,6 +62,7 @@ const Tagline = styled.p`
     font-size: clamp( 1rem, 0.9rem + 0.3vw, 1.2rem );
     color: ${ ( { theme } ) => theme.colors.text_secondary };
     margin-bottom: ${ ( { theme } ) => theme.spacing.xl };
+    text-align: center;
 `
 
 // ── Model status ────────────────────────────────────────────────────
@@ -316,71 +317,71 @@ export default function HomePage() {
 
         <Container>
 
-        <Title>{ DISPLAY_NAME }</Title>
-        <Tagline>
-            Your own AI assistant that runs entirely on this device.
-            Private, fast, and works offline.
-        </Tagline>
+            <Title>{ DISPLAY_NAME }</Title>
+            <Tagline>
+                Your own AI assistant that runs entirely on this device.
+                Private, fast, and works offline.
+            </Tagline>
 
-        <ChatInput
-            on_send={ handle_send }
-            as_form
-            max_width="540px"
-            placeholder="Ask anything..."
-            auto_focus
-            on_mic_click={ handle_mic_click }
-            on_mic_stop={ handle_mic_stop }
-            is_recording={ is_recording }
-            is_transcribing={ is_transcribing }
-            is_loading_model={ is_voice_loading_model }
-            audio_level={ voice_audio_level }
-            recording_start_time={ voice_recording_start_time }
-            append_text={ voice_text }
-        />
+            <ChatInput
+                on_send={ handle_send }
+                as_form
+                max_width="540px"
+                placeholder="Ask anything..."
+                auto_focus
+                on_mic_click={ handle_mic_click }
+                on_mic_stop={ handle_mic_stop }
+                is_recording={ is_recording }
+                is_transcribing={ is_transcribing }
+                is_loading_model={ is_voice_loading_model }
+                audio_level={ voice_audio_level }
+                recording_start_time={ voice_recording_start_time }
+                append_text={ voice_text }
+            />
 
-        { /* Voice model download dialog */ }
-        <VoiceModelDialog
-            is_open={ show_voice_dialog }
-            on_close={ handle_voice_dialog_close }
-            on_confirm={ handle_voice_confirm }
-            is_downloading={ is_voice_downloading }
-            download_progress={ voice_download_progress }
-            has_error={ voice_download_error }
-            on_retry={ handle_voice_confirm }
-        />
+            { /* Voice model download dialog */ }
+            <VoiceModelDialog
+                is_open={ show_voice_dialog }
+                on_close={ handle_voice_dialog_close }
+                on_confirm={ handle_voice_confirm }
+                is_downloading={ is_voice_downloading }
+                download_progress={ voice_download_progress }
+                has_error={ voice_download_error }
+                on_retry={ handle_voice_confirm }
+            />
 
-        { /* Model status row — name, ready state, switch icon */ }
-        <ModelRow>
+            { /* Model status row — name, ready state, switch icon */ }
+            <ModelRow>
 
-            { is_loading && <>
-                <LoadingDot />
-                <span>Loading { model_name }...</span>
-            </> }
+                { is_loading && <>
+                    <LoadingDot />
+                    <span>Loading { model_name }...</span>
+                </> }
 
-            { !is_loading && loaded_model_id && <>
-                <span>{ model_name } — Ready</span>
-                <SwitchIcon
-                    onClick={ () => navigate( `/select-model` ) }
-                    title="Switch model"
-                    data-testid="home-switch-model"
-                >
-                    <ArrowLeftRight size={ 14 } />
-                </SwitchIcon>
-            </> }
+                { !is_loading && loaded_model_id && <>
+                    <span>{ model_name } — Ready</span>
+                    <SwitchIcon
+                        onClick={ () => navigate( `/select-model` ) }
+                        title="Switch model"
+                        data-testid="home-switch-model"
+                    >
+                        <ArrowLeftRight size={ 14 } />
+                    </SwitchIcon>
+                </> }
 
-        </ModelRow>
+            </ModelRow>
 
-        { /* Error banner — only after loading settles, never mid-load */ }
-        { !is_loading && load_error && <ErrorBanner data-testid="home-load-error">
-            <AlertCircle size={ 14 } />
-            <span>Failed to load model</span>
-            <ErrorAction onClick={ handle_retry } data-testid="home-retry-btn">
-                <RotateCcw size={ 12 } /> Retry
-            </ErrorAction>
-            <ErrorAction onClick={ () => navigate( `/select-model` ) } data-testid="home-choose-another-btn">
-                Choose another
-            </ErrorAction>
-        </ErrorBanner> }
+            { /* Error banner — only after loading settles, never mid-load */ }
+            { !is_loading && load_error && <ErrorBanner data-testid="home-load-error">
+                <AlertCircle size={ 14 } />
+                <span>Failed to load model</span>
+                <ErrorAction onClick={ handle_retry } data-testid="home-retry-btn">
+                    <RotateCcw size={ 12 } /> Retry
+                </ErrorAction>
+                <ErrorAction onClick={ () => navigate( `/select-model` ) } data-testid="home-choose-another-btn">
+                    Choose another
+                </ErrorAction>
+            </ErrorBanner> }
 
         </Container>
 
