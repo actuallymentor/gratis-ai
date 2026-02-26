@@ -158,3 +158,8 @@ public/speedtest/
 
 # Electron build output
 out/
+
+# MCP screenshots in root
+*.png
+*.jpg
+*.jpeg
