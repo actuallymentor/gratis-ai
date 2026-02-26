@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import styled from 'styled-components'
-import { Plus, PanelLeftClose, PanelLeft, Download, Trash2, Trash } from 'lucide-react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Plus, PanelLeftClose, PanelLeft, Download, Trash2, Trash, Monitor } from 'lucide-react'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { truncate } from '../../utils/format'
 
 const SidebarContainer = styled.aside`
@@ -171,6 +171,38 @@ const WipeButton = styled.button`
     }
 `
 
+const DownloadAppLink = styled( Link )`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    width: 100%;
+    padding: ${ ( { theme } ) => `${ theme.spacing.xs } ${ theme.spacing.sm }` };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    color: ${ ( { theme } ) => theme.colors.accent };
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+    min-height: 2.75rem;
+
+    &:hover {
+        background: ${ ( { theme } ) => theme.colors.surface_hover };
+    }
+`
+
+const DownloadAppLabel = styled.span`
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+`
+
+const DownloadAppSubtext = styled.span`
+    font-size: 0.65rem;
+    opacity: 0.7;
+    font-weight: 400;
+`
+
+const is_electron = () => !!window.electronAPI?.native_inference
+
 /**
  * Sidebar with chat history, new chat button, and mobile backdrop.
  * Delete uses a "click again to confirm" pattern with visible text feedback.
@@ -315,6 +347,17 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                     <Trash size={ 14 } />
                     { confirming_wipe ? `Click again to confirm` : `Wipe history` }
                 </WipeButton>
+            </SidebarFooter> }
+
+            { /* Download app — web-only promo nudge */ }
+            { !is_electron() && <SidebarFooter>
+                <DownloadAppLink to="/get-app" data-testid="sidebar-download-app">
+                    <Monitor size={ 14 } />
+                    <DownloadAppLabel>
+                        Download App
+                        <DownloadAppSubtext>more powerful</DownloadAppSubtext>
+                    </DownloadAppLabel>
+                </DownloadAppLink>
             </SidebarFooter> }
 
         </SidebarContainer>

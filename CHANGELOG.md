@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.0] - 2026-02-26
+
+### Added
+- "Download App" button in web sidebar — links to `/get-app`, hidden in Electron
+
 ## [0.5.0] - 2026-02-26
 
 ### Added
