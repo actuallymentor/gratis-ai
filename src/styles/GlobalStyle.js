@@ -44,6 +44,11 @@ const GlobalStyle = createGlobalStyle`
         font-weight: 500;
     }
 
+    h1 {
+        border-bottom: 3px solid ${ ( { theme } ) => theme.colors.accent };
+        margin-bottom: 2rem;
+    }
+
     #root {
         min-height: 100vh;
         min-height: 100dvh;
