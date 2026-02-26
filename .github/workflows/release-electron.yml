@@ -101,14 +101,21 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      # ── Get Electron version for targeted cache keys ──
+      - name: Get Electron version
+        id: electron-version
+        shell: bash
+        run: echo "version=$(node -p "require('./package.json').devDependencies.electron")" >> "$GITHUB_OUTPUT"
+
       # ── Caching: Electron binary + electron-builder packaging tools ──
       - name: Cache Electron binary
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/electron
+            ~/Library/Caches/electron
             ~/AppData/Local/electron/Cache
-          key: electron-${{ matrix.platform }}-${{ hashFiles('package-lock.json') }}
+          key: electron-${{ matrix.platform }}-${{ steps.electron-version.outputs.version }}
           restore-keys: electron-${{ matrix.platform }}-
 
       - name: Cache electron-builder
@@ -116,6 +123,7 @@ jobs:
         with:
           path: |
             ~/.cache/electron-builder
+            ~/Library/Caches/electron-builder
             ~/AppData/Local/electron-builder/Cache
           key: electron-builder-${{ matrix.platform }}-${{ hashFiles('package-lock.json') }}
           restore-keys: electron-builder-${{ matrix.platform }}-
@@ -151,11 +159,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      # Linux: native build tools for node-llama-cpp
-      - name: Install Linux build dependencies
-        if: matrix.platform == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y cmake build-essential
 
       - name: Build Electron app
         run: npx electron-vite build
