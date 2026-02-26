@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.3] - 2026-02-26
+
+### Fixed
+- Electron UI freeze during model load — move inference to utilityProcess child process
+
 ## [0.4.0] - 2026-02-25
 
 ### Added

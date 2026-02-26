@@ -12,7 +12,10 @@ export default defineConfig( {
         },
         build: {
             rollupOptions: {
-                input: path.resolve( `electron/main.js` ),
+                input: {
+                    main: path.resolve( `electron/main.js` ),
+                    inference_worker: path.resolve( `electron/inference_worker.js` ),
+                },
             },
         },
     },

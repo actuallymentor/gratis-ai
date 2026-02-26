@@ -1,166 +1,92 @@
-const { app, BrowserWindow, ipcMain } = require( `electron` )
+const { app, BrowserWindow, ipcMain, utilityProcess } = require( `electron` )
 const { autoUpdater } = require( `electron-updater` )
 const path = require( `path` )
 const fs = require( `fs` )
-const os = require( `os` )
 
 let main_window = null
-let native_provider = null
+let inference_worker = null
 let active_download_controller = null
 
 /* global __GITHUB_REPO__ */
 
 // ---------------------------------------------------
-// Native inference provider using node-llama-cpp
-// Inlined to avoid Rollup externalising the require
+// Inference worker bridge — spawns a utilityProcess
+// so model loading + inference never block the UI
 // ---------------------------------------------------
 
-class NativeInference {
+let _request_id = 0
+const _pending = new Map()
 
-    constructor() {
-        this._model = null
-        this._context = null
-        this._session = null
-        this._model_path = null
-        this._abort_controller = null
-    }
+/**
+ * Spawn (or return existing) inference utilityProcess
+ * @returns {Electron.UtilityProcess}
+ */
+const ensure_worker = () => {
 
-    /**
-     * Load a GGUF model from disk
-     * @param {string} model_path - Absolute path to the GGUF file
-     * @param {Object} [opts] - Loading options
-     * @param {number} [opts.n_ctx] - Context window size
-     * @returns {Promise<void>}
-     */
-    async load( model_path, opts = {} ) {
+    if( inference_worker ) return inference_worker
 
-        // Unload any existing model
-        if( this._model ) await this.unload()
+    inference_worker = utilityProcess.fork(
+        path.join( __dirname, `inference_worker.js` ),
+    )
 
-        try {
+    inference_worker.on( `message`, ( msg ) => {
 
-            // node-llama-cpp loaded lazily — heavy native dep
-            const { getLlama, LlamaChatSession } = await import( `node-llama-cpp` )
-            const llama = await getLlama()
-
-            this._model = await llama.loadModel( { modelPath: model_path } )
-
-            // createContext is a method on the model, not on llama
-            this._context = await this._model.createContext( { contextSize: opts.n_ctx || 2048 } )
-
-            // LlamaChatSession wraps a context sequence and manages chat history
-            this._session = new LlamaChatSession( { contextSequence: this._context.getSequence() } )
-
-            this._model_path = model_path
-
-        } catch ( err ) {
-            throw new Error( `Failed to load model: ${ err.message }` )
+        // Unsolicited stream events — forward straight to the renderer
+        if( msg.type === `stream-token` ) {
+            main_window?.webContents?.send( `llm:stream-token`, msg.payload )
+            return
+        }
+        if( msg.type === `stream-done` ) {
+            main_window?.webContents?.send( `llm:stream-done` )
+            return
         }
 
-    }
+        // Request/response — resolve or reject the matching promise
+        const pending = _pending.get( msg.id )
+        if( !pending ) return
 
-    /**
-     * Single-shot chat completion
-     * @param {Array} messages - Chat messages
-     * @param {Object} [opts] - Generation options
-     * @returns {Promise<string>} Generated text
-     */
-    async chat( messages, opts = {} ) {
+        _pending.delete( msg.id )
 
-        if( !this._session ) throw new Error( `No model loaded` )
-
-        // Extract the last user message — LlamaChatSession manages history internally
-        const last_user_message = [ ...messages ].reverse().find( ( m ) => m.role === `user` )
-        const prompt = last_user_message?.content || ``
-
-        const response = await this._session.prompt( prompt, {
-            maxTokens: opts.max_tokens || 2048,
-            temperature: opts.temperature || 0.7,
-        } )
-
-        return response
-
-    }
-
-    /**
-     * Streaming chat completion with text chunk callback
-     * @param {Array} messages - Chat messages
-     * @param {Object} opts - Generation options
-     * @param {Function} on_text - Callback for each text chunk
-     * @returns {Promise<void>}
-     */
-    async chat_stream( messages, opts, on_text ) {
-
-        if( !this._session ) throw new Error( `No model loaded` )
-        this._abort_controller = new AbortController()
-
-        // Extract the last user message — LlamaChatSession manages history internally
-        const last_user_message = [ ...messages ].reverse().find( ( m ) => m.role === `user` )
-        const prompt = last_user_message?.content || ``
-
-        try {
-
-            await this._session.prompt( prompt, {
-                maxTokens: opts.max_tokens || 2048,
-                temperature: opts.temperature || 0.7,
-                signal: this._abort_controller.signal,
-                stopOnAbortSignal: true,
-                // onTextChunk sends decoded strings (not raw token IDs)
-                onTextChunk: ( text ) => {
-                    if( on_text ) on_text( text )
-                },
-            } )
-
-        } catch ( err ) {
-            if( err.name !== `AbortError` ) throw err
-        } finally {
-            this._abort_controller = null
+        if( msg.type === `error` ) {
+            pending.reject( new Error( msg.payload ) )
+        } else {
+            pending.resolve( msg.payload )
         }
 
-    }
+    } )
 
-    /** Abort current generation */
-    abort() {
-        if( this._abort_controller ) {
-            this._abort_controller.abort()
-            this._abort_controller = null
+    // If the worker crashes, clear state so it gets re-spawned on next call
+    inference_worker.on( `exit`, () => {
+
+        inference_worker = null
+
+        // Reject any in-flight requests
+        for( const [ , pending ] of _pending ) {
+            pending.reject( new Error( `Inference worker exited unexpectedly` ) )
         }
-    }
+        _pending.clear()
 
-    /**
-     * Unload the current model and dispose native resources
-     * @returns {Promise<void>}
-     */
-    async unload() {
+    } )
 
-        if( this._session ) {
-            this._session.dispose()
-            this._session = null
-        }
+    return inference_worker
 
-        if( this._context ) {
-            await this._context.dispose()
-            this._context = null
-        }
+}
 
-        if( this._model ) {
-            await this._model.dispose()
-            this._model = null
-        }
+/**
+ * Send a request to the inference worker and await the response
+ * @param {string} type - Message type (load, chat, chat_stream, etc.)
+ * @param {*} [payload] - Message payload
+ * @returns {Promise<*>}
+ */
+const worker_request = ( type, payload ) => {
 
-        this._model_path = null
+    return new Promise( ( resolve, reject ) => {
 
-    }
+        const id = ++_request_id
+        _pending.set( id, { resolve, reject } )
+        ensure_worker().postMessage( { id, type, payload } )
 
-    /** @returns {boolean} */
-    is_loaded() {
-        return !!this._model && !!this._session
-    }
-
-    /** @returns {string|null} */
-    get_model_id() {
-        return this._model_path
-    }
+    } )
 
 }
 
@@ -234,66 +160,9 @@ const create_window = () => {
  */
 const register_ipc_handlers = () => {
 
-    // Return real system info for device detection — includes GPU capabilities
-    // detected via node-llama-cpp so the renderer can make smart model recommendations
-    ipcMain.handle( `system:info`, async () => {
-
-        const info = {
-            total_memory: os.totalmem(),
-            free_memory: os.freemem(),
-            cpus: os.cpus().length,
-            platform: process.platform,
-            arch: process.arch,
-            gpu: {
-                type: false,
-                metal: false,
-                cuda: false,
-                vulkan: false,
-                vram_total: 0,
-                vram_free: 0,
-                unified_memory: 0,
-                device_names: [],
-            },
-        }
-
-        // Detect GPU via node-llama-cpp — getLlama() returns a cached singleton,
-        // so this is fast after the first call and gives us real hardware data
-        try {
-
-            const { getLlama } = await import( `node-llama-cpp` )
-            const llama = await getLlama()
-
-            // Which GPU backend is active
-            const gpu_type = llama.gpu
-            if( gpu_type ) info.gpu.type = gpu_type
-            info.gpu.metal = gpu_type === `metal`
-            info.gpu.cuda = gpu_type === `cuda`
-            info.gpu.vulkan = gpu_type === `vulkan`
-
-            // VRAM state — unified_memory > 0 means Apple Silicon shared memory pool
-            const vram = await llama.getVramState()
-            info.gpu.vram_total = vram.total || 0
-            info.gpu.vram_free = vram.free || 0
-            info.gpu.unified_memory = vram.unifiedSize || 0
-
-            // Human-readable GPU names for display
-            info.gpu.device_names = await llama.getGpuDeviceNames()
-
-        } catch {
-
-            // node-llama-cpp unavailable or GPU detection failed — use platform heuristics
-            // Apple Silicon always has Metal with unified memory
-            if( process.platform === `darwin` && process.arch === `arm64` ) {
-                info.gpu.type = `metal`
-                info.gpu.metal = true
-                info.gpu.unified_memory = os.totalmem()
-            }
-
-        }
-
-        return info
-
-    } )
+    // System info — GPU detection runs in the worker to avoid blocking the UI
+    // on the first getLlama() call (which compiles/loads native backends)
+    ipcMain.handle( `system:info`, () => worker_request( `system:info` ) )
 
     // Save a downloaded model to the filesystem
     ipcMain.handle( `llm:save_model`, async ( _event, { id, file_name, array_buffer, metadata } ) => {
@@ -450,7 +319,7 @@ const register_ipc_handlers = () => {
 
     } )
 
-    // Load a model by ID from the models directory
+    // Load a model by ID — resolves the path here, sends to worker for loading
     ipcMain.handle( `llm:load`, async ( _event, model_id ) => {
 
         const manifest = read_manifest()
@@ -460,13 +329,9 @@ const register_ipc_handlers = () => {
         const model_path = path.join( MODELS_DIR, model.file_name )
         if( !fs.existsSync( model_path ) ) throw new Error( `Model file missing: ${ model.file_name }` )
 
-        // Instantiate native provider on first use
-        if( !native_provider ) {
-            native_provider = new NativeInference()
-        }
-
-        await native_provider.load( model_path, {
-            n_ctx: model.context_length || 2048,
+        await worker_request( `load`, {
+            model_path,
+            opts: { n_ctx: model.context_length || 2048 },
         } )
 
         // Update last_used_at
@@ -477,55 +342,25 @@ const register_ipc_handlers = () => {
 
     } )
 
-    // Single-shot chat completion
-    ipcMain.handle( `llm:chat`, async ( _event, messages, opts ) => {
-
-        if( !native_provider?.is_loaded() ) throw new Error( `No model loaded` )
-        return native_provider.chat( messages, opts )
-
+    // Single-shot chat completion — forwarded to worker
+    ipcMain.handle( `llm:chat`, ( _event, messages, opts ) => {
+        return worker_request( `chat`, { messages, opts } )
     } )
 
-    // Streaming chat completion
-    ipcMain.handle( `llm:chat_stream`, async ( _event, messages, opts ) => {
-
-        if( !native_provider?.is_loaded() ) throw new Error( `No model loaded` )
-
-        // Send text chunks to renderer via events, await completion, then signal done
-        await native_provider.chat_stream( messages, opts, ( text ) => {
-            main_window?.webContents?.send( `llm:stream-token`, text )
-        } )
-
-        main_window?.webContents?.send( `llm:stream-done` )
-
-        return { success: true }
-
+    // Streaming chat — worker sends stream-token / stream-done events
+    // which the message handler above forwards to the renderer
+    ipcMain.handle( `llm:chat_stream`, ( _event, messages, opts ) => {
+        return worker_request( `chat_stream`, { messages, opts } )
     } )
 
     // Abort current generation
-    ipcMain.handle( `llm:abort`, async () => {
-
-        if( native_provider ) native_provider.abort()
-        return { success: true }
-
-    } )
+    ipcMain.handle( `llm:abort`, () => worker_request( `abort` ) )
 
     // Unload the current model
-    ipcMain.handle( `llm:unload`, async () => {
-
-        if( native_provider ) await native_provider.unload()
-        return { success: true }
-
-    } )
+    ipcMain.handle( `llm:unload`, () => worker_request( `unload` ) )
 
     // Get current model status
-    ipcMain.handle( `llm:status`, async () => {
-
-        return {
-            loaded: native_provider?.is_loaded() || false,
-            model_id: native_provider?.get_model_id() || null,
-        }
-
-    } )
+    ipcMain.handle( `llm:status`, () => worker_request( `status` ) )
 
     // List all cached models
     ipcMain.handle( `llm:list_models`, async () => {
