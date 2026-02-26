@@ -78,11 +78,11 @@ const Tagline = styled.p`
 
 const CardGrid = styled.div`
     display: flex;
-    gap: ${ ( { theme } ) => theme.spacing.md };
+    gap: ${ ( { theme } ) => theme.spacing.lg };
     flex-wrap: wrap;
     justify-content: center;
     margin-bottom: ${ ( { theme } ) => theme.spacing.xl };
-    max-width: 720px;
+    max-width: 880px;
     width: 100%;
 `
 
@@ -91,14 +91,15 @@ const Card = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: ${ ( { theme } ) => theme.spacing.sm };
-    padding: ${ ( { theme } ) => theme.spacing.lg };
-    padding-top: ${ ( { theme } ) => theme.spacing.xl };
+    gap: ${ ( { theme } ) => theme.spacing.md };
+    padding: ${ ( { theme } ) => `${ theme.spacing.xl } ${ theme.spacing.lg }` };
+    padding-top: ${ ( { theme } ) => `calc( ${ theme.spacing.xl } + 0.5rem )` };
     border: 2px solid ${ ( { theme, $active } ) =>
         $active ? theme.colors.accent : theme.colors.border };
     border-radius: ${ ( { theme } ) => theme.border_radius.lg };
     background: ${ ( { theme } ) => theme.colors.surface };
-    width: 200px;
+    width: 260px;
+    min-height: 220px;
     flex-shrink: 0;
 
     ${ ( { $active, theme } ) => $active && `
@@ -110,8 +111,8 @@ const PlatformIcon = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     border-radius: ${ ( { theme } ) => theme.border_radius.full };
     background: ${ ( { theme } ) => theme.colors.code_background };
     color: ${ ( { theme } ) => theme.colors.text };
@@ -236,7 +237,7 @@ export default function GetAppPage() {
                     { is_current && <YourOS>Your OS</YourOS> }
 
                     <PlatformIcon>
-                        <Icon size={ 22 } />
+                        <Icon size={ 28 } />
                     </PlatformIcon>
 
                     <PlatformName>{ label }</PlatformName>
