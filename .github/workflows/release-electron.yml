@@ -60,6 +60,19 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          body: |
+            ## Download gratisAI
+
+            Pick the right file for your computer and click to download:
+
+            - **🍎 Mac (Apple Silicon)** — `gratisAI-${{ needs.check-version.outputs.version }}-arm64.dmg` — for M1, M2, M3, M4 Macs
+            - **🍎 Mac (Intel)** — `gratisAI-${{ needs.check-version.outputs.version }}.dmg` — for older Intel-based Macs
+            - **🪟 Windows** — `gratisAI-Setup-${{ needs.check-version.outputs.version }}.exe`
+            - **🐧 Linux** — `gratisAI-${{ needs.check-version.outputs.version }}.AppImage`
+
+            > **Not sure which Mac you have?** Click the Apple menu → "About This Mac". If it says M1/M2/M3/M4, grab the Apple Silicon version. Otherwise, pick Intel.
+
+            ---
 
   # ── Build matrix: macOS (arm64+x64), Windows (x64), Linux (x64) ──
   build:
