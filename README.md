@@ -79,14 +79,22 @@ Yes. The AI model runs entirely on your hardware — in your browser tab or in t
 - Enough free RAM for the model you choose (the app handles this automatically)
 - An internet connection for the first model download only
 
-## For developers
+## Advanced: bring your own model
 
-Technical documentation, build instructions, testing, CI/CD setup, and architecture details are in **[DOCUMENTATION.md](DOCUMENTATION.md)**.
+The built-in models are just the starting point. You can run **any GGUF model from [Hugging Face](https://huggingface.co/models?library=gguf)** — just paste the download URL into the app. This means thousands of open-source models are available to you: coding assistants, roleplay models, domain-specific fine-tunes, you name it.
+
+The only constraint is your hardware: if a model fits in your RAM, it runs.
+
+For build instructions, architecture details, model catalog internals, and more, see **[DOCUMENTATION.md](DOCUMENTATION.md)**.
+
+## For developers
 
 ```bash
 # Quick start
 npm install && npm run dev
 ```
+
+Everything else — testing, CI/CD, Electron builds, deployment — lives in **[DOCUMENTATION.md](DOCUMENTATION.md)**.
 
 ---
 
