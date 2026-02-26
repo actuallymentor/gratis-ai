@@ -82,18 +82,19 @@ const CardGrid = styled.div`
 `
 
 const Card = styled.div`
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: ${ ( { theme } ) => theme.spacing.sm };
     padding: ${ ( { theme } ) => theme.spacing.lg };
+    padding-top: ${ ( { theme } ) => theme.spacing.xl };
     border: 2px solid ${ ( { theme, $active } ) =>
         $active ? theme.colors.accent : theme.colors.border };
     border-radius: ${ ( { theme } ) => theme.border_radius.lg };
     background: ${ ( { theme } ) => theme.colors.surface };
-    min-width: 180px;
-    flex: 1;
-    max-width: 220px;
+    width: 200px;
+    flex-shrink: 0;
 
     ${ ( { $active, theme } ) => $active && `
         box-shadow: 0 0 0 1px ${ theme.colors.accent };
@@ -135,6 +136,7 @@ const DownloadButton = styled.a`
     text-decoration: none;
     width: 100%;
     min-height: 2.5rem;
+    margin-top: auto;
     transition: opacity 0.15s;
 
     &:hover { opacity: 0.85; }
@@ -151,10 +153,13 @@ const DisabledButton = styled.span`
     font-size: 0.875rem;
     width: 100%;
     min-height: 2.5rem;
+    margin-top: auto;
     cursor: default;
 `
 
 const YourOS = styled.span`
+    position: absolute;
+    top: ${ ( { theme } ) => theme.spacing.sm };
     font-size: 0.75rem;
     font-weight: 600;
     color: ${ ( { theme } ) => theme.colors.accent };
