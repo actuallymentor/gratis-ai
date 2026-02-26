@@ -19,10 +19,15 @@ export default class ElectronIPCProvider {
 
         if( on_progress ) on_progress( { progress: 0, status: `Loading model...` } )
 
-        await window.electronAPI.load_model( model_id )
+        const result = await window.electronAPI.load_model( model_id )
         this._loaded_model_id = model_id
 
-        if( on_progress ) on_progress( { progress: 1, status: `Model ready` } )
+        // Let the caller know if context was reduced due to VRAM limits
+        const status = result?.context_reduced
+            ? `Model ready (context reduced to ${ result.context_size?.toLocaleString() } tokens due to memory limits)`
+            : `Model ready`
+
+        if( on_progress ) on_progress( { progress: 1, status } )
 
     }
 

@@ -329,16 +329,22 @@ const register_ipc_handlers = () => {
         const model_path = path.join( MODELS_DIR, model.file_name )
         if( !fs.existsSync( model_path ) ) throw new Error( `Model file missing: ${ model.file_name }` )
 
-        await worker_request( `load`, {
+        const requested_ctx = model.context_length || 2048
+
+        const result = await worker_request( `load`, {
             model_path,
-            opts: { n_ctx: model.context_length || 2048 },
+            opts: { n_ctx: requested_ctx },
         } )
 
         // Update last_used_at
         model.last_used_at = Date.now()
         write_manifest( manifest )
 
-        return { success: true }
+        return {
+            success: true,
+            context_size: result.context_size,
+            context_reduced: result.context_size < requested_ctx,
+        }
 
     } )
 

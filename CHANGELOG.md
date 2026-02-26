@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.5] - 2026-02-26
+
+### Fixed
+- VRAM crash when loading models with large context windows — auto-retry with halved context size until it fits
+
 ## [0.9.4] - 2026-02-26
 
 ### Fixed

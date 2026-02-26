@@ -24,11 +24,16 @@ class NativeInference {
         this._context = null
         this._session = null
         this._model_path = null
+        this._context_size = null
         this._abort_controller = null
     }
 
     /**
-     * Load a GGUF model from disk
+     * Load a GGUF model from disk.
+     *
+     * If the requested context size exceeds available VRAM, we retry with
+     * progressively halved context sizes until it fits (floor: 2048).
+     *
      * @param {string} model_path - Absolute path to the GGUF file
      * @param {Object} [opts] - Loading options
      * @param {number} [opts.n_ctx] - Context window size
@@ -42,9 +47,38 @@ class NativeInference {
         this._llama = await getLlama()
 
         this._model = await this._llama.loadModel( { modelPath: model_path } )
-        this._context = await this._model.createContext( { contextSize: opts.n_ctx || 2048 } )
-        this._session = new LlamaChatSession( { contextSequence: this._context.getSequence() } )
-        this._model_path = model_path
+
+        // Try the requested context size, halving on VRAM failures
+        const MIN_CTX = 2048
+        let ctx_size = opts.n_ctx || MIN_CTX
+
+        while( ctx_size >= MIN_CTX ) {
+
+            try {
+
+                this._context = await this._model.createContext( { contextSize: ctx_size } )
+                this._session = new LlamaChatSession( { contextSequence: this._context.getSequence() } )
+                this._model_path = model_path
+                this._context_size = ctx_size
+                return
+
+            } catch ( err ) {
+
+                const is_vram_error = /vram|memory|too large/i.test( err.message )
+
+                if( !is_vram_error || ctx_size <= MIN_CTX ) {
+                    // Not a VRAM issue, or we've already hit the floor — give up
+                    await this._model.dispose()
+                    this._model = null
+                    throw err
+                }
+
+                // Halve and retry
+                ctx_size = Math.max( MIN_CTX, Math.floor( ctx_size / 2 ) )
+
+            }
+
+        }
 
     }
 
@@ -129,6 +163,7 @@ class NativeInference {
         }
 
         this._model_path = null
+        this._context_size = null
 
     }
 
@@ -223,7 +258,10 @@ const handle_message = async ( { id, type, payload } ) => {
 
             case `load`:
                 await provider.load( payload.model_path, payload.opts )
-                result = { success: true }
+                result = {
+                    success: true,
+                    context_size: provider._context_size,
+                }
                 break
 
             case `chat`:
