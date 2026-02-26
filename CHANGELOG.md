@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.0] - 2026-02-26
+
+### Added
+- History sidebar toggle on homepage — access conversation history without navigating to `/chat`
+
 ## [0.6.3] - 2026-02-26
 
 ### Added

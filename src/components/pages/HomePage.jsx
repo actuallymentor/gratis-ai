@@ -1,15 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeftRight, AlertCircle, RotateCcw } from 'lucide-react'
+import { ArrowLeftRight, AlertCircle, RotateCcw, PanelLeft } from 'lucide-react'
 import ChatInput from '../molecules/ChatInput'
 import VoiceModelDialog from '../molecules/VoiceModelDialog'
+import Sidebar from '../molecules/Sidebar'
 import use_llm from '../../hooks/use_llm'
 import use_model_manager from '../../hooks/use_model_manager'
 import use_voice_input from '../../hooks/use_voice_input'
+import use_chat_history from '../../hooks/use_chat_history'
+import { export_conversation } from '../../utils/export'
 import { DISPLAY_NAME, storage_key } from '../../utils/branding'
 
 // ── Layout ──────────────────────────────────────────────────────────
+
+const PageWrapper = styled.div`
+    display: flex;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+`
 
 const Container = styled.div`
     display: flex;
@@ -18,6 +28,26 @@ const Container = styled.div`
     justify-content: center;
     flex: 1;
     padding: ${ ( { theme } ) => theme.spacing.xl };
+`
+
+// Matches the TopBar IconButton style
+const SidebarToggle = styled.button`
+    position: absolute;
+    top: ${ ( { theme } ) => theme.spacing.md };
+    left: ${ ( { theme } ) => theme.spacing.md };
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    transition: color 0.15s;
+
+    &:hover {
+        color: ${ ( { theme } ) => theme.colors.text };
+    }
 `
 
 const Title = styled.h1`
@@ -119,8 +149,10 @@ export default function HomePage() {
 
     const { load_model, is_loading, loaded_model_id } = use_llm()
     const { cached_models } = use_model_manager()
+    const { conversations, load_messages, delete_conversation, delete_all_conversations } = use_chat_history()
 
     const [ load_error, set_load_error ] = useState( null )
+    const [ sidebar_collapsed, set_sidebar_collapsed ] = useState( true )
 
     // Voice input hook
     const {
@@ -236,9 +268,53 @@ export default function HomePage() {
         set_voice_download_error( false )
     }, [] )
 
+    // ── Sidebar handlers ───────────────────────────────────────────
+
+    const handle_sidebar_toggle = useCallback( () => {
+        set_sidebar_collapsed( ( prev ) => !prev )
+    }, [] )
+
+    const handle_new_chat = useCallback( () => {
+        navigate( `/chat` )
+    }, [ navigate ] )
+
+    const handle_export = useCallback( async ( conversation ) => {
+        const msgs = await load_messages( conversation.id )
+        export_conversation( conversation, msgs )
+    }, [ load_messages ] )
+
+    const handle_delete = useCallback( async ( id ) => {
+        await delete_conversation( id )
+    }, [ delete_conversation ] )
+
+    const handle_delete_all = useCallback( async () => {
+        await delete_all_conversations()
+    }, [ delete_all_conversations ] )
+
     // ── Render ──────────────────────────────────────────────────────
 
-    return <Container>
+    return <PageWrapper>
+
+        <Sidebar
+            collapsed={ sidebar_collapsed }
+            on_toggle={ handle_sidebar_toggle }
+            on_new_chat={ handle_new_chat }
+            conversations={ conversations }
+            on_export={ handle_export }
+            on_delete={ handle_delete }
+            on_delete_all={ handle_delete_all }
+        />
+
+        { /* Toggle button — only visible when sidebar is closed */ }
+        { sidebar_collapsed && <SidebarToggle
+            onClick={ handle_sidebar_toggle }
+            aria-label="Open sidebar"
+            data-testid="home-sidebar-toggle"
+        >
+            <PanelLeft size={ 18 } />
+        </SidebarToggle> }
+
+        <Container>
 
         <Title>{ DISPLAY_NAME }</Title>
         <Tagline>
@@ -306,6 +382,8 @@ export default function HomePage() {
             </ErrorAction>
         </ErrorBanner> }
 
-    </Container>
+        </Container>
+
+    </PageWrapper>
 
 }
