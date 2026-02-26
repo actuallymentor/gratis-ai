@@ -16,7 +16,8 @@ const shared = {
         full: `9999px`,   // pills
     },
     fonts: {
-        body: `system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'`,
+        heading: `'Montserrat Variable', system-ui, -apple-system, 'Segoe UI', sans-serif`,
+        body: `'Nunito Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'`,
         mono: `'SF Mono', ui-monospace, 'Cascadia Code', 'Segoe UI Mono', Menlo, Consolas, monospace`,
     },
     breakpoints: {

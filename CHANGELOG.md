@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.0] - 2026-02-26
+
+### Added
+- Custom typography — Montserrat for headings, Nunito for body text, self-hosted via @fontsource-variable
+
 ## [0.8.0] - 2026-02-26
 
 ### Added

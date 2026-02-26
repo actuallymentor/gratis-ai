@@ -39,6 +39,10 @@ const GlobalStyle = createGlobalStyle`
         overflow: hidden;
     }
 
+    h1, h2, h3, h4, h5, h6 {
+        font-family: ${ ( { theme } ) => theme.fonts.heading };
+    }
+
     #root {
         min-height: 100vh;
         min-height: 100dvh;
