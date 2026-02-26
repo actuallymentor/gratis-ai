@@ -17,7 +17,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   # ── Gate: only proceed when the version string actually changed ──
   check-version:
     runs-on: ubuntu-latest
@@ -63,12 +62,12 @@ jobs:
           body: |
             ## Download gratisAI
 
-            Pick the right file for your computer and click to download:
+            Click the link for your device to start downloading:
 
-            - **🍎 Mac (Apple Silicon)** — `gratisAI-${{ needs.check-version.outputs.version }}-arm64.dmg` — for M1, M2, M3, M4 Macs
-            - **🍎 Mac (Intel)** — `gratisAI-${{ needs.check-version.outputs.version }}.dmg` — for older Intel-based Macs
-            - **🪟 Windows** — `gratisAI-Setup-${{ needs.check-version.outputs.version }}.exe`
-            - **🐧 Linux** — `gratisAI-${{ needs.check-version.outputs.version }}.AppImage`
+            - 🍎 [**Mac (Apple Silicon)**](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/gratisAI-${{ needs.check-version.outputs.version }}-arm64.dmg) — M1, M2, M3, M4 Macs
+            - 🍎 [**Mac (Intel)**](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/gratisAI-${{ needs.check-version.outputs.version }}.dmg) — older Intel-based Macs
+            - 🪟 [**Windows**](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/gratisAI-Setup-${{ needs.check-version.outputs.version }}.exe)
+            - 🐧 [**Linux**](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/gratisAI-${{ needs.check-version.outputs.version }}.AppImage)
 
             > **Not sure which Mac you have?** Click the Apple menu → "About This Mac". If it says M1/M2/M3/M4, grab the Apple Silicon version. Otherwise, pick Intel.
 
@@ -154,26 +153,6 @@ jobs:
       - name: Install Linux build dependencies
         if: matrix.platform == 'linux'
         run: sudo apt-get update && sudo apt-get install -y cmake build-essential
-
-      # Debug: verify the imported certificate is discoverable
-      - name: Debug codesign identity
-        if: matrix.platform == 'mac' && steps.signing.outputs.can-sign-mac == 'true'
-        shell: bash
-        run: |
-          echo "── Keychain search list ──"
-          security list-keychains -d user
-
-          echo ""
-          echo "── Valid signing identities ──"
-          security find-identity -v -p codesigning
-
-          echo ""
-          echo "── Certificate details (Developer ID) ──"
-          security find-identity -v -p codesigning | grep "Developer ID" || echo "⚠️  No 'Developer ID' identity found!"
-
-          echo ""
-          echo "── All certificates in signing_temp keychain ──"
-          security find-certificate -a -p signing_temp.keychain | openssl x509 -noout -subject -dates -issuer 2>/dev/null || echo "⚠️  Could not read certificates"
 
       - name: Build Electron app
         run: npx electron-vite build
