@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.1] - 2026-02-26
+
+### Fixed
+- ERR_FILE_NOT_FOUND for lazy-loaded chunks in Electron — skip less-lazy prefetch where it has no value
+
 ## [0.7.0] - 2026-02-26
 
 ### Added

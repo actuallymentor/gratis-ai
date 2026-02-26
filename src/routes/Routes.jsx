@@ -3,14 +3,21 @@ import { Routes as RouterRoutes, Route } from 'react-router-dom'
 import { prefetch } from 'less-lazy'
 import { storage_key } from '../utils/branding'
 
-// Lazy load all pages with prefetching for code splitting
-const WelcomePage = lazy( prefetch( () => import( '../components/pages/WelcomePage' ) ) )
-const HomePage = lazy( prefetch( () => import( '../components/pages/HomePage' ) ) )
-const ModelSelectPage = lazy( prefetch( () => import( '../components/pages/ModelSelectPage' ) ) )
-const DownloadPage = lazy( prefetch( () => import( '../components/pages/DownloadPage' ) ) )
-const ChatPage = lazy( prefetch( () => import( '../components/pages/ChatPage' ) ) )
-const GetAppPage = lazy( prefetch( () => import( '../components/pages/GetAppPage' ) ) )
-const NotFoundPage = lazy( prefetch( () => import( '../components/pages/NotFoundPage' ) ) )
+// Prefetching injects <link rel="prefetch"> tags — a network optimisation that has
+// zero value in Electron where assets load from disk instantly. Worse, less-lazy
+// resolves chunk paths relative to the HTML document instead of the assets dir,
+// causing ERR_FILE_NOT_FOUND for every lazy-loaded chunk.
+const is_electron = typeof window !== `undefined` && window.electronAPI?.native_inference
+const maybe_prefetch = is_electron ? fn => fn : prefetch
+
+// Lazy load all pages with prefetching for code splitting (web only)
+const WelcomePage = lazy( maybe_prefetch( () => import( '../components/pages/WelcomePage' ) ) )
+const HomePage = lazy( maybe_prefetch( () => import( '../components/pages/HomePage' ) ) )
+const ModelSelectPage = lazy( maybe_prefetch( () => import( '../components/pages/ModelSelectPage' ) ) )
+const DownloadPage = lazy( maybe_prefetch( () => import( '../components/pages/DownloadPage' ) ) )
+const ChatPage = lazy( maybe_prefetch( () => import( '../components/pages/ChatPage' ) ) )
+const GetAppPage = lazy( maybe_prefetch( () => import( '../components/pages/GetAppPage' ) ) )
+const NotFoundPage = lazy( maybe_prefetch( () => import( '../components/pages/NotFoundPage' ) ) )
 
 /**
  * Pick the right landing page: returning users get the search home,
