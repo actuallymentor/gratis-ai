@@ -207,6 +207,13 @@ export default function GetAppPage() {
     const navigate = useNavigate()
     const current_os = detect_os()
 
+    // Reorder so the detected OS sits in the center
+    const ordered_platforms = [
+        ...PLATFORMS.filter( p => p.id !== current_os ),
+    ]
+    const current_platform = PLATFORMS.find( p => p.id === current_os )
+    if( current_platform ) ordered_platforms.splice( 1, 0, current_platform )
+
     return <Container>
 
         <Title>{ DISPLAY_NAME }</Title>
@@ -216,14 +223,14 @@ export default function GetAppPage() {
         </Tagline>
 
         <CardGrid>
-            { PLATFORMS.map( ( { id, label, detail, file_hint, filename, Icon } ) => {
+            { ordered_platforms.map( ( { id, label, detail, file_hint, filename, Icon } ) => {
 
                 const is_current = id === current_os
                 const href = download_url( filename )
 
                 return <Card key={ id } $active={ is_current }>
 
-<PlatformIcon>
+                    <PlatformIcon>
                         <Icon size={ 28 } />
                     </PlatformIcon>
 
