@@ -141,6 +141,26 @@ jobs:
         if: matrix.platform == 'linux'
         run: sudo apt-get update && sudo apt-get install -y cmake build-essential
 
+      # Debug: verify the imported certificate is discoverable
+      - name: Debug codesign identity
+        if: matrix.platform == 'mac' && steps.signing.outputs.can-sign-mac == 'true'
+        shell: bash
+        run: |
+          echo "── Keychain search list ──"
+          security list-keychains -d user
+
+          echo ""
+          echo "── Valid signing identities ──"
+          security find-identity -v -p codesigning
+
+          echo ""
+          echo "── Certificate details (Developer ID) ──"
+          security find-identity -v -p codesigning | grep "Developer ID" || echo "⚠️  No 'Developer ID' identity found!"
+
+          echo ""
+          echo "── All certificates in signing_temp keychain ──"
+          security find-certificate -a -p signing_temp.keychain | openssl x509 -noout -subject -dates -issuer 2>/dev/null || echo "⚠️  Could not read certificates"
+
       - name: Build Electron app
         run: npx electron-vite build
         env:
