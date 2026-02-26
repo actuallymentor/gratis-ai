@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.4] - 2026-02-26
+
+### Fixed
+- Off-center wobble in loading spinners — replace lucide `Loader` with `LoaderCircle` which is balanced for rotation
+
 ## [0.9.2] - 2026-02-26
 
 ### Fixed

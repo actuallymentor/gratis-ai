@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import styled, { useTheme } from 'styled-components'
-import { ChevronDown, Check, Plus, Settings, Loader, AlertTriangle } from 'lucide-react'
+import { ChevronDown, Check, Plus, Settings, LoaderCircle, AlertTriangle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { format_file_size, can_fit_in_memory } from '../../utils/model_catalog'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
@@ -193,7 +193,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
             data-testid="model-selector-dropdown"
             onClick={ () => set_is_open( !is_open ) }
         >
-            { is_switching ? <Loader size={ 14 } /> : null }
+            { is_switching ? <LoaderCircle size={ 14 } /> : null }
             <ModelName>{ display_name }</ModelName>
             <ChevronDown size={ 14 } />
         </Trigger>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import styled, { keyframes } from 'styled-components'
-import { Loader } from 'lucide-react'
+import { LoaderCircle } from 'lucide-react'
 
 // ── Container — matches textarea dimensions so it sits in the same flex slot ─
 
@@ -84,7 +84,7 @@ const spin = keyframes`
     to { transform: rotate( 360deg ); }
 `
 
-const SpinnerIcon = styled( Loader )`
+const SpinnerIcon = styled( LoaderCircle )`
     flex-shrink: 0;
     color: ${ ( { theme } ) => theme.colors.accent };
     animation: ${ spin } 1s linear infinite;

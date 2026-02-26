@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import styled, { keyframes, css } from 'styled-components'
-import { SendHorizonal, Square, Mic, Loader } from 'lucide-react'
+import { SendHorizonal, Square, Mic, LoaderCircle } from 'lucide-react'
 import VoiceStatusBar from '../atoms/VoiceStatusBar'
 
 // ── Pill container — owns all visual appearance ─────────────────────
@@ -126,7 +126,7 @@ const spin = keyframes`
     to { transform: rotate( 360deg ); }
 `
 
-const SpinnerIcon = styled( Loader )`
+const SpinnerIcon = styled( LoaderCircle )`
     animation: ${ spin } 1s linear infinite;
 
     @media ( prefers-reduced-motion: reduce ) {

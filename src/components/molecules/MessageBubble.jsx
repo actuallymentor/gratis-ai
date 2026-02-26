@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
-import { Copy, Check, ChevronRight, Loader } from 'lucide-react'
+import { Copy, Check, ChevronRight, LoaderCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import StreamingIndicator from '../atoms/StreamingIndicator'
 import GenerationStats from '../atoms/GenerationStats'
@@ -166,7 +166,7 @@ const spin = keyframes`
     to { transform: rotate( 360deg ); }
 `
 
-const ThinkingSpinner = styled( Loader )`
+const ThinkingSpinner = styled( LoaderCircle )`
     animation: ${ spin } 1s linear infinite;
     flex-shrink: 0;
 `

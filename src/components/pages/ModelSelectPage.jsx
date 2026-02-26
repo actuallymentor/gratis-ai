@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
-import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, Loader, Link, Zap } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, LoaderCircle, Link, Zap } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import use_model_manager from '../../hooks/use_model_manager'
 import use_speed_estimate from '../../hooks/use_speed_estimate'
@@ -372,7 +372,7 @@ const CustomModelStatus = styled.div`
     gap: ${ ( { theme } ) => theme.spacing.xs };
 `
 
-const Spinner = styled( Loader )`
+const Spinner = styled( LoaderCircle )`
     animation: spin 1s linear infinite;
     @keyframes spin { to { transform: rotate( 360deg ); } }
 `

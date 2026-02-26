@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { v4 as uuid } from 'uuid'
 import toast from 'react-hot-toast'
-import { ArrowRight, Loader } from 'lucide-react'
+import { ArrowRight, LoaderCircle } from 'lucide-react'
 import AppLayout from '../molecules/AppLayout'
 import MessageList from '../molecules/MessageList'
 import ChatInput from '../molecules/ChatInput'
@@ -647,7 +647,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         // Model is loading — show a friendly loading state instead of the "no model" CTA
         if( !has_model && is_loading_model ) {
             return <LoadingContainer data-testid="model-loading">
-                <SpinnerIcon><Loader size={ 32 } /></SpinnerIcon>
+                <SpinnerIcon><LoaderCircle size={ 32 } /></SpinnerIcon>
                 <LoadingText>Loading your model...</LoadingText>
             </LoadingContainer>
         }
