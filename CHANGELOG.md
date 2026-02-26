@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.1] - 2026-02-26
+
+### Fixed
+- Infinite "Loading model..." hang after switching model mid-load then navigating back
+
 ## [0.9.0] - 2026-02-26
 
 ### Added

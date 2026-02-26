@@ -183,14 +183,29 @@ const use_llm_store = create( ( set, get ) => ( {
     },
 
     /**
-     * Unload the current model
+     * Unload the current model.
+     * Clears all loading state first — if a load is in-flight, exit()
+     * kills the WASM worker and the pending loadModel() promise may
+     * never settle, so we can't rely on the finally block to reset state.
      */
     unload_model: async () => {
+
         const provider = get()._provider
+
+        // Reset state synchronously so the next load_model call starts fresh
+        // instead of deduplicating against a zombie promise
+        set( {
+            is_loading: false,
+            loaded_model_id: null,
+            error: null,
+            _load_promise: null,
+            _loading_model_id: null,
+        } )
+
         if( provider ) {
             await provider.unload_model()
-            set( { loaded_model_id: null } )
         }
+
     },
 
     /**
