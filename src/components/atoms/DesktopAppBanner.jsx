@@ -10,12 +10,14 @@ const DISMISSED_KEY = storage_key( `desktop_banner_dismissed` )
 const is_mobile_os = () => /Android|iPhone|iPad|iPod/i.test( navigator.userAgent || `` )
 
 const Banner = styled.div`
+    position: relative;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: ${ p => p.theme.spacing.sm };
     padding: ${ p => p.theme.spacing.xs } ${ p => p.theme.spacing.md };
     background: ${ p => p.theme.colors.accent };
-    color: #1a1a1a;
+    color: #fff;
     font-size: 0.8125rem;
     line-height: 1.4;
     min-height: 2rem;
@@ -26,7 +28,6 @@ const Banner = styled.div`
 `
 
 const Message = styled.span`
-    flex: 1;
     display: flex;
     align-items: center;
     gap: ${ p => p.theme.spacing.sm };
@@ -37,27 +38,30 @@ const AppLink = styled( Link )`
     align-items: center;
     gap: ${ p => p.theme.spacing.xs };
     padding: 0.15rem ${ p => p.theme.spacing.sm };
-    background: rgba( 255, 255, 255, 0.2 );
-    color: #fff;
+    background: ${ p => p.theme.mode === `dark` ? `#fff` : `#1a1a1a` };
+    color: ${ p => p.theme.mode === `dark` ? `#1a1a1a` : `#fff` };
     border-radius: ${ p => p.theme.border_radius.sm };
     font-size: 0.8125rem;
+    font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
 
-    &:hover { background: rgba( 255, 255, 255, 0.3 ); }
+    &:hover { opacity: 0.85; }
 `
 
 const DismissButton = styled.button`
+    position: absolute;
+    right: ${ p => p.theme.spacing.sm };
     display: inline-flex;
     align-items: center;
     padding: 0.15rem;
     background: none;
-    color: rgba( 0, 0, 0, 0.5 );
+    color: rgba( 255, 255, 255, 0.5 );
     border: none;
     cursor: pointer;
     border-radius: ${ p => p.theme.border_radius.sm };
 
-    &:hover { color: #1a1a1a; }
+    &:hover { color: #fff; }
 `
 
 /**
