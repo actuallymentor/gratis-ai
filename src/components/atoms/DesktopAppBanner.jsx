@@ -14,7 +14,7 @@ const Banner = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: ${ p => p.theme.spacing.sm };
+    gap: ${ p => p.theme.spacing.md };
     padding: ${ p => p.theme.spacing.xs } ${ p => p.theme.spacing.md };
     background: ${ p => p.theme.colors.text };
     color: ${ p => p.theme.colors.background };
