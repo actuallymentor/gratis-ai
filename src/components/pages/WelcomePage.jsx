@@ -5,7 +5,21 @@ import { useTranslation } from 'react-i18next'
 import { ArrowRight, Shield, WifiOff, ChevronDown, ChevronUp } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import DeviceInfo from '../atoms/DeviceInfo'
+import LanguageSelector from '../molecules/LanguageSelector'
 import { DISPLAY_NAME } from '../../utils/branding'
+
+const PageWrapper = styled.div`
+    position: relative;
+    display: flex;
+    flex: 1;
+`
+
+const TopRight = styled.div`
+    position: absolute;
+    top: ${ ( { theme } ) => theme.spacing.md };
+    right: ${ ( { theme } ) => theme.spacing.md };
+    z-index: 10;
+`
 
 const Container = styled.div`
     display: flex;
@@ -171,58 +185,66 @@ export default function WelcomePage() {
         if( !is_detecting ) navigate( `/select-model`, { state: { capabilities } } )
     }
 
-    return <Container>
+    return <PageWrapper>
 
-        <Title>{ DISPLAY_NAME }</Title>
-        <Tagline>
-            { t( 'tagline' ) }
-        </Tagline>
+        <TopRight>
+            <LanguageSelector />
+        </TopRight>
 
-        { /* Simple value propositions anyone can understand */ }
-        <ValueProps>
-            <ValueProp>
-                <IconCircle><Shield size={ 18 } /></IconCircle>
-                <span>{ t( 'value_prop_privacy' ) }</span>
-            </ValueProp>
-            <ValueProp>
-                <IconCircle><WifiOff size={ 18 } /></IconCircle>
-                <span>{ t( 'value_prop_offline' ) }</span>
-            </ValueProp>
-        </ValueProps>
+        <Container>
 
-        <StartButton
-            data-testid="get-started-btn"
-            onClick={ handle_start }
-            disabled={ is_detecting }
-        >
-            { is_detecting
-                ? <><DetectingDot /> { t( 'checking_device' ) }</>
-                : <>{ t( 'get_started' ) } <ArrowRight size={ 18 } /></> }
-        </StartButton>
+            <Title>{ DISPLAY_NAME }</Title>
+            <Tagline>
+                { t( 'tagline' ) }
+            </Tagline>
 
-        { /* Step progress indicator */ }
-        <StepIndicator data-testid="step-indicator">
-            <StepDot $active />
-            <StepLine />
-            <StepDot />
-            <StepLine />
-            <StepDot />
-        </StepIndicator>
+            { /* Simple value propositions anyone can understand */ }
+            <ValueProps>
+                <ValueProp>
+                    <IconCircle><Shield size={ 18 } /></IconCircle>
+                    <span>{ t( 'value_prop_privacy' ) }</span>
+                </ValueProp>
+                <ValueProp>
+                    <IconCircle><WifiOff size={ 18 } /></IconCircle>
+                    <span>{ t( 'value_prop_offline' ) }</span>
+                </ValueProp>
+            </ValueProps>
 
-        { /* Device details — hidden by default (progressive disclosure) */ }
-        { capabilities && <>
-            <DetailsToggle
-                data-testid="device-details-toggle"
-                onClick={ () => set_show_details( !show_details ) }
+            <StartButton
+                data-testid="get-started-btn"
+                onClick={ handle_start }
+                disabled={ is_detecting }
             >
-                { show_details ? t( 'hide_device_details' ) : t( 'show_device_details' ) }
-                { show_details ? <ChevronUp size={ 14 } /> : <ChevronDown size={ 14 } /> }
-            </DetailsToggle>
-            <DetailsPanel $expanded={ show_details }>
-                <DeviceInfo capabilities={ capabilities } />
-            </DetailsPanel>
-        </> }
+                { is_detecting
+                    ? <><DetectingDot /> { t( 'checking_device' ) }</>
+                    : <>{ t( 'get_started' ) } <ArrowRight size={ 18 } /></> }
+            </StartButton>
 
-    </Container>
+            { /* Step progress indicator */ }
+            <StepIndicator data-testid="step-indicator">
+                <StepDot $active />
+                <StepLine />
+                <StepDot />
+                <StepLine />
+                <StepDot />
+            </StepIndicator>
+
+            { /* Device details — hidden by default (progressive disclosure) */ }
+            { capabilities && <>
+                <DetailsToggle
+                    data-testid="device-details-toggle"
+                    onClick={ () => set_show_details( !show_details ) }
+                >
+                    { show_details ? t( 'hide_device_details' ) : t( 'show_device_details' ) }
+                    { show_details ? <ChevronUp size={ 14 } /> : <ChevronDown size={ 14 } /> }
+                </DetailsToggle>
+                <DetailsPanel $expanded={ show_details }>
+                    <DeviceInfo capabilities={ capabilities } />
+                </DetailsPanel>
+            </> }
+
+        </Container>
+
+    </PageWrapper>
 
 }
