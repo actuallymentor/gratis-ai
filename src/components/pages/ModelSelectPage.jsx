@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, LoaderCircle, Link, Zap } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import use_model_manager from '../../hooks/use_model_manager'
@@ -400,6 +401,7 @@ function BenchmarkRow( { benchmarks } ) {
 export default function ModelSelectPage() {
 
     const navigate = useNavigate()
+    const { t } = useTranslation( 'models' )
     const [ show_alternatives, set_show_alternatives ] = useState( false )
 
     // Device memory budget and cached model detection
@@ -409,7 +411,7 @@ export default function ModelSelectPage() {
     // Measure real download speed for accurate time estimates
     const { speed_bps, run_estimate } = use_speed_estimate()
     useEffect( () => {
-        run_estimate() 
+        run_estimate()
     }, [ run_estimate ] )
 
     const is_cached = ( model_id ) =>
@@ -486,7 +488,7 @@ export default function ModelSelectPage() {
 
         const parsed = parse_hf_url( custom_url )
         if( !parsed ) {
-            set_custom_error( `Invalid URL. Use a HuggingFace link like hf.co/org/repo:Q4_K_M` )
+            set_custom_error( t( 'invalid_hf_url' ) )
             return
         }
 
@@ -517,11 +519,11 @@ export default function ModelSelectPage() {
 
     return <Container>
 
-        <Title>Pick a model</Title>
+        <Title>{ t( 'pick_a_model' ) }</Title>
         <Subtitle>
             { show_two_cards
-                ? `We picked two options based on your device. Choose the balance that works for you.`
-                : `Based on your device, we picked the best AI model. It will be downloaded once and stored locally.` }
+                ? t( 'subtitle_two_cards' )
+                : t( 'subtitle_single_card' ) }
         </Subtitle>
 
         { /* ── Two-card layout ── */ }
@@ -534,16 +536,16 @@ export default function ModelSelectPage() {
             >
                 <CardLabel $variant="faster">
                     <Zap size={ 18 } />
-                    Faster Option
+                    { t( 'faster_option' ) }
                 </CardLabel>
                 { is_cached( faster.id )
-                    ? <CachedBadge><Check size={ 12 } /> Already downloaded</CachedBadge>
-                    : <DownloadEstimate>Initial download takes { estimate_download_time( faster.file_size_bytes, speed_bps ) }</DownloadEstimate> }
+                    ? <CachedBadge><Check size={ 12 } /> { t( 'already_downloaded' ) }</CachedBadge>
+                    : <DownloadEstimate>{ t( 'initial_download_takes', { time: estimate_download_time( faster.file_size_bytes, speed_bps ) } ) }</DownloadEstimate> }
                 <CardDetailsToggle onClick={ ( e ) => {
-                    e.stopPropagation(); toggle_details( faster.id ) 
+                    e.stopPropagation(); toggle_details( faster.id )
                 } }
                 >
-                    Show details { details_open[ faster.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
+                    { t( 'show_details' ) } { details_open[ faster.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
                 </CardDetailsToggle>
                 <CardDetails $open={ !!details_open[ faster.id ] }>
                     { faster.name } — { format_file_size( faster.file_size_bytes ) } — { faster.quantization }
@@ -558,16 +560,16 @@ export default function ModelSelectPage() {
             >
                 <CardLabel $variant="smarter">
                     <Sparkles size={ 18 } />
-                    Smarter Option
+                    { t( 'smarter_option' ) }
                 </CardLabel>
                 { is_cached( smarter.id )
-                    ? <CachedBadge><Check size={ 12 } /> Already downloaded</CachedBadge>
-                    : <DownloadEstimate>Initial download takes { estimate_download_time( smarter.file_size_bytes, speed_bps ) }</DownloadEstimate> }
+                    ? <CachedBadge><Check size={ 12 } /> { t( 'already_downloaded' ) }</CachedBadge>
+                    : <DownloadEstimate>{ t( 'initial_download_takes', { time: estimate_download_time( smarter.file_size_bytes, speed_bps ) } ) }</DownloadEstimate> }
                 <CardDetailsToggle onClick={ ( e ) => {
-                    e.stopPropagation(); toggle_details( smarter.id ) 
+                    e.stopPropagation(); toggle_details( smarter.id )
                 } }
                 >
-                    Show details { details_open[ smarter.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
+                    { t( 'show_details' ) } { details_open[ smarter.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
                 </CardDetailsToggle>
                 <CardDetails $open={ !!details_open[ smarter.id ] }>
                     { smarter.name } — { format_file_size( smarter.file_size_bytes ) } — { smarter.quantization }
@@ -581,13 +583,13 @@ export default function ModelSelectPage() {
         { !show_two_cards && active_model && <RecommendedCard>
             <RecommendedBadge>
                 <Sparkles size={ 14 } />
-                { custom_model ? `Custom HuggingFace model` : `Recommended for your device` }
+                { custom_model ? t( 'custom_hf_model' ) : t( 'recommended_for_device' ) }
             </RecommendedBadge>
             { is_cached( active_model.id )
-                ? <CachedBadge><Check size={ 12 } /> Already downloaded</CachedBadge>
-                : <DownloadEstimate>Initial download takes { estimate_download_time( active_model.file_size_bytes, speed_bps ) }</DownloadEstimate> }
+                ? <CachedBadge><Check size={ 12 } /> { t( 'already_downloaded' ) }</CachedBadge>
+                : <DownloadEstimate>{ t( 'initial_download_takes', { time: estimate_download_time( active_model.file_size_bytes, speed_bps ) } ) }</DownloadEstimate> }
             <CardDetailsToggle onClick={ () => toggle_details( active_model.id ) }>
-                Show details { details_open[ active_model.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
+                { t( 'show_details' ) } { details_open[ active_model.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
             </CardDetailsToggle>
             <CardDetails $open={ !!details_open[ active_model.id ] }>
                 { active_model.name } — { format_file_size( active_model.file_size_bytes ) }
@@ -596,7 +598,7 @@ export default function ModelSelectPage() {
             </CardDetails>
             { !can_fit_in_memory( active_model, max_model_bytes ) && <MemoryWarning>
                 <AlertTriangle size={ 14 } />
-                May be too large for this browser
+                { t( 'may_be_too_large_browser' ) }
             </MemoryWarning> }
         </RecommendedCard> }
 
@@ -604,7 +606,7 @@ export default function ModelSelectPage() {
             data-testid="model-select-confirm-btn"
             onClick={ handle_download }
         >
-            { active_is_cached ? `Start Chatting` : `Download & Start` } <ArrowRight size={ 18 } />
+            { active_is_cached ? t( 'start_chatting' ) : t( 'download_and_start' ) } <ArrowRight size={ 18 } />
         </DownloadButton>
 
         { /* Step progress */ }
@@ -622,7 +624,7 @@ export default function ModelSelectPage() {
                 data-testid="change-model-toggle"
                 onClick={ () => set_show_alternatives( !show_alternatives ) }
             >
-                Choose a different model
+                { t( 'choose_different_model' ) }
                 { show_alternatives ? <ChevronUp size={ 14 } /> : <ChevronDown size={ 14 } /> }
             </ToggleButton>
 
@@ -638,12 +640,12 @@ export default function ModelSelectPage() {
                             <OptionInfo>
                                 <OptionName>
                                     { model.name }
-                                    { model.uncensored && <UncensoredTag>uncensored</UncensoredTag> }
+                                    { model.uncensored && <UncensoredTag>{ t( 'uncensored' ) }</UncensoredTag> }
                                 </OptionName>
                                 <OptionMeta>
                                     { model.parameters_label } — { format_file_size( model.file_size_bytes ) } — { model.quantization }
                                     { model.benchmarks && <> — <QualityBadge>Score { quality_score( model ).toFixed( 0 ) }</QualityBadge></> }
-                                    { is_cached( model.id ) ? ` — ✓ downloaded` : `` }
+                                    { is_cached( model.id ) ? ` — ✓ ${ t( 'downloaded' ) }` : `` }
                                 </OptionMeta>
                             </OptionInfo>
                             { is_selected && <CheckIcon><Check size={ 16 } /></CheckIcon> }
@@ -655,7 +657,7 @@ export default function ModelSelectPage() {
                 <CustomModelSection>
                     <CustomModelLabel>
                         <Link size={ 14 } />
-                        Custom HuggingFace model
+                        { t( 'custom_hf_model' ) }
                     </CustomModelLabel>
 
                     <CustomModelRow onSubmit={ handle_custom_load }>
@@ -672,13 +674,13 @@ export default function ModelSelectPage() {
                             type="submit"
                             disabled={ custom_loading || !custom_url.trim() }
                         >
-                            { custom_loading ? `Loading...` : `Load` }
+                            { custom_loading ? t( 'common:loading' ) : t( 'common:load' ) }
                         </LoadButton>
                     </CustomModelRow>
 
                     { /* Status feedback */ }
                     { custom_loading && <CustomModelStatus>
-                        <Spinner size={ 12 } /> Resolving model...
+                        <Spinner size={ 12 } /> { t( 'common:resolving' ) }
                     </CustomModelStatus> }
 
                     { custom_error && <CustomModelStatus $error>
@@ -691,7 +693,7 @@ export default function ModelSelectPage() {
 
                     { /* Warn browser users about large custom models that may exceed WASM limits */ }
                     { custom_model && !custom_loading && !window.electronAPI && custom_model.file_size_bytes > 2_000_000_000 && <CustomModelStatus $error>
-                        <AlertTriangle size={ 12 } /> Large models may fail to load in the browser. Consider a smaller quantization or the desktop app.
+                        <AlertTriangle size={ 12 } /> { t( 'large_model_warning' ) }
                     </CustomModelStatus> }
 
                 </CustomModelSection>
