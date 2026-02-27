@@ -460,8 +460,7 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                             <DownloadAppSubtext>more powerful</DownloadAppSubtext>
                         </DownloadAppLabel>
                     </DownloadAppLink>
-                </SidebarFooter>
-            }
+                </SidebarFooter> }
 
         </SidebarContainer>
 
