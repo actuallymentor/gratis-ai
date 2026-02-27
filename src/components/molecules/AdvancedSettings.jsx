@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { useTranslation } from 'react-i18next'
 
 const Section = styled.div`
     margin-bottom: ${ ( { theme } ) => theme.spacing.lg };
@@ -75,14 +76,15 @@ const DividerLabel = styled.p`
  */
 export default function AdvancedSettings( { settings, on_change } ) {
 
+    const { t } = useTranslation( `settings` )
+
     return <>
 
         { /* Temperature — moved from Basic */ }
         <Section>
-            <Label>Creativity</Label>
+            <Label>{ t( `creativity` ) }</Label>
             <Description>
-                Lower values give more predictable, focused answers.
-                Higher values make responses more creative and varied.
+                { t( `creativity_description` ) }
             </Description>
             <SliderRow>
                 <Slider
@@ -108,10 +110,9 @@ export default function AdvancedSettings( { settings, on_change } ) {
 
         { /* Max Tokens — moved from Basic */ }
         <Section>
-            <Label>Response Length</Label>
+            <Label>{ t( `response_length` ) }</Label>
             <Description>
-                Maximum length of each response. Higher values allow longer answers
-                but take more time to generate.
+                { t( `response_length_description` ) }
             </Description>
             <NumberInput
                 data-testid="max-tokens-input"
@@ -126,12 +127,12 @@ export default function AdvancedSettings( { settings, on_change } ) {
         </Section>
 
         <Divider />
-        <DividerLabel>Fine-tuning</DividerLabel>
+        <DividerLabel>{ t( `fine_tuning` ) }</DividerLabel>
 
         { /* Top P */ }
         <Section>
-            <Label>Top P</Label>
-            <Description>Limits the pool of words the AI picks from. Lower values keep it more focused.</Description>
+            <Label>{ t( `top_p` ) }</Label>
+            <Description>{ t( `top_p_description` ) }</Description>
             <SliderRow>
                 <Slider
                     type="range" min="0" max="1" step="0.05"
@@ -148,8 +149,8 @@ export default function AdvancedSettings( { settings, on_change } ) {
 
         { /* Top K */ }
         <Section>
-            <Label>Top K</Label>
-            <Description>Only considers the top K most likely next words. Lower = more predictable.</Description>
+            <Label>{ t( `top_k` ) }</Label>
+            <Description>{ t( `top_k_description` ) }</Description>
             <NumberInput
                 type="number" min="0" max="200"
                 value={ settings.top_k ?? 40 }
@@ -160,8 +161,8 @@ export default function AdvancedSettings( { settings, on_change } ) {
 
         { /* Min P */ }
         <Section>
-            <Label>Min P</Label>
-            <Description>Filters out words that are too unlikely. Higher values make output more predictable.</Description>
+            <Label>{ t( `min_p` ) }</Label>
+            <Description>{ t( `min_p_description` ) }</Description>
             <SliderRow>
                 <Slider
                     type="range" min="0" max="1" step="0.01"
@@ -178,8 +179,8 @@ export default function AdvancedSettings( { settings, on_change } ) {
 
         { /* Repeat Penalty */ }
         <Section>
-            <Label>Repeat Penalty</Label>
-            <Description>Discourages the AI from repeating itself. Higher values = less repetition.</Description>
+            <Label>{ t( `repeat_penalty` ) }</Label>
+            <Description>{ t( `repeat_penalty_description` ) }</Description>
             <SliderRow>
                 <Slider
                     type="range" min="1" max="2" step="0.05"
@@ -196,8 +197,8 @@ export default function AdvancedSettings( { settings, on_change } ) {
 
         { /* Repeat Last N */ }
         <Section>
-            <Label>Repeat Last N</Label>
-            <Description>How far back the AI checks for repeated words.</Description>
+            <Label>{ t( `repeat_last_n` ) }</Label>
+            <Description>{ t( `repeat_last_n_description` ) }</Description>
             <NumberInput
                 type="number" min="0" max="2048"
                 value={ settings.repeat_last_n ?? 64 }
@@ -208,8 +209,8 @@ export default function AdvancedSettings( { settings, on_change } ) {
 
         { /* Frequency Penalty */ }
         <Section>
-            <Label>Frequency Penalty</Label>
-            <Description>Reduces how often common words appear. Useful for more varied language.</Description>
+            <Label>{ t( `frequency_penalty` ) }</Label>
+            <Description>{ t( `frequency_penalty_description` ) }</Description>
             <SliderRow>
                 <Slider
                     type="range" min="0" max="2" step="0.1"
@@ -226,8 +227,8 @@ export default function AdvancedSettings( { settings, on_change } ) {
 
         { /* Presence Penalty */ }
         <Section>
-            <Label>Presence Penalty</Label>
-            <Description>Encourages the AI to talk about new topics rather than repeating old ones.</Description>
+            <Label>{ t( `presence_penalty` ) }</Label>
+            <Description>{ t( `presence_penalty_description` ) }</Description>
             <SliderRow>
                 <Slider
                     type="range" min="0" max="2" step="0.1"
@@ -244,8 +245,8 @@ export default function AdvancedSettings( { settings, on_change } ) {
 
         { /* Seed */ }
         <Section>
-            <Label>Seed</Label>
-            <Description>Set a number for reproducible results. Leave at -1 for random.</Description>
+            <Label>{ t( `seed` ) }</Label>
+            <Description>{ t( `seed_description` ) }</Description>
             <NumberInput
                 type="number" min="-1"
                 value={ settings.seed ?? -1 }
@@ -256,11 +257,11 @@ export default function AdvancedSettings( { settings, on_change } ) {
 
         { /* Stop Sequences */ }
         <Section>
-            <Label>Stop Sequences</Label>
-            <Description>Words or phrases that tell the AI to stop generating. Separate with commas.</Description>
+            <Label>{ t( `stop_sequences` ) }</Label>
+            <Description>{ t( `stop_sequences_description` ) }</Description>
             <TextInput
                 type="text"
-                placeholder="e.g. [END], STOP, ###"
+                placeholder={ t( `stop_sequences_placeholder` ) }
                 value={ settings.stop_sequences ?? `` }
                 onChange={ ( e ) => on_change( `stop_sequences`, e.target.value ) }
             />

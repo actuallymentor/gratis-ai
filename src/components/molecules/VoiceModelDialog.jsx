@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { Mic, X, AlertCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { EVENTS } from '../../utils/branding'
 
 const Overlay = styled.div`
@@ -198,6 +199,8 @@ export default function VoiceModelDialog( {
     on_retry,
 } ) {
 
+    const { t } = useTranslation( `pages` )
+
     // Close on Escape key
     useEffect( () => {
 
@@ -222,8 +225,8 @@ export default function VoiceModelDialog( {
         <Modal>
 
             <Header>
-                <Title>{ is_downloading ? `Downloading Model` : `Voice Input` }</Title>
-                { !is_downloading && <CloseButton onClick={ on_close } aria-label="Close dialog">
+                <Title>{ is_downloading ? t( `downloading_model` ) : t( `voice_input` ) }</Title>
+                { !is_downloading && <CloseButton onClick={ on_close } aria-label={ t( `common:aria_close_dialog` ) }>
                     <X size={ 18 } />
                 </CloseButton> }
             </Header>
@@ -236,10 +239,10 @@ export default function VoiceModelDialog( {
             { /* Error state */ }
             { has_error && <ErrorContainer>
                 <AlertCircle size={ 20 } />
-                <ErrorText>Download failed. Please check your connection and try again.</ErrorText>
+                <ErrorText>{ t( `voice_download_failed` ) }</ErrorText>
                 <ButtonRow>
-                    <CancelButton onClick={ on_close }>Cancel</CancelButton>
-                    <ConfirmButton onClick={ on_retry }>Retry</ConfirmButton>
+                    <CancelButton onClick={ on_close }>{ t( `common:cancel` ) }</CancelButton>
+                    <ConfirmButton onClick={ on_retry }>{ t( `common:retry` ) }</ConfirmButton>
                 </ButtonRow>
             </ErrorContainer> }
 
@@ -251,31 +254,30 @@ export default function VoiceModelDialog( {
                     </ProgressBarTrack>
                     <ProgressText>
                         <span>
-                            <LoadingDot>{ download_progress?.status || `Downloading...` }</LoadingDot>
+                            <LoadingDot>{ download_progress?.status || t( `voice_downloading` ) }</LoadingDot>
                         </span>
                         <span>{ progress_percent }%</span>
                     </ProgressText>
                 </ProgressContainer>
 
                 <ButtonRow>
-                    <CancelButton onClick={ on_close }>Hide</CancelButton>
+                    <CancelButton onClick={ on_close }>{ t( `common:hide` ) }</CancelButton>
                 </ButtonRow>
             </> }
 
             { /* Confirmation state */ }
             { !is_downloading && !has_error && <>
                 <Description>
-                    Voice input requires downloading a speech recognition model (~640 MB).
-                    The model runs entirely in your browser for full privacy.
+                    { t( `voice_description` ) }
                 </Description>
 
                 <SizeBadgeRow>
-                    <SizeBadge>~640 MB download</SizeBadge>
+                    <SizeBadge>{ t( `voice_size_badge` ) }</SizeBadge>
                 </SizeBadgeRow>
 
                 <ButtonRow>
-                    <CancelButton onClick={ on_close }>Cancel</CancelButton>
-                    <ConfirmButton onClick={ on_confirm }>Download</ConfirmButton>
+                    <CancelButton onClick={ on_close }>{ t( `common:cancel` ) }</CancelButton>
+                    <ConfirmButton onClick={ on_confirm }>{ t( `common:download` ) }</ConfirmButton>
                 </ButtonRow>
             </> }
 

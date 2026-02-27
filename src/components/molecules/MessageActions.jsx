@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 import { Copy, RefreshCw, Pencil } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 
 const ActionsBar = styled.div`
     display: flex;
@@ -41,12 +42,14 @@ const ActionButton = styled.button`
  */
 export default function MessageActions( { content, can_regenerate, can_edit, on_regenerate, on_edit } ) {
 
+    const { t } = useTranslation()
+
     const handle_copy = async () => {
         try {
             await navigator.clipboard.writeText( content )
-            toast.success( `Copied to clipboard` )
+            toast.success( t( `copied_to_clipboard` ) )
         } catch {
-            toast.error( `Failed to copy` )
+            toast.error( t( `failed_to_copy` ) )
         }
     }
 
@@ -54,7 +57,7 @@ export default function MessageActions( { content, can_regenerate, can_edit, on_
         <ActionButton
             data-testid="message-copy-btn"
             onClick={ handle_copy }
-            aria-label="Copy message"
+            aria-label={ t( `aria_copy_message` ) }
         >
             <Copy size={ 14 } />
         </ActionButton>
@@ -62,7 +65,7 @@ export default function MessageActions( { content, can_regenerate, can_edit, on_
         { can_regenerate && <ActionButton
             data-testid="message-regenerate-btn"
             onClick={ on_regenerate }
-            aria-label="Regenerate response"
+            aria-label={ t( `aria_regenerate_response` ) }
         >
             <RefreshCw size={ 14 } />
         </ActionButton> }
@@ -70,7 +73,7 @@ export default function MessageActions( { content, can_regenerate, can_edit, on_
         { can_edit && <ActionButton
             data-testid="message-edit-btn"
             onClick={ on_edit }
-            aria-label="Edit message"
+            aria-label={ t( `aria_edit_message` ) }
         >
             <Pencil size={ 14 } />
         </ActionButton> }

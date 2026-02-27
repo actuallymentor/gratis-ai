@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { Plus, PanelLeftClose, PanelLeft, Download, Trash2, Trash, Monitor, RefreshCw, LoaderCircle, CheckCircle } from 'lucide-react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { truncate } from '../../utils/format'
 
 const SidebarContainer = styled.aside`
@@ -250,6 +251,7 @@ const is_electron = () => !!window.electronAPI?.native_inference
  */
 export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversations = [], on_export, on_delete, on_delete_all } ) {
 
+    const { t } = useTranslation( 'pages' )
     const navigate = useNavigate()
     const { id: active_id } = useParams()
     const [ confirming_delete, set_confirming_delete ] = useState( null )
@@ -364,10 +366,10 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                     onClick={ handle_new_chat }
                 >
                     <Plus size={ 16 } />
-                    New Chat
+                    { t( 'new_chat' ) }
                 </NewChatButton>
 
-                <CollapseButton onClick={ on_toggle } aria-label="Toggle sidebar">
+                <CollapseButton onClick={ on_toggle } aria-label={ t( 'common:aria_toggle_sidebar' ) }>
                     { collapsed ? <PanelLeft size={ 18 } /> : <PanelLeftClose size={ 18 } /> }
                 </CollapseButton>
             </SidebarHeader>
@@ -376,8 +378,7 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
 
                 { conversations.length === 0 ?
                     <EmptyState>
-                        Your conversations will appear here.
-                        Start a new chat to begin!
+                        { t( 'empty_conversations' ) }
                     </EmptyState>
                     :
                     conversations.map( ( conv ) =>
@@ -403,20 +404,20 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                                 { confirming_delete !== conv.id && <ActionIcon
                                     data-testid={ `sidebar-export-${ conv.id }` }
                                     onClick={ ( e ) => handle_export( e, conv ) }
-                                    aria-label="Export conversation"
-                                    title="Export"
+                                    aria-label={ t( 'common:aria_export_conversation' ) }
+                                    title={ t( 'common:export' ) }
                                 >
                                     <Download size={ 14 } />
                                 </ActionIcon> }
                                 <ActionIcon
                                     data-testid={ `sidebar-delete-${ conv.id }` }
                                     onClick={ ( e ) => handle_delete( e, conv.id ) }
-                                    aria-label={ confirming_delete === conv.id ? `Confirm delete` : `Delete conversation` }
-                                    title={ confirming_delete === conv.id ? `Click to confirm` : `Delete` }
+                                    aria-label={ confirming_delete === conv.id ? t( 'common:aria_confirm_delete' ) : t( 'common:aria_delete_conversation' ) }
+                                    title={ confirming_delete === conv.id ? t( 'click_to_confirm' ) : t( 'common:delete' ) }
                                     $confirming={ confirming_delete === conv.id }
                                 >
                                     <Trash2 size={ 14 } />
-                                    { confirming_delete === conv.id && `Delete?` }
+                                    { confirming_delete === conv.id && t( 'delete_question' ) }
                                 </ActionIcon>
                             </ConversationActions>
                         </ConversationItem>
@@ -430,10 +431,10 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                     data-testid="wipe-history-btn"
                     onClick={ handle_wipe }
                     $confirming={ confirming_wipe }
-                    aria-label={ confirming_wipe ? `Confirm wipe history` : `Wipe history` }
+                    aria-label={ confirming_wipe ? t( 'common:aria_confirm_wipe_history' ) : t( 'common:aria_wipe_history' ) }
                 >
                     <Trash size={ 14 } />
-                    { confirming_wipe ? `Click again to confirm` : `Wipe history` }
+                    { confirming_wipe ? t( 'settings:click_again_to_confirm' ) : t( 'wipe_history' ) }
                 </WipeButton>
             </SidebarFooter> }
 
@@ -444,20 +445,20 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                         data-testid="check-for-updates-btn"
                         onClick={ handle_check_for_updates }
                         disabled={ check_status === `checking` }
-                        aria-label="Check for updates"
+                        aria-label={ t( 'common:aria_check_for_updates' ) }
                     >
-                        { check_status === `checking` && <><SpinnerIcon size={ 14 } /> Checking...</> }
-                        { check_status === `up_to_date` && <><CheckCircle size={ 14 } /> Up to date</> }
-                        { check_status === `failed` && <><RefreshCw size={ 14 } /> Check failed</> }
-                        { check_status === `idle` && <><RefreshCw size={ 14 } /> Check for updates</> }
+                        { check_status === `checking` && <><SpinnerIcon size={ 14 } /> { t( 'checking_updates' ) }</> }
+                        { check_status === `up_to_date` && <><CheckCircle size={ 14 } /> { t( 'up_to_date' ) }</> }
+                        { check_status === `failed` && <><RefreshCw size={ 14 } /> { t( 'check_failed' ) }</> }
+                        { check_status === `idle` && <><RefreshCw size={ 14 } /> { t( 'check_for_updates' ) }</> }
                     </CheckUpdateButton>
                 </SidebarFooter>
                 : <SidebarFooter>
                     <DownloadAppLink to="/get-app" data-testid="sidebar-download-app">
                         <Monitor size={ 14 } />
                         <DownloadAppLabel>
-                            Download App
-                            <DownloadAppSubtext>more powerful</DownloadAppSubtext>
+                            { t( 'download_app' ) }
+                            <DownloadAppSubtext>{ t( 'download_app_subtext' ) }</DownloadAppSubtext>
                         </DownloadAppLabel>
                     </DownloadAppLink>
                 </SidebarFooter> }

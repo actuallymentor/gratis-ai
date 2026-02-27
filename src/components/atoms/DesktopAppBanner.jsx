@@ -2,6 +2,7 @@ import { useState } from 'react'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import { Monitor, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { storage_key } from '../../utils/branding'
 
 const DISMISSED_KEY = storage_key( `desktop_banner_dismissed` )
@@ -66,6 +67,7 @@ const DismissButton = styled.button`
  */
 export default function DesktopAppBanner() {
 
+    const { t } = useTranslation( `pages` )
     const [ dismissed, set_dismissed ] = useState( () =>
         localStorage.getItem( DISMISSED_KEY ) === `true`
     )
@@ -85,16 +87,16 @@ export default function DesktopAppBanner() {
 
     return <Banner>
 
-        <DismissButton onClick={ dismiss } aria-label="Dismiss">
+        <DismissButton onClick={ dismiss } aria-label={ t( `common:aria_dismiss` ) }>
             <X size={ 14 } />
         </DismissButton>
 
         <Message>
             <Monitor size={ 14 } />
-            Get more power with the same privacy — try the desktop app
+            { t( `desktop_banner_text` ) }
         </Message>
 
-        <AppLink to="/get-app">Get the app</AppLink>
+        <AppLink to="/get-app">{ t( `get_the_app` ) }</AppLink>
 
     </Banner>
 

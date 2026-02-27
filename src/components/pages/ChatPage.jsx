@@ -15,6 +15,7 @@ import use_settings from '../../hooks/use_settings'
 import use_voice_input from '../../hooks/use_voice_input'
 import { export_conversation } from '../../utils/export'
 import { parse_model_param, resolve_cached_model } from '../../utils/model_param_resolver'
+import { useTranslation } from 'react-i18next'
 import { storage_key, EVENTS } from '../../utils/branding'
 
 const Container = styled.div`
@@ -155,6 +156,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const { id: conversation_id } = useParams()
     const navigate = useNavigate()
     const [ search_params, set_search_params ] = useSearchParams()
+    const { t } = useTranslation( 'chat' )
 
     const [ messages, set_messages ] = useState( [] )
     // Initialize as null = "haven't tried loading yet" to distinguish from "tried and failed"
@@ -231,7 +233,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                 .catch( ( err ) => {
                     console.error( `[ChatPage] Auto-load failed:`, err.message )
                     set_model_loaded( false )
-                    toast.error( err.message || `Failed to load model` )
+                    toast.error( err.message || t( 'common:failed_to_load_model' ) )
                 } )
         } else {
             // No model configured — transition from null (unknown) to false (no model)
@@ -265,7 +267,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
                 if( msgs.length === 0 ) {
                     // Conversation not found or empty — redirect to fresh chat
-                    toast( `Conversation not found` )
+                    toast( t( 'common:conversation_not_found' ) )
                     navigate( `/chat`, { replace: true } )
                     return
                 }
@@ -472,7 +474,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                             set_model_loaded( true )
                             localStorage.setItem( storage_key( `active_model_id` ), match.id )
                         } catch {
-                            toast.error( `Failed to load model` )
+                            toast.error( t( 'common:failed_to_load_model' ) )
                         }
                     } else if( parsed.type === `local` ) {
                         toast.error( `Model not found: ${ parsed.value }` )
@@ -592,7 +594,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             await refresh_models()
         } catch ( err ) {
             console.error( `[ChatPage] Failed to switch model:`, err )
-            toast.error( err.message || `Failed to load model` )
+            toast.error( err.message || t( 'common:failed_to_load_model' ) )
         }
 
     }, [ load_model, refresh_models ] )
@@ -648,23 +650,22 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         if( !has_model && is_loading_model ) {
             return <LoadingContainer data-testid="model-loading">
                 <SpinnerIcon><LoaderCircle size={ 32 } /></SpinnerIcon>
-                <LoadingText>Loading your model...</LoadingText>
+                <LoadingText>{ t( 'loading_your_model' ) }</LoadingText>
             </LoadingContainer>
         }
 
         // No model loaded — show a helpful, actionable CTA
         if( !has_model ) {
             return <NoModelContainer>
-                <NoModelTitle>Let's get you set up</NoModelTitle>
+                <NoModelTitle>{ t( 'lets_get_you_set_up' ) }</NoModelTitle>
                 <NoModelText>
-                    You need to download an AI model before you can start chatting.
-                    It only takes a minute.
+                    { t( 'no_model_description' ) }
                 </NoModelText>
                 <SetupButton
                     data-testid="setup-model-btn"
                     onClick={ () => navigate( `/` ) }
                 >
-                    Set up a model <ArrowRight size={ 16 } />
+                    { t( 'set_up_a_model' ) } <ArrowRight size={ 16 } />
                 </SetupButton>
             </NoModelContainer>
         }
@@ -706,7 +707,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             <InputSection $centered={ should_center }>
 
                 <WelcomeContent $visible={ should_center }>
-                    <WelcomeTitle>What can I help with?</WelcomeTitle>
+                    <WelcomeTitle>{ t( 'what_can_i_help_with' ) }</WelcomeTitle>
                 </WelcomeContent>
 
                 <ChatInput

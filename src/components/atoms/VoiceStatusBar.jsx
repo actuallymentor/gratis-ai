@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { LoaderCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 // ── Container — matches textarea dimensions so it sits in the same flex slot ─
 
@@ -177,6 +178,8 @@ export default function VoiceStatusBar( {
     recording_start_time = null,
 } ) {
 
+    const { t } = useTranslation( `chat` )
+
     // Elapsed time counter — ticks every second while recording
     const [ elapsed, set_elapsed ] = useState( 0 )
 
@@ -201,7 +204,7 @@ export default function VoiceStatusBar( {
     // ── Recording: dot + label + timer + level meter (right-aligned) ─
     if( is_recording ) return <StatusArea>
         <RecordingDot />
-        <StatusLabel $variant="recording">Recording</StatusLabel>
+        <StatusLabel $variant="recording">{ t( `recording` ) }</StatusLabel>
         <Timer>{ format_elapsed( elapsed ) }</Timer>
         <AudioLevelMeter level={ audio_level } />
     </StatusArea>
@@ -210,7 +213,7 @@ export default function VoiceStatusBar( {
     if( is_transcribing ) return <StatusArea>
         <SpinnerIcon size={ 14 } />
         <StatusLabel $variant="transcribing">
-            Transcribing<AnimatedEllipsis />
+            { t( `transcribing` ) }<AnimatedEllipsis />
         </StatusLabel>
     </StatusArea>
 
@@ -218,7 +221,7 @@ export default function VoiceStatusBar( {
     if( is_loading_model ) return <StatusArea>
         <SpinnerIcon size={ 14 } />
         <StatusLabel $variant="loading">
-            Loading voice model<AnimatedEllipsis />
+            { t( `loading_voice_model` ) }<AnimatedEllipsis />
         </StatusLabel>
     </StatusArea>
 

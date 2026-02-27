@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import { Sun, Moon, Monitor } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const Section = styled.div`
     margin-bottom: ${ ( { theme } ) => theme.spacing.lg };
@@ -79,8 +80,6 @@ const ShortcutKey = styled.code`
 
 /**
  * Basic settings tab — simple, non-intimidating options only.
- * Temperature and Max Tokens have been moved to the Advanced tab
- * to reduce cognitive load for non-technical users.
  * @param {Object} props
  * @param {string} props.theme_preference - Current theme preference
  * @param {Function} props.on_theme_change - Handler for theme changes
@@ -95,70 +94,69 @@ export default function BasicSettings( {
     on_system_prompt_change,
 } ) {
 
+    const { t } = useTranslation( `settings` )
+
     return <>
 
         { /* Theme */ }
         <Section>
-            <Label>Appearance</Label>
-            <Description>Choose how the app looks.</Description>
+            <Label>{ t( `appearance` ) }</Label>
+            <Description>{ t( `appearance_description` ) }</Description>
             <ThemeToggleGroup>
                 <ThemeButton
                     $active={ theme_preference === `light` }
                     onClick={ () => on_theme_change( `light` ) }
                 >
-                    <Sun size={ 14 } /> Light
+                    <Sun size={ 14 } /> { t( `theme_light` ) }
                 </ThemeButton>
                 <ThemeButton
                     $active={ theme_preference === `dark` }
                     onClick={ () => on_theme_change( `dark` ) }
                 >
-                    <Moon size={ 14 } /> Dark
+                    <Moon size={ 14 } /> { t( `theme_dark` ) }
                 </ThemeButton>
                 <ThemeButton
                     $active={ theme_preference === `system` }
                     onClick={ () => on_theme_change( `system` ) }
                 >
-                    <Monitor size={ 14 } /> System
+                    <Monitor size={ 14 } /> { t( `theme_system` ) }
                 </ThemeButton>
             </ThemeToggleGroup>
         </Section>
 
         { /* System Prompt */ }
         <Section>
-            <Label>Custom Instructions</Label>
-            <Description>
-                Tell the AI how to behave. For example: "Always reply in French"
-                or "Explain things simply".
-            </Description>
+            <Label>{ t( `custom_instructions` ) }</Label>
+            <Description>{ t( `custom_instructions_description` ) }</Description>
             <Textarea
                 data-testid="system-prompt-input"
                 value={ system_prompt }
                 onChange={ ( e ) => on_system_prompt_change( e.target.value ) }
-                placeholder="e.g. You are a friendly assistant who explains things simply..."
+                placeholder={ t( `custom_instructions_placeholder` ) }
             />
         </Section>
 
         { /* Keyboard Shortcuts Reference */ }
         <ShortcutsSection>
-            <Label>Keyboard Shortcuts</Label>
+            <Label>{ t( `keyboard_shortcuts` ) }</Label>
             <ShortcutRow>
-                <span>New Chat</span>
+                <span>{ t( `shortcut_new_chat` ) }</span>
                 <ShortcutKey>Ctrl+N</ShortcutKey>
             </ShortcutRow>
             <ShortcutRow>
-                <span>Toggle Sidebar</span>
+                <span>{ t( `shortcut_toggle_sidebar` ) }</span>
                 <ShortcutKey>Ctrl+Shift+S</ShortcutKey>
             </ShortcutRow>
             <ShortcutRow>
-                <span>Settings</span>
+                <span>{ t( `shortcut_settings` ) }</span>
                 <ShortcutKey>Ctrl+,</ShortcutKey>
             </ShortcutRow>
             <ShortcutRow>
-                <span>Stop Generation</span>
+                <span>{ t( `shortcut_stop_generation` ) }</span>
                 <ShortcutKey>Ctrl+Shift+Backspace</ShortcutKey>
             </ShortcutRow>
             <ShortcutRow>
-                <span>Close Modal</span>
+                <span>{ t( `shortcut_close_modal` ) }</span>
                 <ShortcutKey>Esc</ShortcutKey>
             </ShortcutRow>
         </ShortcutsSection>

@@ -1,0 +1,32 @@
+{
+    "no_model": "No model",
+    "no_models_hint": "No models downloaded yet. Add one to get started.",
+    "may_not_fit": "may not fit",
+    "add_model": "Add Model",
+    "manage_models": "Manage Models",
+
+    "pick_a_model": "Pick a model",
+    "subtitle_two_cards": "We picked two options based on your device. Choose the balance that works for you.",
+    "subtitle_single_card": "Based on your device, we picked the best AI model. It will be downloaded once and stored locally.",
+    "faster_option": "Faster Option",
+    "smarter_option": "Smarter Option",
+    "already_downloaded": "Already downloaded",
+    "initial_download_takes": "Initial download takes {{time}}",
+    "show_details": "Show details",
+    "recommended_for_device": "Recommended for your device",
+    "custom_hf_model": "Custom HuggingFace model",
+    "start_chatting": "Start Chatting",
+    "download_and_start": "Download & Start",
+    "choose_different_model": "Choose a different model",
+    "downloaded": "downloaded",
+    "uncensored": "uncensored",
+    "invalid_hf_url": "Invalid URL. Use a HuggingFace link like hf.co/org/repo:Q4_K_M",
+    "may_be_too_large_browser": "May be too large for this browser",
+    "large_model_warning": "Large models may fail to load in the browser. Consider a smaller quantization or the desktop app.",
+
+    "downloading_your_model": "Downloading your model",
+    "one_time_download": "{{name}} — this is a one-time download. After this, everything works offline.",
+    "ready_to_chat": "Ready to chat!",
+    "cancel_download": "Cancel download",
+    "preparing": "Preparing..."
+}

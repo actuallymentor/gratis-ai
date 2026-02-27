@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import { Copy, Check, ChevronRight, LoaderCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import StreamingIndicator from '../atoms/StreamingIndicator'
 import GenerationStats from '../atoms/GenerationStats'
 import MessageActions from './MessageActions'
@@ -262,6 +263,7 @@ const ExpandButton = styled.button`
  */
 const CodeBlock = ( { children, ...props } ) => {
 
+    const { t } = useTranslation()
     const [ copied, set_copied ] = useState( false )
 
     const handle_copy = async () => {
@@ -271,13 +273,13 @@ const CodeBlock = ( { children, ...props } ) => {
             set_copied( true )
             setTimeout( () => set_copied( false ), 2000 )
         } catch {
-            toast.error( `Failed to copy code` )
+            toast.error( t( `common:failed_to_copy_code` ) )
         }
     }
 
     return <pre { ...props }>
         { children }
-        <CodeCopyButton onClick={ handle_copy } aria-label="Copy code">
+        <CodeCopyButton onClick={ handle_copy } aria-label={ t( `common:aria_copy_code` ) }>
             { copied ? <Check size={ 14 } /> : <Copy size={ 14 } /> }
         </CodeCopyButton>
     </pre>
@@ -302,6 +304,7 @@ const MessageBubble = memo( ( {
     on_edit,
 } ) => {
 
+    const { t } = useTranslation( `chat` )
     const is_user = message.role === `user`
     const [ is_editing, set_is_editing ] = useState( false )
     const [ edit_text, set_edit_text ] = useState( message.content )
@@ -362,13 +365,13 @@ const MessageBubble = memo( ( {
                         data-testid="message-edit-cancel"
                         onClick={ handle_edit_cancel }
                     >
-                        Cancel
+                        { t( `common:cancel` ) }
                     </CancelButton>
                     <SubmitButton
                         data-testid="message-edit-submit"
                         onClick={ handle_edit_submit }
                     >
-                        Submit
+                        { t( `common:submit` ) }
                     </SubmitButton>
                 </EditActions>
             </EditContainer>
@@ -379,7 +382,7 @@ const MessageBubble = memo( ( {
                 { thinking && is_thinking && <>
                     <ThinkingHeader>
                         <ThinkingSpinner size={ 14 } />
-                        Thinking...
+                        { t( `thinking` ) }
                     </ThinkingHeader>
                     <ThinkingWindow
                         ref={ thinking_ref }
@@ -390,11 +393,11 @@ const MessageBubble = memo( ( {
                     </ThinkingWindow>
                     { needs_truncation && !thinking_expanded &&
                         <ExpandButton onClick={ () => set_thinking_expanded( true ) }>
-                            Show all thinking
+                            { t( `show_all_thinking` ) }
                         </ExpandButton> }
                     { thinking_expanded &&
                         <ExpandButton onClick={ () => set_thinking_expanded( false ) }>
-                            Collapse
+                            { t( `collapse` ) }
                         </ExpandButton> }
                 </> }
 
@@ -406,7 +409,7 @@ const MessageBubble = memo( ( {
                         onClick={ () => set_show_thinking( !show_thinking ) }
                     >
                         <ChevronRight size={ 14 } />
-                        { show_thinking ? `Hide thinking` : `Show thinking` }
+                        { show_thinking ? t( `hide_thinking` ) : t( `show_thinking` ) }
                     </ThinkingToggle>
                     <ThinkingPanel $expanded={ show_thinking }>
                         <ThinkingContent data-testid="thinking-content">

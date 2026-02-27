@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { X, CheckCircle } from 'lucide-react'
 import { download_model, is_model_cached } from '../../utils/model_download'
 import { format_file_size } from '../../utils/model_catalog'
@@ -145,8 +146,13 @@ const SuccessIcon = styled.div`
  * @param {number} seconds
  * @returns {string}
  */
-const format_eta = ( seconds ) => {
+const format_eta = ( seconds, t ) => {
     if( seconds < 0 || !isFinite( seconds ) ) return ``
+    if( t ) {
+        if( seconds < 60 ) return t( 'common:format_eta_seconds', { count: Math.ceil( seconds / 5 ) * 5 } )
+        const minutes = Math.ceil( seconds / 60 )
+        return t( minutes !== 1 ? 'common:format_eta_minutes_plural' : 'common:format_eta_minutes', { count: minutes } )
+    }
     if( seconds < 60 ) return `About ${ Math.ceil( seconds / 5 ) * 5 } seconds left`
     const minutes = Math.ceil( seconds / 60 )
     return `About ${ minutes } minute${ minutes !== 1 ? `s` : `` } left`
@@ -160,10 +166,11 @@ export default function DownloadPage() {
 
     const navigate = useNavigate()
     const location = useLocation()
+    const { t } = useTranslation( 'models' )
     const model = location.state?.model
     const return_to = location.state?.return_to || `/chat`
 
-    const [ progress, set_progress ] = useState( { progress: 0, bytes_loaded: 0, bytes_total: 0, status: `Preparing...` } )
+    const [ progress, set_progress ] = useState( { progress: 0, bytes_loaded: 0, bytes_total: 0, status: t( 'preparing' ) } )
     const [ error, set_error ] = useState( null )
     const [ is_complete, set_is_complete ] = useState( false )
     const abort_ref = useRef( null )
@@ -286,7 +293,7 @@ export default function DownloadPage() {
         const remaining_bytes = progress.bytes_total - progress.bytes_loaded
         const remaining_seconds = remaining_bytes / speed_bps
 
-        return format_eta( remaining_seconds )
+        return format_eta( remaining_seconds, t )
     }
 
     if( !model ) return null
@@ -298,7 +305,7 @@ export default function DownloadPage() {
     if( is_complete ) {
         return <Container>
             <SuccessIcon><CheckCircle size={ 48 } /></SuccessIcon>
-            <Title style={ { marginTop: `1rem` } }>Ready to chat!</Title>
+            <Title style={ { marginTop: `1rem` } }>{ t( 'ready_to_chat' ) }</Title>
         </Container>
     }
 
@@ -313,10 +320,9 @@ export default function DownloadPage() {
             <StepDot $active />
         </StepIndicator>
 
-        <Title>Downloading your model</Title>
+        <Title>{ t( 'downloading_your_model' ) }</Title>
         <StatusMessage>
-            { model.name } — this is a one-time download.
-            After this, everything works offline.
+            { t( 'one_time_download', { name: model.name } ) }
         </StatusMessage>
 
         { error && <ErrorText>{ error }</ErrorText> }
@@ -338,7 +344,7 @@ export default function DownloadPage() {
 
         <CancelButton onClick={ handle_cancel }>
             <X size={ 16 } />
-            Cancel download
+            { t( 'cancel_download' ) }
         </CancelButton>
 
     </Container>

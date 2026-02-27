@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Apple, Monitor, Terminal, FolderDown } from 'lucide-react'
 import { DISPLAY_NAME, EVENTS } from '../../utils/branding'
 
@@ -288,6 +289,7 @@ const AUTO_DISMISS_MS = 8000
 export default function GetAppPage() {
 
     const navigate = useNavigate()
+    const { t } = useTranslation( 'pages' )
     const current_os = detect_os()
 
     // Download-started modal state
@@ -326,8 +328,7 @@ export default function GetAppPage() {
 
         <Title>{ DISPLAY_NAME }</Title>
         <Tagline>
-            Download the desktop app for faster, fully-offline AI
-            powered by your own hardware.
+            { t( 'get_app_tagline' ) }
         </Tagline>
 
         <CardGrid>
@@ -350,9 +351,9 @@ export default function GetAppPage() {
                             href={ href }
                             onClick={ () => handle_download_click( filename ) }
                         >
-                            Download for { label }
+                            { t( 'download_for', { platform: label } ) }
                         </DownloadButton>
-                        : <DisabledButton>Not configured</DisabledButton> }
+                        : <DisabledButton>{ t( 'not_configured' ) }</DisabledButton> }
 
                 </Card>
 
@@ -360,21 +361,20 @@ export default function GetAppPage() {
         </CardGrid>
 
         { GITHUB_REPO && <Footnote>
-            Running an Intel Mac?{ ` ` }
+            { t( 'intel_mac_prompt' ) }{ ` ` }
             <a
                 href={ download_url( `gratisAI-mac-intel.dmg` ) }
                 onClick={ () => handle_download_click( `gratisAI-mac-intel.dmg` ) }
-            >Download the Intel build</a>
+            >{ t( 'download_intel_build' ) }</a>
         </Footnote> }
 
         { !GITHUB_REPO && <Notice>
-            Release downloads are not configured for this deployment.
-            Build the desktop app from source or check the project repository.
+            { t( 'not_configured_notice' ) }
         </Notice> }
 
         <BackButton onClick={ () => navigate( `/chat` ) }>
             <ArrowLeft size={ 16 } />
-            Or continue in your browser
+            { t( 'or_continue_browser' ) }
         </BackButton>
 
         { /* Download-started confirmation modal */ }
@@ -388,17 +388,16 @@ export default function GetAppPage() {
                     <FolderDown size={ 24 } />
                 </ModalIcon>
 
-                <ModalTitle>Download started</ModalTitle>
+                <ModalTitle>{ t( 'download_started' ) }</ModalTitle>
 
                 <ModalDescription>
-                    Your file is downloading to your Downloads folder.
-                    Open it once it finishes to install { DISPLAY_NAME }.
+                    { t( 'download_started_description', { name: DISPLAY_NAME } ) }
                 </ModalDescription>
 
                 <ModalFilename>{ downloading_file }</ModalFilename>
 
                 <div>
-                    <ModalDismiss onClick={ dismiss_modal }>Got it</ModalDismiss>
+                    <ModalDismiss onClick={ dismiss_modal }>{ t( 'got_it' ) }</ModalDismiss>
                 </div>
 
             </Modal>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import BasicSettings from './BasicSettings'
 import AdvancedSettings from './AdvancedSettings'
 import ModelsSettings from './ModelsSettings'
@@ -80,12 +81,6 @@ const Body = styled.div`
     padding: ${ ( { theme } ) => theme.spacing.md };
 `
 
-const TABS = [
-    { id: `basic`, label: `Basic` },
-    { id: `advanced`, label: `Advanced` },
-    { id: `models`, label: `Models` },
-]
-
 /**
  * Settings modal with three tabs
  * @param {Object} props
@@ -100,6 +95,13 @@ export default function SettingsModal( { is_open, on_close, theme_preference, on
 
     const [ active_tab, set_active_tab ] = useState( `basic` )
     const { settings, update_setting } = use_settings()
+    const { t } = useTranslation( `settings` )
+
+    const TABS = [
+        { id: `basic`, label: t( `tab_basic` ) },
+        { id: `advanced`, label: t( `tab_advanced` ) },
+        { id: `models`, label: t( `tab_models` ) },
+    ]
 
     // Listen for global close-modal events (Escape key)
     useEffect( () => {
@@ -123,8 +125,8 @@ export default function SettingsModal( { is_open, on_close, theme_preference, on
         <Modal>
 
             <Header>
-                <Title>Settings</Title>
-                <CloseButton onClick={ on_close } aria-label="Close settings">
+                <Title>{ t( `title` ) }</Title>
+                <CloseButton onClick={ on_close } aria-label={ t( `common:aria_close_settings` ) }>
                     <X size={ 18 } />
                 </CloseButton>
             </Header>

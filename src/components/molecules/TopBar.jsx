@@ -1,7 +1,9 @@
 import styled from 'styled-components'
 import { Sun, Moon, Monitor, Settings, PanelLeft, ArrowLeftRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import ModelSelector from './ModelSelector'
+import LanguageSelector from './LanguageSelector'
 
 const Bar = styled.header`
     display: flex;
@@ -101,6 +103,7 @@ export default function TopBar( {
 } ) {
 
     const navigate = useNavigate()
+    const { t } = useTranslation( `pages` )
 
     const cycle_theme = () => {
         const current_index = CYCLE.indexOf( theme_preference )
@@ -115,7 +118,7 @@ export default function TopBar( {
             { sidebar_collapsed && <IconButton
                 data-testid="sidebar-open-btn"
                 onClick={ on_toggle_sidebar }
-                aria-label="Open sidebar"
+                aria-label={ t( `common:aria_open_sidebar` ) }
             >
                 <PanelLeft size={ 18 } />
             </IconButton> }
@@ -129,20 +132,22 @@ export default function TopBar( {
             <ChangeModelButton
                 data-testid="change-model-btn"
                 onClick={ () => navigate( `/select-model` ) }
-                aria-label="Change model"
+                aria-label={ t( `common:aria_change_model` ) }
             >
                 <ArrowLeftRight size={ 14 } />
-                Change model
+                { t( `change_model` ) }
             </ChangeModelButton>
         </LeftSection>
 
-        { /* Right: theme toggle + settings */ }
+        { /* Right: language + theme toggle + settings */ }
         <RightSection>
+            <LanguageSelector />
+
             <IconButton
                 data-testid="theme-toggle"
                 onClick={ cycle_theme }
-                title={ `Theme: ${ theme_preference.charAt( 0 ).toUpperCase() + theme_preference.slice( 1 ) }` }
-                aria-label="Toggle theme"
+                title={ t( `theme_label`, { theme: theme_preference.charAt( 0 ).toUpperCase() + theme_preference.slice( 1 ) } ) }
+                aria-label={ t( `common:aria_toggle_theme` ) }
             >
                 { get_theme_icon( theme_preference, theme_mode ) }
             </IconButton>
@@ -150,7 +155,7 @@ export default function TopBar( {
             <IconButton
                 data-testid="settings-btn"
                 onClick={ on_settings_open }
-                aria-label="Open settings"
+                aria-label={ t( `common:aria_open_settings` ) }
             >
                 <Settings size={ 18 } />
             </IconButton>

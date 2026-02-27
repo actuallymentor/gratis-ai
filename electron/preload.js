@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld( `electronAPI`, {
     // System info for device detection
     get_system_info: () => ipcRenderer.invoke( `system:info` ),
 
+    // System locale for i18n
+    get_system_locale: () => ipcRenderer.invoke( `system:locale` ),
+
     // Model lifecycle
     load_model: ( model_path ) => ipcRenderer.invoke( `llm:load`, model_path ),
     unload_model: () => ipcRenderer.invoke( `llm:unload` ),
@@ -24,6 +27,13 @@ contextBridge.exposeInMainWorld( `electronAPI`, {
     list_models: () => ipcRenderer.invoke( `llm:list_models` ),
     delete_model: ( model_id ) => ipcRenderer.invoke( `llm:delete_model`, model_id ),
     save_model: ( data ) => ipcRenderer.invoke( `llm:save_model`, data ),
+
+    // Console log forwarding from Node.js processes
+    on_nodejs_console: ( callback ) => {
+        const handler = ( _, data ) => callback( data )
+        ipcRenderer.on( `nodejs:console`, handler )
+        return () => ipcRenderer.removeListener( `nodejs:console`, handler )
+    },
 
     // Streaming download — main process downloads and writes directly to disk
     download_model: ( data ) => ipcRenderer.invoke( `llm:download_model`, data ),

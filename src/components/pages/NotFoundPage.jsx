@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const Container = styled.div`
     display: flex;
@@ -55,16 +56,17 @@ const BackButton = styled.button`
 export default function NotFoundPage() {
 
     const navigate = useNavigate()
+    const { t } = useTranslation( `pages` )
 
     return <Container>
         <Code>404</Code>
-        <Title>Page not found</Title>
+        <Title>{ t( `not_found_title` ) }</Title>
         <Description>
-            The page you're looking for doesn't exist or has been moved.
+            { t( `not_found_description` ) }
         </Description>
         <BackButton onClick={ () => navigate( `/chat` ) }>
             <ArrowLeft size={ 16 } />
-            Back to chat
+            { t( `back_to_chat` ) }
         </BackButton>
     </Container>
 

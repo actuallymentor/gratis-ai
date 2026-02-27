@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import styled, { keyframes, css } from 'styled-components'
 import { SendHorizonal, Square, Mic, LoaderCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import VoiceStatusBar from '../atoms/VoiceStatusBar'
 
 // ── Pill container — owns all visual appearance ─────────────────────
@@ -164,7 +165,7 @@ export default function ChatInput( {
     disabled,
     as_form = false,
     max_width,
-    placeholder = `Type a message...`,
+    placeholder: placeholder_prop,
     auto_focus = false,
     on_mic_click,
     on_mic_stop,
@@ -175,6 +176,9 @@ export default function ChatInput( {
     recording_start_time = null,
     append_text,
 } ) {
+
+    const { t } = useTranslation( `chat` )
+    const placeholder = placeholder_prop || t( `placeholder` )
 
     const [ text, set_text ] = useState( `` )
     const textarea_ref = useRef( null )
@@ -268,7 +272,7 @@ export default function ChatInput( {
 
             { /* Mic button — shows spinner when transcribing or loading model */ }
             { is_transcribing || is_loading_model ?
-                <MicButton disabled type="button" aria-label={ is_transcribing ? `Transcribing` : `Loading voice model` }>
+                <MicButton disabled type="button" aria-label={ is_transcribing ? t( `common:aria_transcribing` ) : t( `common:aria_loading_voice_model` ) }>
                     <SpinnerIcon size={ 16 } />
                 </MicButton>
                 :
@@ -278,7 +282,7 @@ export default function ChatInput( {
                     onClick={ handle_mic }
                     $is_recording={ is_recording }
                     disabled={ disabled || is_generating }
-                    aria-label={ is_recording ? `Stop recording` : `Voice input` }
+                    aria-label={ is_recording ? t( `common:aria_stop_recording` ) : t( `common:aria_voice_input` ) }
                 >
                     <Mic size={ 16 } />
                 </MicButton> }
@@ -289,7 +293,7 @@ export default function ChatInput( {
                     data-testid="stop-btn"
                     type="button"
                     onClick={ on_stop }
-                    aria-label="Stop generation"
+                    aria-label={ t( `common:aria_stop_generation` ) }
                 >
                     <Square size={ 16 } />
                 </StopButton>
@@ -299,7 +303,7 @@ export default function ChatInput( {
                     type={ as_form ? `submit` : `button` }
                     onClick={ as_form ? undefined : handle_send }
                     disabled={ !text.trim() || disabled }
-                    aria-label="Send message"
+                    aria-label={ t( `common:aria_send_message` ) }
                 >
                     <SendHorizonal size={ 16 } />
                 </SendButton> }

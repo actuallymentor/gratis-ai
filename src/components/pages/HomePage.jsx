@@ -9,6 +9,7 @@ import use_llm from '../../hooks/use_llm'
 import use_model_manager from '../../hooks/use_model_manager'
 import use_voice_input from '../../hooks/use_voice_input'
 import use_chat_history from '../../hooks/use_chat_history'
+import { useTranslation } from 'react-i18next'
 import { export_conversation } from '../../utils/export'
 import { DISPLAY_NAME, storage_key } from '../../utils/branding'
 
@@ -146,6 +147,7 @@ const ErrorAction = styled.button`
  */
 export default function HomePage() {
 
+    const { t } = useTranslation( 'pages' )
     const navigate = useNavigate()
 
     const { load_model, unload_model, is_loading, loaded_model_id } = use_llm()
@@ -315,7 +317,7 @@ export default function HomePage() {
         { /* Toggle button — only visible when sidebar is closed */ }
         { sidebar_collapsed && <SidebarToggle
             onClick={ handle_sidebar_toggle }
-            aria-label="Open sidebar"
+            aria-label={ t( 'common:aria_open_sidebar' ) }
             data-testid="home-sidebar-toggle"
         >
             <PanelLeft size={ 18 } />
@@ -325,15 +327,14 @@ export default function HomePage() {
 
             <Title>{ DISPLAY_NAME }</Title>
             <Tagline>
-                Your own AI assistant that runs entirely on this device.
-                Private, fast, and works offline.
+                { t( 'tagline' ) }
             </Tagline>
 
             <ChatInput
                 on_send={ handle_send }
                 as_form
                 max_width="540px"
-                placeholder="Ask anything..."
+                placeholder={ t( 'chat:placeholder_ask' ) }
                 auto_focus
                 on_mic_click={ handle_mic_click }
                 on_mic_stop={ handle_mic_stop }
@@ -361,10 +362,10 @@ export default function HomePage() {
 
                 { is_loading && <>
                     <LoadingDot />
-                    <span>Loading { model_name }...</span>
+                    <span>{ t( 'loading_model', { name: model_name } ) }</span>
                     <SwitchIcon
                         onClick={ handle_switch_model }
-                        title="Switch model"
+                        title={ t( 'switch_model' ) }
                         data-testid="home-switch-model"
                     >
                         <ArrowLeftRight size={ 14 } />
@@ -372,10 +373,10 @@ export default function HomePage() {
                 </> }
 
                 { !is_loading && loaded_model_id && <>
-                    <span>{ model_name } — Ready</span>
+                    <span>{ t( 'model_ready', { name: model_name } ) }</span>
                     <SwitchIcon
                         onClick={ handle_switch_model }
-                        title="Switch model"
+                        title={ t( 'switch_model' ) }
                         data-testid="home-switch-model"
                     >
                         <ArrowLeftRight size={ 14 } />
@@ -387,12 +388,12 @@ export default function HomePage() {
             { /* Error banner — only after loading settles, never mid-load */ }
             { !is_loading && load_error && <ErrorBanner data-testid="home-load-error">
                 <AlertCircle size={ 14 } />
-                <span>Failed to load model</span>
+                <span>{ t( 'failed_to_load' ) }</span>
                 <ErrorAction onClick={ handle_retry } data-testid="home-retry-btn">
-                    <RotateCcw size={ 12 } /> Retry
+                    <RotateCcw size={ 12 } /> { t( 'common:retry' ) }
                 </ErrorAction>
                 <ErrorAction onClick={ () => navigate( `/select-model` ) } data-testid="home-choose-another-btn">
-                    Choose another
+                    { t( 'choose_another' ) }
                 </ErrorAction>
             </ErrorBanner> }
 

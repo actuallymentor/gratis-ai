@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.11.0] - 2026-02-27
+
+### Added
+- i18n support via `react-i18next` — all ~300 user-facing strings extracted to 5 namespace JSON files
+- Globe language selector in TopBar — extensible for future languages, English shipped by default
+- `use_language` hook for language persistence to localStorage
+- Electron IPC for system locale detection (`system:locale`)
+- `format_stats` and `format_time` accept optional `t` param for translated output
+
 ## [0.10.0] - 2026-02-27
 
 ### Added

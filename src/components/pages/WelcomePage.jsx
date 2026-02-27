@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowRight, Shield, WifiOff, ChevronDown, ChevronUp } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import DeviceInfo from '../atoms/DeviceInfo'
@@ -161,6 +162,7 @@ const DetectingDot = styled.span`
  */
 export default function WelcomePage() {
 
+    const { t } = useTranslation( 'pages' )
     const navigate = useNavigate()
     const { capabilities, is_detecting } = use_device_capabilities()
     const [ show_details, set_show_details ] = useState( false )
@@ -173,19 +175,18 @@ export default function WelcomePage() {
 
         <Title>{ DISPLAY_NAME }</Title>
         <Tagline>
-            Your own AI assistant that runs entirely on this device.
-            Private, fast, and works offline.
+            { t( 'tagline' ) }
         </Tagline>
 
         { /* Simple value propositions anyone can understand */ }
         <ValueProps>
             <ValueProp>
                 <IconCircle><Shield size={ 18 } /></IconCircle>
-                <span>Your conversations stay on your device — nothing is sent to the cloud</span>
+                <span>{ t( 'value_prop_privacy' ) }</span>
             </ValueProp>
             <ValueProp>
                 <IconCircle><WifiOff size={ 18 } /></IconCircle>
-                <span>Works without internet after initial setup</span>
+                <span>{ t( 'value_prop_offline' ) }</span>
             </ValueProp>
         </ValueProps>
 
@@ -195,8 +196,8 @@ export default function WelcomePage() {
             disabled={ is_detecting }
         >
             { is_detecting
-                ? <><DetectingDot /> Checking your device...</>
-                : <>Get Started <ArrowRight size={ 18 } /></> }
+                ? <><DetectingDot /> { t( 'checking_device' ) }</>
+                : <>{ t( 'get_started' ) } <ArrowRight size={ 18 } /></> }
         </StartButton>
 
         { /* Step progress indicator */ }
@@ -214,7 +215,7 @@ export default function WelcomePage() {
                 data-testid="device-details-toggle"
                 onClick={ () => set_show_details( !show_details ) }
             >
-                { show_details ? `Hide` : `Show` } device details
+                { show_details ? t( 'hide_device_details' ) : t( 'show_device_details' ) }
                 { show_details ? <ChevronUp size={ 14 } /> : <ChevronDown size={ 14 } /> }
             </DetailsToggle>
             <DetailsPanel $expanded={ show_details }>

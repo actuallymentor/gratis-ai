@@ -1,6 +1,7 @@
 import { Component } from 'react'
 import styled from 'styled-components'
 import { AlertTriangle, RotateCcw } from 'lucide-react'
+import { Translation } from 'react-i18next'
 
 const Container = styled.div`
     display: flex;
@@ -101,23 +102,25 @@ export default class ErrorBoundary extends Component {
         const error_message = this.state.error?.message || `An unexpected error occurred`
         const error_stack = this.state.error?.stack || ``
 
-        return <Container>
-            <IconWrapper><AlertTriangle size={ 40 } /></IconWrapper>
-            <Title>Something went wrong</Title>
-            <Description>
-                The app ran into an unexpected error. Reloading usually fixes it.
-            </Description>
+        return <Translation ns="pages">{ ( t ) =>
+            <Container>
+                <IconWrapper><AlertTriangle size={ 40 } /></IconWrapper>
+                <Title>{ t( `error_title` ) }</Title>
+                <Description>
+                    { t( `error_description` ) }
+                </Description>
 
-            <Details>
-                <summary>Error details</summary>
-                <ErrorMessage>{ error_message }{ `\n\n` }{ error_stack }</ErrorMessage>
-            </Details>
+                <Details>
+                    <summary>{ t( `error_details` ) }</summary>
+                    <ErrorMessage>{ error_message }{ `\n\n` }{ error_stack }</ErrorMessage>
+                </Details>
 
-            <ReloadButton onClick={ this.handle_reload }>
-                <RotateCcw size={ 16 } />
-                Reload the app
-            </ReloadButton>
-        </Container>
+                <ReloadButton onClick={ this.handle_reload }>
+                    <RotateCcw size={ 16 } />
+                    { t( `reload_the_app` ) }
+                </ReloadButton>
+            </Container>
+        }</Translation>
 
     }
 

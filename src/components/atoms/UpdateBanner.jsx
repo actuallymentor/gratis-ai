@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import { Download, RefreshCw, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const Banner = styled.div`
     display: flex;
@@ -69,6 +70,8 @@ export default function UpdateBanner( {
     is_ready_to_install, dismissed, on_download, on_install, on_dismiss,
 } ) {
 
+    const { t } = useTranslation( `pages` )
+
     // Nothing to show
     if( !available_update || dismissed ) return null
 
@@ -76,27 +79,27 @@ export default function UpdateBanner( {
 
     // Ready to install — prompt restart
     if( is_ready_to_install ) return <Banner>
-        <Message>Version { version } is ready to install</Message>
+        <Message>{ t( `update_version_ready`, { version } ) }</Message>
         <ActionButton onClick={ on_install }>
-            <RefreshCw size={ 14 } /> Restart now
+            <RefreshCw size={ 14 } /> { t( `restart_now` ) }
         </ActionButton>
-        <DismissButton onClick={ on_dismiss } aria-label="Dismiss">
+        <DismissButton onClick={ on_dismiss } aria-label={ t( `common:aria_dismiss` ) }>
             <X size={ 14 } />
         </DismissButton>
     </Banner>
 
     // Download in progress
     if( is_downloading ) return <Banner>
-        <Message>Downloading v{ version }… { download_progress }%</Message>
+        <Message>{ t( `update_downloading`, { version, progress: download_progress } ) }</Message>
     </Banner>
 
     // Update available — offer download
     return <Banner>
-        <Message>Version { version } is available</Message>
+        <Message>{ t( `update_version_available`, { version } ) }</Message>
         <ActionButton onClick={ on_download }>
-            <Download size={ 14 } /> Download
+            <Download size={ 14 } /> { t( `common:download` ) }
         </ActionButton>
-        <DismissButton onClick={ on_dismiss } aria-label="Dismiss">
+        <DismissButton onClick={ on_dismiss } aria-label={ t( `common:aria_dismiss` ) }>
             <X size={ 14 } />
         </DismissButton>
     </Banner>

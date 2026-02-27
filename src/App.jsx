@@ -11,6 +11,7 @@ import DesktopAppBanner from './components/atoms/DesktopAppBanner'
 import Routes from './routes/Routes'
 import { register_shortcuts } from './utils/keyboard_shortcuts'
 import { EVENTS } from './utils/branding'
+import { sync_electron_locale } from './i18n'
 
 // Choose router based on runtime environment
 const is_electron = typeof window !== `undefined` && window.electronAPI?.native_inference
@@ -27,6 +28,11 @@ const router_future = { v7_startTransition: true, v7_relativeSplatPath: true }
 export default function App() {
 
     const { theme, theme_preference, set_theme_preference } = use_theme()
+
+    // Sync language from Electron system locale on first load
+    useEffect( () => {
+        sync_electron_locale() 
+    }, [] )
 
     // Register global keyboard shortcuts
     useEffect( () => {

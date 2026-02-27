@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import { Cpu, HardDrive, Monitor } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const Container = styled.div`
     display: flex;
@@ -33,6 +34,8 @@ const Value = styled.span`
  */
 export default function DeviceInfo( { capabilities } ) {
 
+    const { t } = useTranslation( `pages` )
+
     if( !capabilities ) return null
 
     const { gpu, memory, cpu } = capabilities
@@ -42,25 +45,25 @@ export default function DeviceInfo( { capabilities } ) {
         { /* GPU info */ }
         <InfoCard>
             <Monitor size={ 14 } />
-            GPU: <Value>{ gpu.renderer }</Value>
+            { t( `device_gpu` ) }: <Value>{ gpu.renderer }</Value>
         </InfoCard>
 
         { /* VRAM */ }
         { gpu.estimated_vram > 0 && <InfoCard>
             <HardDrive size={ 14 } />
-            VRAM: <Value>~{ gpu.estimated_vram } GB</Value>
+            { t( `device_vram` ) }: <Value>~{ gpu.estimated_vram } GB</Value>
         </InfoCard> }
 
         { /* RAM */ }
         { memory.device_memory && <InfoCard>
             <HardDrive size={ 14 } />
-            RAM: <Value>{ memory.device_memory } GB</Value>
+            { t( `device_ram` ) }: <Value>{ memory.device_memory } GB</Value>
         </InfoCard> }
 
         { /* CPU cores */ }
         <InfoCard>
             <Cpu size={ 14 } />
-            Cores: <Value>{ cpu.cores }</Value>
+            { t( `device_cores` ) }: <Value>{ cpu.cores }</Value>
         </InfoCard>
 
     </Container>

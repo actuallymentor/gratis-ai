@@ -55,6 +55,7 @@ for( const level of [ `log`, `info`, `warn`, `error`, `debug` ] ) {
 let main_window = null
 let inference_worker = null
 let active_download_controller = null
+let _is_quitting = false
 
 /* global __GITHUB_REPO__ */
 
@@ -80,6 +81,12 @@ const ensure_worker = () => {
 
     inference_worker.on( `message`, ( msg ) => {
 
+        // Worker console output — relay to renderer via the same forwarding pipeline
+        if( msg.type === `console-log` ) {
+            _forward_log( msg.payload.level, [ msg.payload.message ] )
+            return
+        }
+
         // Unsolicited stream events — forward straight to the renderer
         if( msg.type === `stream-token` ) {
             main_window?.webContents?.send( `llm:stream-token`, msg.payload )
@@ -104,10 +111,14 @@ const ensure_worker = () => {
 
     } )
 
-    // If the worker crashes, clear state so it gets re-spawned on next call
+    // If the worker crashes, clear state so it gets re-spawned on next call.
+    // During graceful shutdown we skip the "reject pending" logic — those
+    // requests are already irrelevant and the error noise confuses cleanup.
     inference_worker.on( `exit`, () => {
 
         inference_worker = null
+
+        if( _is_quitting ) return
 
         // Reject any in-flight requests
         for( const [ , pending ] of _pending ) {
@@ -134,6 +145,35 @@ const worker_request = ( type, payload ) => {
         const id = ++_request_id
         _pending.set( id, { resolve, reject } )
         ensure_worker().postMessage( { id, type, payload } )
+
+    } )
+
+}
+
+/**
+ * Gracefully shut down the inference worker — cancels generation,
+ * frees GPU/mmap resources, then waits for the process to exit.
+ * Falls back to force-kill after 4 seconds if the worker is stuck.
+ * @returns {Promise<void>}
+ */
+const shutdown_worker = () => {
+
+    if( !inference_worker ) return Promise.resolve()
+
+    return new Promise( ( resolve ) => {
+
+        const timeout = setTimeout( () => {
+            // Worker stuck in native code — force-kill
+            if( inference_worker ) inference_worker.kill()
+            resolve()
+        }, 4_000 )
+
+        inference_worker.on( `exit`, () => {
+            clearTimeout( timeout )
+            resolve()
+        } )
+
+        inference_worker.postMessage( { id: ++_request_id, type: `shutdown` } )
 
     } )
 
@@ -202,12 +242,18 @@ const create_window = () => {
         main_window.loadFile( path.join( __dirname, `../renderer/index.html` ) )
     }
 
+    // Flush buffered console logs once the renderer is ready to receive them
+    main_window.webContents.on( `did-finish-load`, _flush_log_buffer )
+
 }
 
 /**
  * Register all IPC handlers for LLM operations
  */
 const register_ipc_handlers = () => {
+
+    // System locale — used by the renderer to sync i18n with the OS language
+    ipcMain.handle( `system:locale`, () => app.getLocale() )
 
     // System info — GPU detection runs in the worker to avoid blocking the UI
     // on the first getLlama() call (which compiles/loads native backends)
@@ -529,6 +575,25 @@ app.whenReady().then( () => {
 
 } )
 
+// Graceful shutdown — clean up worker, abort downloads, then quit
+app.on( `before-quit`, ( event ) => {
+
+    // Guard: second fire after cleanup completes — let it through
+    if( _is_quitting ) return
+
+    _is_quitting = true
+    event.preventDefault()
+
+    // Abort any in-progress model download
+    if( active_download_controller ) {
+        active_download_controller.abort()
+        active_download_controller = null
+    }
+
+    shutdown_worker().then( () => app.quit() )
+
+} )
+
 app.on( `window-all-closed`, () => {
-    if( process.platform !== `darwin` ) app.quit()
+    if( process.platform !== `darwin` || _is_quitting ) app.quit()
 } )

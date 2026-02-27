@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import styled, { useTheme } from 'styled-components'
 import { ChevronDown, Check, Plus, Settings, LoaderCircle, AlertTriangle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { format_file_size, can_fit_in_memory } from '../../utils/model_catalog'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 
@@ -119,6 +120,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
     const dropdown_ref = useRef( null )
     const navigate = useNavigate()
     const theme = useTheme()
+    const { t } = useTranslation( `models` )
     const { max_model_bytes } = use_device_capabilities()
 
     // Close dropdown on click outside or Escape key
@@ -168,7 +170,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
 
     // Find the active model's display name
     const active_model = cached_models.find( ( m ) => m.id === active_model_id )
-    const display_name = is_switching ? `Loading...` : active_model?.name || `No model`
+    const display_name = is_switching ? t( `common:loading` ) : active_model?.name || t( `no_model` )
 
     const handle_select = ( model_id ) => {
         set_is_open( false )
@@ -203,7 +205,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
 
                 { cached_models.length === 0 ?
                     <NoModelHint>
-                        No models downloaded yet. Add one to get started.
+                        { t( `no_models_hint` ) }
                     </NoModelHint>
                     :
                     cached_models.map( ( model ) => {
@@ -221,7 +223,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                                 <ModelLabel>{ model.name }</ModelLabel>
                                 <ModelMeta>
                                     { format_file_size( model.file_size_bytes ) }
-                                    { too_large ? ` — may not fit` : `` }
+                                    { too_large ? ` — ${ t( `may_not_fit` ) }` : `` }
                                 </ModelMeta>
                             </ModelInfo>
                             { too_large && <AlertTriangle size={ 12 } style={ { color: theme.colors.warning, flexShrink: 0 } } /> }
@@ -232,12 +234,12 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
 
                 <ActionOption data-testid="model-add-btn" onClick={ handle_add }>
                     <Plus size={ 14 } />
-                    Add Model
+                    { t( `add_model` ) }
                 </ActionOption>
 
                 <ActionOption data-testid="model-manage-btn" onClick={ handle_manage }>
                     <Settings size={ 14 } />
-                    Manage Models
+                    { t( `manage_models` ) }
                 </ActionOption>
 
             </Dropdown> }

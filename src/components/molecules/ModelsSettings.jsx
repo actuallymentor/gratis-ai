@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { format_file_size } from '../../utils/model_catalog'
 import use_model_manager from '../../hooks/use_model_manager'
 import { clear_all_data, get_db } from '../../stores/db'
@@ -195,6 +196,7 @@ const DangerButton = styled( Button )`
 export default function ModelsSettings( { on_close, on_model_switch } ) {
 
     const navigate = useNavigate()
+    const { t } = useTranslation( `settings` )
     const { cached_models, storage_used, storage_estimate, delete_model } = use_model_manager()
     const [ confirming, set_confirming ] = useState( null )
     const [ show_danger, set_show_danger ] = useState( false )
@@ -221,7 +223,7 @@ export default function ModelsSettings( { on_close, on_model_switch } ) {
         try {
             await delete_model( model.id )
             set_confirming( null )
-            toast.success( `Deleted ${ model.name }` )
+            toast.success( t( `common:deleted_model`, { name: model.name } ) )
         } catch ( err ) {
             toast.error( err.message )
         }
@@ -239,23 +241,23 @@ export default function ModelsSettings( { on_close, on_model_switch } ) {
             const db = await get_db()
             const conversations = await db.getAll( `conversations` )
             if( conversations.length === 0 ) {
-                toast( `No conversations to export` )
+                toast( t( `common:no_conversations_to_export` ) )
                 return
             }
             for( const conv of conversations ) {
                 const messages = await db.getAllFromIndex( `messages`, `conversation_id`, conv.id )
                 export_conversation( conv, messages )
             }
-            toast.success( `Exported ${ conversations.length } conversation${ conversations.length !== 1 ? `s` : `` }` )
+            toast.success( t( conversations.length !== 1 ? `common:exported_conversations_plural` : `common:exported_conversations`, { count: conversations.length } ) )
         } catch ( err ) {
-            toast.error( `Export failed: ${ err.message }` )
+            toast.error( t( `common:export_failed`, { message: err.message } ) )
         }
 
     }
 
     const handle_clear_all = async () => {
 
-        const confirmed = confirm( `This will delete all conversations, cached models, and settings. This cannot be undone.` )
+        const confirmed = confirm( t( `confirm_delete_all` ) )
         if( !confirmed ) return
 
         await clear_all_data()
@@ -278,23 +280,23 @@ export default function ModelsSettings( { on_close, on_model_switch } ) {
         { /* Storage summary */ }
         <StorageSummary data-testid="storage-summary">
             <StorageStat>
-                <strong>{ cached_models.length }</strong> model{ cached_models.length !== 1 ? `s` : `` } cached
+                <strong>{ cached_models.length }</strong> { cached_models.length !== 1 ? t( `models_cached` ) : t( `model_cached` ) }
             </StorageStat>
             <StorageStat>
-                <strong>{ format_file_size( storage_used ) }</strong> used
+                <strong>{ format_file_size( storage_used ) }</strong> { t( `used` ) }
             </StorageStat>
             { storage_estimate !== null &&
                 <StorageStat>
-                    <strong>{ format_file_size( storage_estimate ) }</strong> available
+                    <strong>{ format_file_size( storage_estimate ) }</strong> { t( `available` ) }
                 </StorageStat> }
         </StorageSummary>
 
         { /* Cached models list */ }
         <Section>
-            <SectionTitle>Your Models</SectionTitle>
-            <Description>Models you have downloaded. You can switch between them at any time.</Description>
+            <SectionTitle>{ t( `your_models` ) }</SectionTitle>
+            <Description>{ t( `your_models_description` ) }</Description>
             { cached_models.length === 0 ?
-                <EmptyState>No models downloaded yet. Add one below to get started.</EmptyState>
+                <EmptyState>{ t( `no_models_downloaded` ) }</EmptyState>
                 :
                 <ModelList>
                     { cached_models.map( ( model ) => {
@@ -303,8 +305,8 @@ export default function ModelsSettings( { on_close, on_model_switch } ) {
                             <ModelInfo>
                                 <ModelName>
                                     { model.name }
-                                    { is_active && <Badge $variant="active">Active</Badge> }
-                                    { !is_active && <Badge>Cached</Badge> }
+                                    { is_active && <Badge $variant="active">{ t( `active` ) }</Badge> }
+                                    { !is_active && <Badge>{ t( `cached` ) }</Badge> }
                                 </ModelName>
                                 <ModelMeta>
                                     { format_file_size( model.file_size_bytes ) }
@@ -316,14 +318,14 @@ export default function ModelsSettings( { on_close, on_model_switch } ) {
                                     disabled={ is_active }
                                     onClick={ () => handle_load( model.id ) }
                                 >
-                                    { is_active ? `Active` : `Switch to this` }
+                                    { is_active ? t( `active` ) : t( `switch_to_this` ) }
                                 </SmallButton>
                                 <DeleteButton
                                     data-testid={ `model-delete-btn-${ model.id }` }
                                     disabled={ is_active }
                                     onClick={ () => handle_delete( model ) }
                                 >
-                                    { confirming === model.id ? `Click again to confirm` : `Remove` }
+                                    { confirming === model.id ? t( `click_again_to_confirm` ) : t( `remove` ) }
                                 </DeleteButton>
                             </ModelActions>
                         </ModelItem>
@@ -333,34 +335,34 @@ export default function ModelsSettings( { on_close, on_model_switch } ) {
 
         { /* Add model section */ }
         <Section>
-            <SectionTitle>Add Model</SectionTitle>
-            <Description>Download a new model or load your own GGUF file.</Description>
+            <SectionTitle>{ t( `add_model` ) }</SectionTitle>
+            <Description>{ t( `add_model_description` ) }</Description>
             <ButtonRow>
                 <Button
                     data-testid="add-model-preset-btn"
                     onClick={ handle_add_preset }
                 >
-                    Browse Models
+                    { t( `browse_models` ) }
                 </Button>
                 <Button
                     data-testid="add-model-custom-btn"
                     onClick={ handle_add_custom }
                 >
-                    Load Custom File
+                    { t( `load_custom_file` ) }
                 </Button>
             </ButtonRow>
         </Section>
 
         { /* Export all conversations */ }
         <Section>
-            <SectionTitle>Your Data</SectionTitle>
-            <Description>Export your conversations as text files for safekeeping.</Description>
+            <SectionTitle>{ t( `your_data` ) }</SectionTitle>
+            <Description>{ t( `your_data_description` ) }</Description>
             <ButtonRow>
                 <Button
                     data-testid="export-all-btn"
                     onClick={ handle_export_all }
                 >
-                    Export All Conversations
+                    { t( `export_all_conversations` ) }
                 </Button>
             </ButtonRow>
         </Section>
@@ -370,19 +372,19 @@ export default function ModelsSettings( { on_close, on_model_switch } ) {
             data-testid="danger-zone-toggle"
             onClick={ () => set_show_danger( !show_danger ) }
         >
-            Danger Zone
+            { t( `danger_zone` ) }
             { show_danger ? <ChevronUp size={ 14 } /> : <ChevronDown size={ 14 } /> }
         </DangerToggle>
 
         <DangerPanel $expanded={ show_danger }>
             <DangerZone>
-                <Description>This will permanently delete all conversations, models, and settings.</Description>
+                <Description>{ t( `danger_zone_description` ) }</Description>
                 <ButtonRow>
                     <DangerButton
                         data-testid="clear-all-data-btn"
                         onClick={ handle_clear_all }
                     >
-                        Delete Everything
+                        { t( `delete_everything` ) }
                     </DangerButton>
                 </ButtonRow>
             </DangerZone>

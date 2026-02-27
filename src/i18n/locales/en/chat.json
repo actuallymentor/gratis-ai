@@ -1,0 +1,21 @@
+{
+    "placeholder": "Type a message...",
+    "placeholder_ask": "Ask anything...",
+
+    "thinking": "Thinking...",
+    "show_thinking": "Show thinking",
+    "hide_thinking": "Hide thinking",
+    "show_all_thinking": "Show all thinking",
+    "collapse": "Collapse",
+
+    "what_can_i_help_with": "What can I help with?",
+    "loading_your_model": "Loading your model...",
+
+    "lets_get_you_set_up": "Let's get you set up",
+    "no_model_description": "You need to download an AI model before you can start chatting. It only takes a minute.",
+    "set_up_a_model": "Set up a model",
+
+    "recording": "Recording",
+    "transcribing": "Transcribing",
+    "loading_voice_model": "Loading voice model"
+}

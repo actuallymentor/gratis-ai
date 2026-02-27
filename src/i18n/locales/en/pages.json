@@ -1,0 +1,71 @@
+{
+    "tagline": "Your own AI assistant that runs entirely on this device. Private, fast, and works offline.",
+    "value_prop_privacy": "Your conversations stay on your device — nothing is sent to the cloud",
+    "value_prop_offline": "Works without internet after initial setup",
+    "get_started": "Get Started",
+    "checking_device": "Checking your device...",
+    "show_device_details": "Show device details",
+    "hide_device_details": "Hide device details",
+
+    "model_ready": "{{name}} — Ready",
+    "loading_model": "Loading {{name}}...",
+    "switch_model": "Switch model",
+    "failed_to_load": "Failed to load model",
+    "choose_another": "Choose another",
+
+    "new_chat": "New Chat",
+    "empty_conversations": "Your conversations will appear here. Start a new chat to begin!",
+    "wipe_history": "Wipe history",
+    "click_to_confirm": "Click to confirm",
+    "delete_question": "Delete?",
+
+    "download_app": "Download App",
+    "download_app_subtext": "more powerful",
+    "checking_updates": "Checking...",
+    "up_to_date": "Up to date",
+    "check_failed": "Check failed",
+    "check_for_updates": "Check for updates",
+
+    "change_model": "Change model",
+    "theme_label": "Theme: {{theme}}",
+
+    "desktop_banner_text": "Get more power with the same privacy — try the desktop app",
+    "get_the_app": "Get the app",
+
+    "update_version_available": "Version {{version}} is available",
+    "update_version_ready": "Version {{version}} is ready to install",
+    "update_downloading": "Downloading v{{version}}… {{progress}}%",
+    "restart_now": "Restart now",
+
+    "get_app_tagline": "Download the desktop app for faster, fully-offline AI powered by your own hardware.",
+    "download_for": "Download for {{platform}}",
+    "not_configured": "Not configured",
+    "intel_mac_prompt": "Running an Intel Mac?",
+    "download_intel_build": "Download the Intel build",
+    "not_configured_notice": "Release downloads are not configured for this deployment. Build the desktop app from source or check the project repository.",
+    "or_continue_browser": "Or continue in your browser",
+    "download_started": "Download started",
+    "download_started_description": "Your file is downloading to your Downloads folder. Open it once it finishes to install {{name}}.",
+    "got_it": "Got it",
+
+    "not_found_title": "Page not found",
+    "not_found_description": "The page you're looking for doesn't exist or has been moved.",
+    "back_to_chat": "Back to chat",
+
+    "error_title": "Something went wrong",
+    "error_description": "The app ran into an unexpected error. Reloading usually fixes it.",
+    "error_details": "Error details",
+    "reload_the_app": "Reload the app",
+
+    "voice_input": "Voice Input",
+    "downloading_model": "Downloading Model",
+    "voice_description": "Voice input requires downloading a speech recognition model (~640 MB). The model runs entirely in your browser for full privacy.",
+    "voice_size_badge": "~640 MB download",
+    "voice_download_failed": "Download failed. Please check your connection and try again.",
+    "voice_downloading": "Downloading...",
+
+    "device_gpu": "GPU",
+    "device_vram": "VRAM",
+    "device_ram": "RAM",
+    "device_cores": "Cores"
+}
