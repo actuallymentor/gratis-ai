@@ -32,7 +32,7 @@ const detect_language = () => {
     // Use the first browser language that we have translations for
     const browser_languages = navigator.languages || [ navigator.language ]
     for( const lang of browser_languages ) {
-        const code = lang.split( `-` )[ 0 ]
+        const [ code ] = lang.split( `-` )
         if( code === `en` ) return `en`
     }
 
@@ -76,7 +76,7 @@ export const sync_electron_locale = async () => {
         const stored = localStorage.getItem( STORAGE_KEY )
         if( stored ) return
 
-        const code = locale.split( `-` )[ 0 ]
+        const [ code ] = locale.split( `-` )
         if( i18n.hasResourceBundle( code, `common` ) ) {
             await i18n.changeLanguage( code )
         }
