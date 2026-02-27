@@ -12,6 +12,30 @@
 
 const os = require( `os` )
 
+// ---------------------------------------------------
+// Console forwarding — relay worker logs to the main
+// process so they can reach the browser DevTools
+// ---------------------------------------------------
+
+const _serialise_arg = ( arg ) => {
+    if( typeof arg === `object` ) try { return JSON.stringify( arg ) } catch { return String( arg ) }
+    return String( arg )
+}
+
+for( const level of [ `log`, `info`, `warn`, `error`, `debug` ] ) {
+
+    const original = console[ level ].bind( console )
+
+    console[ level ] = ( ...args ) => {
+        original( ...args )
+        process.parentPort.postMessage( {
+            type: `console-log`,
+            payload: { level, message: args.map( _serialise_arg ).join( ` ` ) },
+        } )
+    }
+
+}
+
 // -------------------------------------------------------
 // NativeInference — thin wrapper around node-llama-cpp
 // -------------------------------------------------------
@@ -293,7 +317,15 @@ const handle_message = async ( { id, type, payload } ) => {
                 }
                 break
 
-            default:
+            case `shutdown`:
+                // Graceful shutdown: cancel generation, free GPU/mmap, then exit
+                provider.abort()
+                await provider.unload()
+                send( { id, type: `response`, payload: { success: true } } )
+                process.exit( 0 )
+                break
+
+        default:
                 throw new Error( `Unknown message type: ${ type }` )
 
         }
@@ -307,3 +339,7 @@ const handle_message = async ( { id, type, payload } ) => {
 }
 
 process.parentPort.on( `message`, ( { data } ) => handle_message( data ) )
+
+// Safety net — last-chance cancellation if the process is killed without
+// the shutdown message (e.g. SIGTERM). `exit` handlers must be synchronous.
+process.on( `exit`, () => provider.abort() )
