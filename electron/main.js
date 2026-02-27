@@ -3,6 +3,55 @@ const { autoUpdater } = require( `electron-updater` )
 const path = require( `path` )
 const fs = require( `fs` )
 
+// ---------------------------------------------------
+// Console forwarding — pipes Node.js console output
+// from main + worker into the browser DevTools console
+// ---------------------------------------------------
+
+const _log_buffer = []
+let _renderer_ready = false
+
+const _serialise_arg = ( arg ) => {
+    if( typeof arg === `object` ) try { return JSON.stringify( arg ) } catch { return String( arg ) }
+    return String( arg )
+}
+
+const _forward_log = ( level, args ) => {
+
+    const entry = { level, message: args.map( _serialise_arg ).join( ` ` ) }
+
+    if( _renderer_ready && main_window?.webContents ) {
+        main_window.webContents.send( `nodejs:console`, entry )
+    } else {
+        _log_buffer.push( entry )
+    }
+
+}
+
+const _flush_log_buffer = () => {
+
+    _renderer_ready = true
+
+    for( const entry of _log_buffer ) {
+        main_window?.webContents?.send( `nodejs:console`, entry )
+    }
+
+    _log_buffer.length = 0
+
+}
+
+// Monkey-patch console methods to forward to renderer
+for( const level of [ `log`, `info`, `warn`, `error`, `debug` ] ) {
+
+    const original = console[ level ].bind( console )
+
+    console[ level ] = ( ...args ) => {
+        original( ...args )
+        _forward_log( level, args )
+    }
+
+}
+
 let main_window = null
 let inference_worker = null
 let active_download_controller = null
@@ -433,6 +482,10 @@ const setup_auto_updater = () => {
             version: info.version,
             release_notes: info.releaseNotes || ``,
         } )
+    } )
+
+    autoUpdater.on( `update-not-available`, () => {
+        send( `updater:not-available` )
     } )
 
     autoUpdater.on( `download-progress`, ( progress ) => {

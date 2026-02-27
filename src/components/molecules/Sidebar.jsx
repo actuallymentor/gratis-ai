@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import styled from 'styled-components'
-import { Plus, PanelLeftClose, PanelLeft, Download, Trash2, Trash, Monitor } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import styled, { keyframes } from 'styled-components'
+import { Plus, PanelLeftClose, PanelLeft, Download, Trash2, Trash, Monitor, RefreshCw, LoaderCircle, CheckCircle } from 'lucide-react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { truncate } from '../../utils/format'
 
@@ -201,6 +201,38 @@ const DownloadAppSubtext = styled.span`
     font-weight: 400;
 `
 
+const spin = keyframes`
+    from { transform: rotate( 0deg ); }
+    to { transform: rotate( 360deg ); }
+`
+
+const CheckUpdateButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.sm };
+    width: 100%;
+    padding: ${ ( { theme } ) => `${ theme.spacing.xs } ${ theme.spacing.sm }` };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    font-size: 0.8rem;
+    transition: color 0.15s, background 0.15s;
+    min-height: 2.75rem;
+
+    &:hover:not( :disabled ) {
+        color: ${ ( { theme } ) => theme.colors.text };
+        background: ${ ( { theme } ) => theme.colors.surface_hover };
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        cursor: default;
+    }
+`
+
+const SpinnerIcon = styled( LoaderCircle )`
+    animation: ${ spin } 1s linear infinite;
+`
+
 const is_electron = () => !!window.electronAPI?.native_inference
 
 /**
@@ -222,6 +254,62 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
     const { id: active_id } = useParams()
     const [ confirming_delete, set_confirming_delete ] = useState( null )
     const [ confirming_wipe, set_confirming_wipe ] = useState( false )
+
+    // Check-for-updates state (Electron only)
+    const [ check_status, set_check_status ] = useState( `idle` )
+    const status_ref = useRef( `idle` )
+    const timer_ref = useRef( null )
+
+    // Keep ref in sync so IPC callbacks see the latest status
+    const update_status = ( next ) => {
+        status_ref.current = next
+        set_check_status( next )
+    }
+
+    // Reset to idle after a brief delay (for transient states)
+    const reset_after_delay = ( ms = 3000 ) => {
+        clearTimeout( timer_ref.current )
+        timer_ref.current = setTimeout( () => update_status( `idle` ), ms )
+    }
+
+    // Subscribe to updater IPC events for feedback
+    useEffect( () => {
+
+        if( !is_electron() ) return
+
+        const unsub_not_available = window.electronAPI.updater.on_update_not_available( () => {
+            if( status_ref.current === `checking` ) {
+                update_status( `up_to_date` )
+                reset_after_delay()
+            }
+        } )
+
+        const unsub_available = window.electronAPI.updater.on_update_available( () => {
+            // The existing UpdateBanner handles this — just reset our button
+            update_status( `idle` )
+        } )
+
+        const unsub_error = window.electronAPI.updater.on_update_error( () => {
+            if( status_ref.current === `checking` ) {
+                update_status( `failed` )
+                reset_after_delay()
+            }
+        } )
+
+        return () => {
+            unsub_not_available()
+            unsub_available()
+            unsub_error()
+            clearTimeout( timer_ref.current )
+        }
+
+    }, [] )
+
+    const handle_check_for_updates = () => {
+        if( check_status === `checking` ) return
+        update_status( `checking` )
+        window.electronAPI.updater.check_for_updates()
+    }
 
     const handle_new_chat = () => {
         if( on_new_chat ) on_new_chat()
@@ -349,16 +437,31 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                 </WipeButton>
             </SidebarFooter> }
 
-            { /* Download app — web-only promo nudge */ }
-            { !is_electron() && <SidebarFooter>
-                <DownloadAppLink to="/get-app" data-testid="sidebar-download-app">
-                    <Monitor size={ 14 } />
-                    <DownloadAppLabel>
-                        Download App
-                        <DownloadAppSubtext>more powerful</DownloadAppSubtext>
-                    </DownloadAppLabel>
-                </DownloadAppLink>
-            </SidebarFooter> }
+            { /* Electron: check for updates — Web: download app promo */ }
+            { is_electron()
+                ? <SidebarFooter>
+                    <CheckUpdateButton
+                        data-testid="check-for-updates-btn"
+                        onClick={ handle_check_for_updates }
+                        disabled={ check_status === `checking` }
+                        aria-label="Check for updates"
+                    >
+                        { check_status === `checking` && <><SpinnerIcon size={ 14 } /> Checking...</> }
+                        { check_status === `up_to_date` && <><CheckCircle size={ 14 } /> Up to date</> }
+                        { check_status === `failed` && <><RefreshCw size={ 14 } /> Check failed</> }
+                        { check_status === `idle` && <><RefreshCw size={ 14 } /> Check for updates</> }
+                    </CheckUpdateButton>
+                </SidebarFooter>
+                : <SidebarFooter>
+                    <DownloadAppLink to="/get-app" data-testid="sidebar-download-app">
+                        <Monitor size={ 14 } />
+                        <DownloadAppLabel>
+                            Download App
+                            <DownloadAppSubtext>more powerful</DownloadAppSubtext>
+                        </DownloadAppLabel>
+                    </DownloadAppLink>
+                </SidebarFooter>
+            }
 
         </SidebarContainer>
 

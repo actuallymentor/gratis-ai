@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.10.0] - 2026-02-27
+
+### Added
+- "Check for updates" button in Electron sidebar — replaces web-only "Download App" link with manual update check
+- `update-not-available` IPC event forwarding from main process to renderer
+
 ## [0.9.5] - 2026-02-26
 
 ### Fixed
