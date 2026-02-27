@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.2] - 2026-02-27
+
+### Fixed
+- Conservative memory budgets for model recommendations — Apple Silicon 75→65%, CPU-only 70→60%
+- Runtime overhead raised to 500 MB to account for Electron and V8 heap
+- Context size floor lowered to 512 tokens for last-resort VRAM recovery
+
 ## [0.13.0] - 2026-02-27
 
 ### Added

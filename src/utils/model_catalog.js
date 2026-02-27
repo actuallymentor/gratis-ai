@@ -553,7 +553,8 @@ export const MODEL_CATALOG = [
 // ─── Memory estimation ──────────────────────────────────────────────────────────
 
 // Fixed overhead for llama.cpp runtime (scratch buffers, compute graph, etc.)
-const RUNTIME_OVERHEAD = 300_000_000
+// Includes Electron process, V8 heap, and node-llama-cpp internal allocations
+const RUNTIME_OVERHEAD = 500_000_000
 
 // Default context for memory fitness checks — models advertise max context
 // (e.g. 131K) but users typically start with short conversations. Using a
@@ -565,7 +566,7 @@ const DEFAULT_ESTIMATION_CONTEXT = 2048
  * Estimate total runtime memory for a model (weights + KV cache + overhead).
  *
  * Uses real architecture parameters when available:
- *   file_size_bytes + KV_cache(layers, kv_heads, head_dim, ctx) + 300 MB overhead
+ *   file_size_bytes + KV_cache(layers, kv_heads, head_dim, ctx) + 500 MB overhead
  *
  * Falls back to the classic `file_size × 1.2` heuristic for custom models
  * that lack architecture data.

@@ -72,9 +72,10 @@ class NativeInference {
 
         this._model = await this._llama.loadModel( { modelPath: model_path } )
 
-        // Try the requested context size, halving on VRAM failures
-        const MIN_CTX = 2048
-        let ctx_size = opts.n_ctx || MIN_CTX
+        // Try the requested context size, halving on VRAM failures.
+        // Floor is 512 — tight but functional for short conversations.
+        const MIN_CTX = 512
+        let ctx_size = opts.n_ctx || 2048
 
         while( ctx_size >= MIN_CTX ) {
 

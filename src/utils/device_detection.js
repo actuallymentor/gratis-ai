@@ -262,10 +262,12 @@ export const estimate_max_model_bytes = ( capabilities ) => {
         const gpu = capabilities.gpu || {}
 
         // Apple Silicon: unified memory — GPU/CPU share the same pool
-        // macOS lets Metal access up to ~75% of physical RAM
+        // Metal can technically access ~75% of physical RAM, but macOS,
+        // Electron, and background apps easily consume 2-3 GB on a laptop.
+        // 65% keeps recommendations safe for 8 GB machines under real load.
         if( gpu.unified_memory > 0 || gpu.metal ) {
             const unified = gpu.unified_memory || total
-            return Math.floor( unified * 0.75 )
+            return Math.floor( unified * 0.65 )
         }
 
         // Discrete GPU: use the larger of VRAM or 60% system RAM
@@ -274,8 +276,9 @@ export const estimate_max_model_bytes = ( capabilities ) => {
             return Math.floor( Math.max( gpu.vram_total, total * 0.6 ) )
         }
 
-        // CPU-only: 70% of system RAM — generous for a dedicated single-user app
-        return Math.floor( total * 0.7 )
+        // CPU-only: 60% of system RAM — leaves headroom for the OS,
+        // Electron overhead, and other apps running on a typical laptop
+        return Math.floor( total * 0.6 )
 
     }
 
