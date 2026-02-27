@@ -1,0 +1,71 @@
+{
+    "tagline": "Il tuo assistente IA personale che funziona interamente su questo dispositivo. Privato, veloce e disponibile offline.",
+    "value_prop_privacy": "Le tue conversazioni restano sul tuo dispositivo — nulla viene inviato al cloud",
+    "value_prop_offline": "Funziona senza internet dopo la configurazione iniziale",
+    "get_started": "Inizia",
+    "checking_device": "Controllo del dispositivo…",
+    "show_device_details": "Mostra dettagli dispositivo",
+    "hide_device_details": "Nascondi dettagli dispositivo",
+
+    "model_ready": "{{name}} — Pronto",
+    "loading_model": "Caricamento di {{name}}…",
+    "switch_model": "Cambia modello",
+    "failed_to_load": "Impossibile caricare il modello",
+    "choose_another": "Scegline un altro",
+
+    "new_chat": "Nuova chat",
+    "empty_conversations": "Le tue conversazioni appariranno qui. Inizia una nuova chat per cominciare!",
+    "wipe_history": "Cancella cronologia",
+    "click_to_confirm": "Clicca per confermare",
+    "delete_question": "Eliminare?",
+
+    "download_app": "Scarica l'app",
+    "download_app_subtext": "più potente",
+    "checking_updates": "Controllo…",
+    "up_to_date": "Aggiornato",
+    "check_failed": "Controllo fallito",
+    "check_for_updates": "Controlla aggiornamenti",
+
+    "change_model": "Cambia modello",
+    "theme_label": "Tema: {{theme}}",
+
+    "desktop_banner_text": "Più potenza con la stessa privacy — prova l'app desktop",
+    "get_the_app": "Scarica l'app",
+
+    "update_version_available": "La versione {{version}} è disponibile",
+    "update_version_ready": "La versione {{version}} è pronta per l'installazione",
+    "update_downloading": "Download di v{{version}} in corso… {{progress}}%",
+    "restart_now": "Riavvia ora",
+
+    "get_app_tagline": "Scarica l'app desktop per un'IA più veloce, completamente offline, alimentata dal tuo hardware.",
+    "download_for": "Scarica per {{platform}}",
+    "not_configured": "Non configurato",
+    "intel_mac_prompt": "Hai un Mac Intel?",
+    "download_intel_build": "Scarica la build Intel",
+    "not_configured_notice": "I download delle release non sono configurati per questa distribuzione. Compila l'app desktop dal codice sorgente o controlla il repository del progetto.",
+    "or_continue_browser": "Oppure continua nel browser",
+    "download_started": "Download avviato",
+    "download_started_description": "Il file si sta scaricando nella cartella Download. Aprilo al termine per installare {{name}}.",
+    "got_it": "Ho capito",
+
+    "not_found_title": "Pagina non trovata",
+    "not_found_description": "La pagina che stai cercando non esiste o è stata spostata.",
+    "back_to_chat": "Torna alla chat",
+
+    "error_title": "Qualcosa è andato storto",
+    "error_description": "L'app ha riscontrato un errore imprevisto. Ricaricare di solito risolve il problema.",
+    "error_details": "Dettagli errore",
+    "reload_the_app": "Ricarica l'app",
+
+    "voice_input": "Input vocale",
+    "downloading_model": "Download del modello",
+    "voice_description": "L'input vocale richiede il download di un modello di riconoscimento vocale (~640 MB). Il modello funziona interamente nel browser per garantire la massima privacy.",
+    "voice_size_badge": "~640 MB download",
+    "voice_download_failed": "Download non riuscito. Verifica la connessione e riprova.",
+    "voice_downloading": "Download in corso…",
+
+    "device_gpu": "GPU",
+    "device_vram": "VRAM",
+    "device_ram": "RAM",
+    "device_cores": "Core"
+}

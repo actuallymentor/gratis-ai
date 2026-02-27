@@ -1,0 +1,71 @@
+{
+    "tagline": "このデバイス上で完全に動作する、あなただけのAIアシスタント。プライベートで高速、オフラインでも使えます。",
+    "value_prop_privacy": "会話はお使いのデバイスに保存されます — クラウドには一切送信されません",
+    "value_prop_offline": "初回セットアップ後はインターネットなしで動作します",
+    "get_started": "はじめる",
+    "checking_device": "デバイスを確認中...",
+    "show_device_details": "デバイスの詳細を表示",
+    "hide_device_details": "デバイスの詳細を非表示",
+
+    "model_ready": "{{name}} — 準備完了",
+    "loading_model": "{{name}}を読み込み中...",
+    "switch_model": "モデルを切り替え",
+    "failed_to_load": "モデルの読み込みに失敗しました",
+    "choose_another": "別のモデルを選ぶ",
+
+    "new_chat": "新しいチャット",
+    "empty_conversations": "会話がここに表示されます。新しいチャットを始めましょう！",
+    "wipe_history": "履歴を消去",
+    "click_to_confirm": "クリックして確認",
+    "delete_question": "削除しますか？",
+
+    "download_app": "アプリをダウンロード",
+    "download_app_subtext": "より高性能",
+    "checking_updates": "確認中...",
+    "up_to_date": "最新です",
+    "check_failed": "確認に失敗しました",
+    "check_for_updates": "アップデートを確認",
+
+    "change_model": "モデルを変更",
+    "theme_label": "テーマ: {{theme}}",
+
+    "desktop_banner_text": "同じプライバシーでより高性能に — デスクトップアプリをお試しください",
+    "get_the_app": "アプリを入手",
+
+    "update_version_available": "バージョン{{version}}が利用可能です",
+    "update_version_ready": "バージョン{{version}}のインストール準備ができました",
+    "update_downloading": "v{{version}}をダウンロード中… {{progress}}%",
+    "restart_now": "今すぐ再起動",
+
+    "get_app_tagline": "デスクトップアプリをダウンロードして、あなたのハードウェアで動く高速な完全オフラインAIを体験しましょう。",
+    "download_for": "{{platform}}版をダウンロード",
+    "not_configured": "未設定",
+    "intel_mac_prompt": "Intel Macをお使いですか？",
+    "download_intel_build": "Intel版をダウンロード",
+    "not_configured_notice": "このデプロイではリリースのダウンロードが設定されていません。ソースからデスクトップアプリをビルドするか、プロジェクトのリポジトリをご確認ください。",
+    "or_continue_browser": "またはブラウザで続ける",
+    "download_started": "ダウンロードを開始しました",
+    "download_started_description": "ファイルがダウンロードフォルダにダウンロードされています。完了したら開いて{{name}}をインストールしてください。",
+    "got_it": "了解",
+
+    "not_found_title": "ページが見つかりません",
+    "not_found_description": "お探しのページは存在しないか、移動された可能性があります。",
+    "back_to_chat": "チャットに戻る",
+
+    "error_title": "問題が発生しました",
+    "error_description": "アプリで予期しないエラーが発生しました。再読み込みで通常は解決します。",
+    "error_details": "エラーの詳細",
+    "reload_the_app": "アプリを再読み込み",
+
+    "voice_input": "音声入力",
+    "downloading_model": "モデルをダウンロード中",
+    "voice_description": "音声入力には音声認識モデル（約640 MB）のダウンロードが必要です。モデルはブラウザ内で完全に動作し、プライバシーが守られます。",
+    "voice_size_badge": "約640 MBのダウンロード",
+    "voice_download_failed": "ダウンロードに失敗しました。接続を確認して再度お試しください。",
+    "voice_downloading": "ダウンロード中...",
+
+    "device_gpu": "GPU",
+    "device_vram": "VRAM",
+    "device_ram": "RAM",
+    "device_cores": "コア数"
+}

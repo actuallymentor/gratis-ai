@@ -1,0 +1,32 @@
+{
+    "no_model": "Geen model",
+    "no_models_hint": "Nog geen modellen gedownload. Voeg er een toe om te beginnen.",
+    "may_not_fit": "past mogelijk niet",
+    "add_model": "Model toevoegen",
+    "manage_models": "Modellen beheren",
+
+    "pick_a_model": "Kies een model",
+    "subtitle_two_cards": "We hebben twee opties gekozen op basis van je apparaat. Kies de balans die bij je past.",
+    "subtitle_single_card": "Op basis van je apparaat hebben we het beste AI-model gekozen. Het wordt eenmalig gedownload en lokaal opgeslagen.",
+    "faster_option": "Snellere optie",
+    "smarter_option": "Slimmere optie",
+    "already_downloaded": "Al gedownload",
+    "initial_download_takes": "Eerste download duurt {{time}}",
+    "show_details": "Details tonen",
+    "recommended_for_device": "Aanbevolen voor jouw apparaat",
+    "custom_hf_model": "Eigen HuggingFace-model",
+    "start_chatting": "Begin met chatten",
+    "download_and_start": "Downloaden en starten",
+    "choose_different_model": "Kies een ander model",
+    "downloaded": "gedownload",
+    "uncensored": "ongecensureerd",
+    "invalid_hf_url": "Ongeldige URL. Gebruik een HuggingFace-link zoals hf.co/org/repo:Q4_K_M",
+    "may_be_too_large_browser": "Mogelijk te groot voor deze browser",
+    "large_model_warning": "Grote modellen laden mogelijk niet in de browser. Overweeg een kleinere kwantisatie of de desktop-app.",
+
+    "downloading_your_model": "Je model wordt gedownload",
+    "one_time_download": "{{name}} — dit is een eenmalige download. Daarna werkt alles offline.",
+    "ready_to_chat": "Klaar om te chatten!",
+    "cancel_download": "Download annuleren",
+    "preparing": "Voorbereiden…"
+}

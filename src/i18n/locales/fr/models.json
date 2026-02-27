@@ -1,0 +1,32 @@
+{
+    "no_model": "Aucun modèle",
+    "no_models_hint": "Aucun modèle téléchargé. Ajoutez-en un pour commencer.",
+    "may_not_fit": "risque de ne pas tenir",
+    "add_model": "Ajouter un modèle",
+    "manage_models": "Gérer les modèles",
+
+    "pick_a_model": "Choisissez un modèle",
+    "subtitle_two_cards": "Nous avons sélectionné deux options selon votre appareil. Choisissez l'équilibre qui vous convient.",
+    "subtitle_single_card": "Selon votre appareil, nous avons choisi le meilleur modèle d'IA. Il sera téléchargé une fois et stocké localement.",
+    "faster_option": "Option plus rapide",
+    "smarter_option": "Option plus intelligente",
+    "already_downloaded": "Déjà téléchargé",
+    "initial_download_takes": "Le téléchargement initial prend {{time}}",
+    "show_details": "Afficher les détails",
+    "recommended_for_device": "Recommandé pour votre appareil",
+    "custom_hf_model": "Modèle HuggingFace personnalisé",
+    "start_chatting": "Commencer à discuter",
+    "download_and_start": "Télécharger et démarrer",
+    "choose_different_model": "Choisir un autre modèle",
+    "downloaded": "téléchargé",
+    "uncensored": "non censuré",
+    "invalid_hf_url": "URL non valide. Utilisez un lien HuggingFace comme hf.co/org/repo:Q4_K_M",
+    "may_be_too_large_browser": "Risque d'être trop volumineux pour ce navigateur",
+    "large_model_warning": "Les modèles volumineux peuvent échouer au chargement dans le navigateur. Envisagez une quantification plus petite ou l'application de bureau.",
+
+    "downloading_your_model": "Téléchargement de votre modèle",
+    "one_time_download": "{{name}} — c'est un téléchargement unique. Ensuite, tout fonctionne hors ligne.",
+    "ready_to_chat": "Prêt à discuter !",
+    "cancel_download": "Annuler le téléchargement",
+    "preparing": "Préparation..."
+}

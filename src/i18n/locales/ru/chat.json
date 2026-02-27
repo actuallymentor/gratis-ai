@@ -1,0 +1,21 @@
+{
+    "placeholder": "Введите сообщение...",
+    "placeholder_ask": "Спросите что угодно...",
+
+    "thinking": "Думаю...",
+    "show_thinking": "Показать ход мысли",
+    "hide_thinking": "Скрыть ход мысли",
+    "show_all_thinking": "Показать весь ход мысли",
+    "collapse": "Свернуть",
+
+    "what_can_i_help_with": "Чем могу помочь?",
+    "loading_your_model": "Загрузка модели...",
+
+    "lets_get_you_set_up": "Давайте всё настроим",
+    "no_model_description": "Для начала нужно скачать модель ИИ. Это займёт всего минуту.",
+    "set_up_a_model": "Настроить модель",
+
+    "recording": "Запись",
+    "transcribing": "Транскрибирование",
+    "loading_voice_model": "Загрузка голосовой модели"
+}

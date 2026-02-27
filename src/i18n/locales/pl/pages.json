@@ -1,0 +1,71 @@
+{
+    "tagline": "Twój własny asystent AI, który działa całkowicie na tym urządzeniu. Prywatny, szybki i działa offline.",
+    "value_prop_privacy": "Twoje rozmowy pozostają na Twoim urządzeniu — nic nie jest wysyłane do chmury",
+    "value_prop_offline": "Działa bez internetu po początkowej konfiguracji",
+    "get_started": "Rozpocznij",
+    "checking_device": "Sprawdzanie urządzenia…",
+    "show_device_details": "Pokaż szczegóły urządzenia",
+    "hide_device_details": "Ukryj szczegóły urządzenia",
+
+    "model_ready": "{{name}} — Gotowy",
+    "loading_model": "Ładowanie {{name}}…",
+    "switch_model": "Zmień model",
+    "failed_to_load": "Nie udało się załadować modelu",
+    "choose_another": "Wybierz inny",
+
+    "new_chat": "Nowa rozmowa",
+    "empty_conversations": "Tutaj pojawią się Twoje rozmowy. Rozpocznij nową rozmowę, aby zacząć!",
+    "wipe_history": "Wyczyść historię",
+    "click_to_confirm": "Kliknij, aby potwierdzić",
+    "delete_question": "Usunąć?",
+
+    "download_app": "Pobierz aplikację",
+    "download_app_subtext": "wydajniejsza",
+    "checking_updates": "Sprawdzanie…",
+    "up_to_date": "Aktualna wersja",
+    "check_failed": "Sprawdzenie nie powiodło się",
+    "check_for_updates": "Sprawdź aktualizacje",
+
+    "change_model": "Zmień model",
+    "theme_label": "Motyw: {{theme}}",
+
+    "desktop_banner_text": "Więcej mocy z tą samą prywatnością — wypróbuj aplikację desktopową",
+    "get_the_app": "Pobierz aplikację",
+
+    "update_version_available": "Dostępna jest wersja {{version}}",
+    "update_version_ready": "Wersja {{version}} jest gotowa do instalacji",
+    "update_downloading": "Pobieranie v{{version}}… {{progress}}%",
+    "restart_now": "Uruchom ponownie",
+
+    "get_app_tagline": "Pobierz aplikację desktopową — szybsze, w pełni offline AI zasilane Twoim sprzętem.",
+    "download_for": "Pobierz dla {{platform}}",
+    "not_configured": "Nie skonfigurowano",
+    "intel_mac_prompt": "Masz Maca z procesorem Intel?",
+    "download_intel_build": "Pobierz wersję Intel",
+    "not_configured_notice": "Pliki do pobrania nie są skonfigurowane dla tego wdrożenia. Zbuduj aplikację desktopową ze źródeł lub sprawdź repozytorium projektu.",
+    "or_continue_browser": "Lub kontynuuj w przeglądarce",
+    "download_started": "Pobieranie rozpoczęte",
+    "download_started_description": "Plik jest pobierany do folderu Pobrane. Otwórz go po zakończeniu, aby zainstalować {{name}}.",
+    "got_it": "Rozumiem",
+
+    "not_found_title": "Nie znaleziono strony",
+    "not_found_description": "Strona, której szukasz, nie istnieje lub została przeniesiona.",
+    "back_to_chat": "Wróć do czatu",
+
+    "error_title": "Coś poszło nie tak",
+    "error_description": "Aplikacja napotkała nieoczekiwany błąd. Przeładowanie zazwyczaj to naprawia.",
+    "error_details": "Szczegóły błędu",
+    "reload_the_app": "Przeładuj aplikację",
+
+    "voice_input": "Wprowadzanie głosowe",
+    "downloading_model": "Pobieranie modelu",
+    "voice_description": "Wprowadzanie głosowe wymaga pobrania modelu rozpoznawania mowy (~640 MB). Model działa całkowicie w przeglądarce, zapewniając pełną prywatność.",
+    "voice_size_badge": "~640 MB do pobrania",
+    "voice_download_failed": "Pobieranie nie powiodło się. Sprawdź połączenie i spróbuj ponownie.",
+    "voice_downloading": "Pobieranie…",
+
+    "device_gpu": "GPU",
+    "device_vram": "VRAM",
+    "device_ram": "RAM",
+    "device_cores": "Rdzenie"
+}

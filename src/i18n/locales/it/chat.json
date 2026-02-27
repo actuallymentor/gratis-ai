@@ -1,0 +1,21 @@
+{
+    "placeholder": "Scrivi un messaggio…",
+    "placeholder_ask": "Chiedi qualsiasi cosa…",
+
+    "thinking": "Sto pensando…",
+    "show_thinking": "Mostra ragionamento",
+    "hide_thinking": "Nascondi ragionamento",
+    "show_all_thinking": "Mostra tutto il ragionamento",
+    "collapse": "Comprimi",
+
+    "what_can_i_help_with": "Come posso aiutarti?",
+    "loading_your_model": "Caricamento del modello…",
+
+    "lets_get_you_set_up": "Configuriamo tutto",
+    "no_model_description": "Devi scaricare un modello IA prima di poter iniziare a chattare. Ci vuole solo un minuto.",
+    "set_up_a_model": "Configura un modello",
+
+    "recording": "Registrazione",
+    "transcribing": "Trascrizione in corso",
+    "loading_voice_model": "Caricamento modello vocale"
+}

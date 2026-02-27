@@ -1,0 +1,71 @@
+{
+    "tagline": "Je eigen AI-assistent die volledig op dit apparaat draait. Privé, snel en werkt offline.",
+    "value_prop_privacy": "Je gesprekken blijven op je apparaat — er wordt niets naar de cloud gestuurd",
+    "value_prop_offline": "Werkt zonder internet na de eerste installatie",
+    "get_started": "Aan de slag",
+    "checking_device": "Je apparaat wordt gecontroleerd…",
+    "show_device_details": "Apparaatdetails tonen",
+    "hide_device_details": "Apparaatdetails verbergen",
+
+    "model_ready": "{{name}} — Gereed",
+    "loading_model": "{{name}} laden…",
+    "switch_model": "Model wisselen",
+    "failed_to_load": "Model laden mislukt",
+    "choose_another": "Kies een ander",
+
+    "new_chat": "Nieuw gesprek",
+    "empty_conversations": "Je gesprekken verschijnen hier. Begin een nieuw gesprek!",
+    "wipe_history": "Geschiedenis wissen",
+    "click_to_confirm": "Klik om te bevestigen",
+    "delete_question": "Verwijderen?",
+
+    "download_app": "App downloaden",
+    "download_app_subtext": "krachtiger",
+    "checking_updates": "Controleren…",
+    "up_to_date": "Up-to-date",
+    "check_failed": "Controle mislukt",
+    "check_for_updates": "Controleren op updates",
+
+    "change_model": "Model wijzigen",
+    "theme_label": "Thema: {{theme}}",
+
+    "desktop_banner_text": "Meer kracht met dezelfde privacy — probeer de desktop-app",
+    "get_the_app": "Download de app",
+
+    "update_version_available": "Versie {{version}} is beschikbaar",
+    "update_version_ready": "Versie {{version}} staat klaar om te installeren",
+    "update_downloading": "v{{version}} downloaden… {{progress}}%",
+    "restart_now": "Nu herstarten",
+
+    "get_app_tagline": "Download de desktop-app voor snellere, volledig offline AI op je eigen hardware.",
+    "download_for": "Downloaden voor {{platform}}",
+    "not_configured": "Niet geconfigureerd",
+    "intel_mac_prompt": "Heb je een Intel Mac?",
+    "download_intel_build": "Download de Intel-versie",
+    "not_configured_notice": "Downloads zijn niet geconfigureerd voor deze omgeving. Bouw de desktop-app vanuit de broncode of bekijk de projectrepository.",
+    "or_continue_browser": "Of ga verder in je browser",
+    "download_started": "Download gestart",
+    "download_started_description": "Je bestand wordt gedownload naar je map Downloads. Open het wanneer het klaar is om {{name}} te installeren.",
+    "got_it": "Begrepen",
+
+    "not_found_title": "Pagina niet gevonden",
+    "not_found_description": "De pagina die je zoekt bestaat niet of is verplaatst.",
+    "back_to_chat": "Terug naar chat",
+
+    "error_title": "Er ging iets mis",
+    "error_description": "De app heeft een onverwachte fout gevonden. Herladen lost het meestal op.",
+    "error_details": "Foutdetails",
+    "reload_the_app": "App herladen",
+
+    "voice_input": "Spraakinvoer",
+    "downloading_model": "Model downloaden",
+    "voice_description": "Spraakinvoer vereist het downloaden van een spraakherkenningsmodel (~640 MB). Het model draait volledig in je browser voor volledige privacy.",
+    "voice_size_badge": "~640 MB download",
+    "voice_download_failed": "Download mislukt. Controleer je verbinding en probeer het opnieuw.",
+    "voice_downloading": "Downloaden…",
+
+    "device_gpu": "GPU",
+    "device_vram": "VRAM",
+    "device_ram": "RAM",
+    "device_cores": "Kernen"
+}

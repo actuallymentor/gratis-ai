@@ -1,0 +1,71 @@
+{
+    "tagline": "完全在你的设备上运行的 AI 助手。私密、快速，支持离线使用。",
+    "value_prop_privacy": "对话保存在你的设备上 — 不会发送到云端",
+    "value_prop_offline": "初次设置后无需联网即可使用",
+    "get_started": "开始使用",
+    "checking_device": "正在检测设备...",
+    "show_device_details": "显示设备详情",
+    "hide_device_details": "隐藏设备详情",
+
+    "model_ready": "{{name}} — 就绪",
+    "loading_model": "正在加载 {{name}}...",
+    "switch_model": "切换模型",
+    "failed_to_load": "模型加载失败",
+    "choose_another": "选择其他",
+
+    "new_chat": "新对话",
+    "empty_conversations": "你的对话将显示在这里。开始一个新对话吧！",
+    "wipe_history": "清除历史",
+    "click_to_confirm": "点击确认",
+    "delete_question": "删除？",
+
+    "download_app": "下载应用",
+    "download_app_subtext": "更强大",
+    "checking_updates": "检查中...",
+    "up_to_date": "已是最新",
+    "check_failed": "检查失败",
+    "check_for_updates": "检查更新",
+
+    "change_model": "更换模型",
+    "theme_label": "主题: {{theme}}",
+
+    "desktop_banner_text": "同样的隐私保护，更强大的性能 — 试试桌面应用",
+    "get_the_app": "获取应用",
+
+    "update_version_available": "版本 {{version}} 可供更新",
+    "update_version_ready": "版本 {{version}} 已准备好安装",
+    "update_downloading": "正在下载 v{{version}}… {{progress}}%",
+    "restart_now": "立即重启",
+
+    "get_app_tagline": "下载桌面应用，体验由你自己的硬件驱动的更快、完全离线的 AI。",
+    "download_for": "下载 {{platform}} 版",
+    "not_configured": "未配置",
+    "intel_mac_prompt": "使用的是 Intel Mac？",
+    "download_intel_build": "下载 Intel 版本",
+    "not_configured_notice": "此部署未配置发布下载。请从源码构建桌面应用或查看项目仓库。",
+    "or_continue_browser": "或继续使用浏览器",
+    "download_started": "下载已开始",
+    "download_started_description": "文件正在下载到你的下载文件夹。下载完成后打开即可安装 {{name}}。",
+    "got_it": "知道了",
+
+    "not_found_title": "页面未找到",
+    "not_found_description": "你要查找的页面不存在或已被移动。",
+    "back_to_chat": "返回聊天",
+
+    "error_title": "出了点问题",
+    "error_description": "应用遇到了意外错误。重新加载通常可以解决。",
+    "error_details": "错误详情",
+    "reload_the_app": "重新加载应用",
+
+    "voice_input": "语音输入",
+    "downloading_model": "正在下载模型",
+    "voice_description": "语音输入需要下载一个语音识别模型（约 640 MB）。该模型完全在浏览器中运行，确保你的隐私。",
+    "voice_size_badge": "约 640 MB 下载",
+    "voice_download_failed": "下载失败。请检查网络连接后重试。",
+    "voice_downloading": "下载中...",
+
+    "device_gpu": "GPU",
+    "device_vram": "VRAM",
+    "device_ram": "RAM",
+    "device_cores": "核心数"
+}

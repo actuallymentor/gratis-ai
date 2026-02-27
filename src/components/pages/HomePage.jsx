@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeftRight, AlertCircle, RotateCcw, PanelLeft } from 'lucide-react'
 import ChatInput from '../molecules/ChatInput'
 import VoiceModelDialog from '../molecules/VoiceModelDialog'
+import LanguageSelector from '../molecules/LanguageSelector'
 import Sidebar from '../molecules/Sidebar'
 import use_llm from '../../hooks/use_llm'
 import use_model_manager from '../../hooks/use_model_manager'
@@ -49,6 +50,13 @@ const SidebarToggle = styled.button`
     &:hover {
         color: ${ ( { theme } ) => theme.colors.text };
     }
+`
+
+const TopRight = styled.div`
+    position: absolute;
+    top: ${ ( { theme } ) => theme.spacing.md };
+    right: ${ ( { theme } ) => theme.spacing.md };
+    z-index: 10;
 `
 
 const Title = styled.h1`
@@ -313,6 +321,11 @@ export default function HomePage() {
             on_delete={ handle_delete }
             on_delete_all={ handle_delete_all }
         />
+
+        { /* Language selector — top right corner */ }
+        <TopRight>
+            <LanguageSelector />
+        </TopRight>
 
         { /* Toggle button — only visible when sidebar is closed */ }
         { sidebar_collapsed && <SidebarToggle

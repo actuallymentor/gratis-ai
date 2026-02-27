@@ -1,0 +1,71 @@
+{
+    "tagline": "Votre propre assistant IA qui fonctionne entièrement sur cet appareil. Privé, rapide et hors ligne.",
+    "value_prop_privacy": "Vos conversations restent sur votre appareil — rien n'est envoyé dans le cloud",
+    "value_prop_offline": "Fonctionne sans internet après la configuration initiale",
+    "get_started": "Commencer",
+    "checking_device": "Analyse de votre appareil...",
+    "show_device_details": "Afficher les détails de l'appareil",
+    "hide_device_details": "Masquer les détails de l'appareil",
+
+    "model_ready": "{{name}} — Prêt",
+    "loading_model": "Chargement de {{name}}...",
+    "switch_model": "Changer de modèle",
+    "failed_to_load": "Échec du chargement du modèle",
+    "choose_another": "En choisir un autre",
+
+    "new_chat": "Nouvelle discussion",
+    "empty_conversations": "Vos conversations apparaîtront ici. Lancez une nouvelle discussion pour commencer !",
+    "wipe_history": "Effacer l'historique",
+    "click_to_confirm": "Cliquez pour confirmer",
+    "delete_question": "Supprimer ?",
+
+    "download_app": "Télécharger l'app",
+    "download_app_subtext": "plus puissante",
+    "checking_updates": "Vérification...",
+    "up_to_date": "À jour",
+    "check_failed": "Échec de la vérification",
+    "check_for_updates": "Vérifier les mises à jour",
+
+    "change_model": "Changer de modèle",
+    "theme_label": "Thème : {{theme}}",
+
+    "desktop_banner_text": "Plus de puissance avec la même confidentialité — essayez l'application de bureau",
+    "get_the_app": "Obtenir l'app",
+
+    "update_version_available": "La version {{version}} est disponible",
+    "update_version_ready": "La version {{version}} est prête à installer",
+    "update_downloading": "Téléchargement de la v{{version}}… {{progress}} %",
+    "restart_now": "Redémarrer maintenant",
+
+    "get_app_tagline": "Téléchargez l'application de bureau pour une IA plus rapide, entièrement hors ligne, alimentée par votre propre matériel.",
+    "download_for": "Télécharger pour {{platform}}",
+    "not_configured": "Non configuré",
+    "intel_mac_prompt": "Vous avez un Mac Intel ?",
+    "download_intel_build": "Télécharger la version Intel",
+    "not_configured_notice": "Les téléchargements ne sont pas configurés pour ce déploiement. Compilez l'application de bureau depuis les sources ou consultez le dépôt du projet.",
+    "or_continue_browser": "Ou continuer dans votre navigateur",
+    "download_started": "Téléchargement lancé",
+    "download_started_description": "Votre fichier est en cours de téléchargement dans votre dossier Téléchargements. Ouvrez-le une fois terminé pour installer {{name}}.",
+    "got_it": "Compris",
+
+    "not_found_title": "Page introuvable",
+    "not_found_description": "La page que vous cherchez n'existe pas ou a été déplacée.",
+    "back_to_chat": "Retour au chat",
+
+    "error_title": "Un problème est survenu",
+    "error_description": "L'application a rencontré une erreur inattendue. Un rechargement résout généralement le problème.",
+    "error_details": "Détails de l'erreur",
+    "reload_the_app": "Recharger l'application",
+
+    "voice_input": "Saisie vocale",
+    "downloading_model": "Téléchargement du modèle",
+    "voice_description": "La saisie vocale nécessite le téléchargement d'un modèle de reconnaissance vocale (~640 Mo). Le modèle s'exécute entièrement dans votre navigateur pour une confidentialité totale.",
+    "voice_size_badge": "~640 Mo à télécharger",
+    "voice_download_failed": "Échec du téléchargement. Vérifiez votre connexion et réessayez.",
+    "voice_downloading": "Téléchargement...",
+
+    "device_gpu": "GPU",
+    "device_vram": "VRAM",
+    "device_ram": "RAM",
+    "device_cores": "Cœurs"
+}

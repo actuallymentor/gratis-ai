@@ -1,0 +1,21 @@
+{
+    "placeholder": "Napisz wiadomość…",
+    "placeholder_ask": "Zapytaj o cokolwiek…",
+
+    "thinking": "Myślę…",
+    "show_thinking": "Pokaż tok myślenia",
+    "hide_thinking": "Ukryj tok myślenia",
+    "show_all_thinking": "Pokaż cały tok myślenia",
+    "collapse": "Zwiń",
+
+    "what_can_i_help_with": "W czym mogę pomóc?",
+    "loading_your_model": "Ładowanie modelu…",
+
+    "lets_get_you_set_up": "Przygotujmy wszystko",
+    "no_model_description": "Zanim zaczniesz rozmawiać, musisz pobrać model AI. To zajmie tylko chwilę.",
+    "set_up_a_model": "Skonfiguruj model",
+
+    "recording": "Nagrywanie",
+    "transcribing": "Transkrybowanie",
+    "loading_voice_model": "Ładowanie modelu głosowego"
+}

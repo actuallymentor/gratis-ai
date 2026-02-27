@@ -1,0 +1,32 @@
+{
+    "no_model": "モデルなし",
+    "no_models_hint": "モデルがまだダウンロードされていません。追加して始めましょう。",
+    "may_not_fit": "容量不足の可能性",
+    "add_model": "モデルを追加",
+    "manage_models": "モデルを管理",
+
+    "pick_a_model": "モデルを選ぶ",
+    "subtitle_two_cards": "お使いのデバイスに合わせて2つの選択肢を用意しました。バランスの良い方をお選びください。",
+    "subtitle_single_card": "お使いのデバイスに最適なAIモデルを選びました。一度ダウンロードすればローカルに保存されます。",
+    "faster_option": "高速オプション",
+    "smarter_option": "高性能オプション",
+    "already_downloaded": "ダウンロード済み",
+    "initial_download_takes": "初回ダウンロードに{{time}}かかります",
+    "show_details": "詳細を表示",
+    "recommended_for_device": "お使いのデバイスにおすすめ",
+    "custom_hf_model": "カスタムHuggingFaceモデル",
+    "start_chatting": "チャットを開始",
+    "download_and_start": "ダウンロードして開始",
+    "choose_different_model": "別のモデルを選ぶ",
+    "downloaded": "ダウンロード済み",
+    "uncensored": "無検閲",
+    "invalid_hf_url": "無効なURLです。hf.co/org/repo:Q4_K_M のようなHuggingFaceリンクを使用してください",
+    "may_be_too_large_browser": "このブラウザには大きすぎる可能性があります",
+    "large_model_warning": "大きなモデルはブラウザで読み込めない場合があります。より小さい量子化かデスクトップアプリをご検討ください。",
+
+    "downloading_your_model": "モデルをダウンロード中",
+    "one_time_download": "{{name}} — 初回のみのダウンロードです。以降はすべてオフラインで動作します。",
+    "ready_to_chat": "チャットの準備ができました！",
+    "cancel_download": "ダウンロードをキャンセル",
+    "preparing": "準備中..."
+}

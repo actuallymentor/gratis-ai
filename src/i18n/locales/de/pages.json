@@ -1,0 +1,71 @@
+{
+    "tagline": "Dein eigener KI-Assistent, der komplett auf diesem Gerät läuft. Privat, schnell und offline nutzbar.",
+    "value_prop_privacy": "Deine Unterhaltungen bleiben auf deinem Gerät — nichts wird in die Cloud gesendet",
+    "value_prop_offline": "Funktioniert nach der Ersteinrichtung ohne Internet",
+    "get_started": "Loslegen",
+    "checking_device": "Gerät wird überprüft…",
+    "show_device_details": "Gerätedetails anzeigen",
+    "hide_device_details": "Gerätedetails ausblenden",
+
+    "model_ready": "{{name}} — Bereit",
+    "loading_model": "{{name}} wird geladen…",
+    "switch_model": "Modell wechseln",
+    "failed_to_load": "Modell konnte nicht geladen werden",
+    "choose_another": "Anderes wählen",
+
+    "new_chat": "Neuer Chat",
+    "empty_conversations": "Deine Unterhaltungen erscheinen hier. Starte einen neuen Chat, um loszulegen!",
+    "wipe_history": "Verlauf löschen",
+    "click_to_confirm": "Zum Bestätigen klicken",
+    "delete_question": "Löschen?",
+
+    "download_app": "App herunterladen",
+    "download_app_subtext": "leistungsstärker",
+    "checking_updates": "Prüfe…",
+    "up_to_date": "Aktuell",
+    "check_failed": "Prüfung fehlgeschlagen",
+    "check_for_updates": "Nach Updates suchen",
+
+    "change_model": "Modell wechseln",
+    "theme_label": "Design: {{theme}}",
+
+    "desktop_banner_text": "Mehr Leistung bei gleicher Privatsphäre — probiere die Desktop-App",
+    "get_the_app": "App holen",
+
+    "update_version_available": "Version {{version}} ist verfügbar",
+    "update_version_ready": "Version {{version}} ist zur Installation bereit",
+    "update_downloading": "v{{version}} wird heruntergeladen… {{progress}}%",
+    "restart_now": "Jetzt neu starten",
+
+    "get_app_tagline": "Lade die Desktop-App herunter für schnellere, vollständig offline nutzbare KI — betrieben von deiner eigenen Hardware.",
+    "download_for": "Für {{platform}} herunterladen",
+    "not_configured": "Nicht konfiguriert",
+    "intel_mac_prompt": "Hast du einen Intel-Mac?",
+    "download_intel_build": "Intel-Build herunterladen",
+    "not_configured_notice": "Release-Downloads sind für diese Bereitstellung nicht konfiguriert. Erstelle die Desktop-App aus dem Quellcode oder schau im Projekt-Repository nach.",
+    "or_continue_browser": "Oder im Browser fortfahren",
+    "download_started": "Download gestartet",
+    "download_started_description": "Deine Datei wird in den Download-Ordner heruntergeladen. Öffne sie nach Abschluss, um {{name}} zu installieren.",
+    "got_it": "Verstanden",
+
+    "not_found_title": "Seite nicht gefunden",
+    "not_found_description": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
+    "back_to_chat": "Zurück zum Chat",
+
+    "error_title": "Etwas ist schiefgelaufen",
+    "error_description": "Die App ist auf einen unerwarteten Fehler gestoßen. Ein Neuladen behebt das Problem normalerweise.",
+    "error_details": "Fehlerdetails",
+    "reload_the_app": "App neu laden",
+
+    "voice_input": "Spracheingabe",
+    "downloading_model": "Modell wird heruntergeladen",
+    "voice_description": "Spracheingabe erfordert das Herunterladen eines Spracherkennungsmodells (~640 MB). Das Modell läuft vollständig in deinem Browser für maximale Privatsphäre.",
+    "voice_size_badge": "~640 MB Download",
+    "voice_download_failed": "Download fehlgeschlagen. Bitte prüfe deine Verbindung und versuche es erneut.",
+    "voice_downloading": "Wird heruntergeladen…",
+
+    "device_gpu": "GPU",
+    "device_vram": "VRAM",
+    "device_ram": "RAM",
+    "device_cores": "Kerne"
+}

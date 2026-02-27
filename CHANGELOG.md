@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.0] - 2026-02-27
+
+### Added
+- 10 new languages: Spanish (es), French (fr), German (de), Italian (it), Portuguese (pt), Dutch (nl), Polish (pl), Russian (ru), Japanese (ja), Chinese Simplified (zh)
+- 222 translation keys per language across 5 namespaces (common, chat, settings, models, pages)
+- Browser language auto-detection for all supported languages
+- Language selector now lists all 11 languages
+
 ## [0.11.0] - 2026-02-27
 
 ### Added

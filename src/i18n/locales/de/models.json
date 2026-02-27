@@ -1,0 +1,32 @@
+{
+    "no_model": "Kein Modell",
+    "no_models_hint": "Noch keine Modelle heruntergeladen. Füge eines hinzu, um loszulegen.",
+    "may_not_fit": "passt evtl. nicht",
+    "add_model": "Modell hinzufügen",
+    "manage_models": "Modelle verwalten",
+
+    "pick_a_model": "Wähle ein Modell",
+    "subtitle_two_cards": "Wir haben zwei Optionen basierend auf deinem Gerät ausgewählt. Wähle die Balance, die für dich passt.",
+    "subtitle_single_card": "Basierend auf deinem Gerät haben wir das beste KI-Modell ausgewählt. Es wird einmalig heruntergeladen und lokal gespeichert.",
+    "faster_option": "Schnellere Option",
+    "smarter_option": "Klügere Option",
+    "already_downloaded": "Bereits heruntergeladen",
+    "initial_download_takes": "Erstmaliger Download dauert {{time}}",
+    "show_details": "Details anzeigen",
+    "recommended_for_device": "Empfohlen für dein Gerät",
+    "custom_hf_model": "Eigenes HuggingFace-Modell",
+    "start_chatting": "Chat starten",
+    "download_and_start": "Herunterladen & starten",
+    "choose_different_model": "Anderes Modell wählen",
+    "downloaded": "heruntergeladen",
+    "uncensored": "unzensiert",
+    "invalid_hf_url": "Ungültige URL. Verwende einen HuggingFace-Link wie hf.co/org/repo:Q4_K_M",
+    "may_be_too_large_browser": "Möglicherweise zu groß für diesen Browser",
+    "large_model_warning": "Große Modelle können im Browser möglicherweise nicht geladen werden. Erwäge eine kleinere Quantisierung oder die Desktop-App.",
+
+    "downloading_your_model": "Dein Modell wird heruntergeladen",
+    "one_time_download": "{{name}} — dies ist ein einmaliger Download. Danach funktioniert alles offline.",
+    "ready_to_chat": "Bereit zum Chatten!",
+    "cancel_download": "Download abbrechen",
+    "preparing": "Wird vorbereitet…"
+}

@@ -1,0 +1,32 @@
+{
+    "no_model": "无模型",
+    "no_models_hint": "还没有下载任何模型。添加一个来开始使用。",
+    "may_not_fit": "可能无法装入",
+    "add_model": "添加模型",
+    "manage_models": "管理模型",
+
+    "pick_a_model": "选择模型",
+    "subtitle_two_cards": "我们根据你的设备选出了两个方案，请选择适合你的平衡点。",
+    "subtitle_single_card": "根据你的设备，我们选出了最佳 AI 模型。下载一次后即可存储在本地。",
+    "faster_option": "更快的选择",
+    "smarter_option": "更强的选择",
+    "already_downloaded": "已下载",
+    "initial_download_takes": "首次下载需要 {{time}}",
+    "show_details": "显示详情",
+    "recommended_for_device": "推荐给你的设备",
+    "custom_hf_model": "自定义 HuggingFace 模型",
+    "start_chatting": "开始聊天",
+    "download_and_start": "下载并开始",
+    "choose_different_model": "选择其他模型",
+    "downloaded": "已下载",
+    "uncensored": "无审查",
+    "invalid_hf_url": "无效的 URL。请使用 HuggingFace 链接，如 hf.co/org/repo:Q4_K_M",
+    "may_be_too_large_browser": "对此浏览器来说可能太大",
+    "large_model_warning": "大型模型可能无法在浏览器中加载。请考虑使用更小的量化版本或桌面应用。",
+
+    "downloading_your_model": "正在下载模型",
+    "one_time_download": "{{name}} — 仅需下载一次。之后所有功能都可离线使用。",
+    "ready_to_chat": "准备就绪！",
+    "cancel_download": "取消下载",
+    "preparing": "准备中..."
+}

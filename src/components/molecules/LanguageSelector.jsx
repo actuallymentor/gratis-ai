@@ -60,9 +60,19 @@ const CheckSpace = styled.div`
     flex-shrink: 0;
 `
 
-// Extensible — add more languages here when translations are ready
+// Supported languages — add more here when translations are ready
 const LANGUAGES = [
     { code: `en`, label: `English` },
+    { code: `es`, label: `Español` },
+    { code: `fr`, label: `Français` },
+    { code: `de`, label: `Deutsch` },
+    { code: `it`, label: `Italiano` },
+    { code: `pt`, label: `Português` },
+    { code: `nl`, label: `Nederlands` },
+    { code: `pl`, label: `Polski` },
+    { code: `ru`, label: `Русский` },
+    { code: `ja`, label: `日本語` },
+    { code: `zh`, label: `中文` },
 ]
 
 /**

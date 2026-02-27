@@ -1,0 +1,21 @@
+{
+    "placeholder": "Nachricht eingeben…",
+    "placeholder_ask": "Frag einfach drauflos…",
+
+    "thinking": "Denkt nach…",
+    "show_thinking": "Denkprozess anzeigen",
+    "hide_thinking": "Denkprozess ausblenden",
+    "show_all_thinking": "Gesamten Denkprozess anzeigen",
+    "collapse": "Einklappen",
+
+    "what_can_i_help_with": "Wie kann ich helfen?",
+    "loading_your_model": "Dein Modell wird geladen…",
+
+    "lets_get_you_set_up": "Lass uns loslegen",
+    "no_model_description": "Du musst zuerst ein KI-Modell herunterladen, bevor du chatten kannst. Das dauert nur eine Minute.",
+    "set_up_a_model": "Modell einrichten",
+
+    "recording": "Aufnahme",
+    "transcribing": "Wird transkribiert",
+    "loading_voice_model": "Sprachmodell wird geladen"
+}
