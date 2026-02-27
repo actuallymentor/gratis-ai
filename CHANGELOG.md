@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.3] - 2026-02-27
+
+### Fixed
+- Two-pass model loading — reload model for clean VRAM when context halving fails
+- Cap initial context request to 2048 to avoid cascading createContext failures
+- Propagate non-VRAM errors immediately instead of retrying
+
 ## [0.13.2] - 2026-02-27
 
 ### Fixed

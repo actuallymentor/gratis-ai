@@ -424,7 +424,11 @@ const register_ipc_handlers = () => {
         const model_path = path.join( MODELS_DIR, model.file_name )
         if( !fs.existsSync( model_path ) ) throw new Error( `Model file missing: ${ model.file_name }` )
 
-        const requested_ctx = model.context_length || 2048
+        // Start conservative — the worker halves on VRAM failures, so a lower
+        // starting point means fewer failed createContext() calls and faster
+        // load on constrained hardware.  The model's context_length is its
+        // theoretical max, not what we should actually request.
+        const requested_ctx = Math.min( model.context_length || 2048, 2048 )
 
         const result = await worker_request( `load`, {
             model_path,

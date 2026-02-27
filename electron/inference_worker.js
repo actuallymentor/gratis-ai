@@ -56,7 +56,10 @@ class NativeInference {
      * Load a GGUF model from disk.
      *
      * If the requested context size exceeds available VRAM, we retry with
-     * progressively halved context sizes until it fits (floor: 2048).
+     * progressively halved context sizes (floor: 512). Failed createContext()
+     * calls can fragment VRAM, so if all sizes fail we dispose the model
+     * entirely and reload once — a fresh start often succeeds where in-place
+     * halving doesn't.
      *
      * @param {string} model_path - Absolute path to the GGUF file
      * @param {Object} [opts] - Loading options
@@ -70,40 +73,64 @@ class NativeInference {
         const { getLlama, LlamaChatSession } = await import( `node-llama-cpp` )
         this._llama = await getLlama()
 
-        this._model = await this._llama.loadModel( { modelPath: model_path } )
-
-        // Try the requested context size, halving on VRAM failures.
-        // Floor is 512 — tight but functional for short conversations.
         const MIN_CTX = 512
-        let ctx_size = opts.n_ctx || 2048
+        const requested_ctx = opts.n_ctx || 2048
 
-        while( ctx_size >= MIN_CTX ) {
+        // Outer loop: first pass tries halving in-place; second pass
+        // reloads the model for clean VRAM and retries at MIN_CTX.
+        for( let attempt = 0; attempt < 2; attempt++ ) {
 
-            try {
+            this._model = await this._llama.loadModel( { modelPath: model_path } )
 
-                this._context = await this._model.createContext( { contextSize: ctx_size } )
-                this._session = new LlamaChatSession( { contextSequence: this._context.getSequence() } )
-                this._model_path = model_path
-                this._context_size = ctx_size
-                return
+            let ctx_size = attempt === 0 ? requested_ctx : MIN_CTX
 
-            } catch ( err ) {
+            while( ctx_size >= MIN_CTX ) {
 
-                const is_vram_error = /vram|memory|too large/i.test( err.message )
+                try {
 
-                if( !is_vram_error || ctx_size <= MIN_CTX ) {
-                    // Not a VRAM issue, or we've already hit the floor — give up
-                    await this._model.dispose()
-                    this._model = null
-                    throw err
+                    this._context = await this._model.createContext( { contextSize: ctx_size } )
+                    this._session = new LlamaChatSession( { contextSequence: this._context.getSequence() } )
+                    this._model_path = model_path
+                    this._context_size = ctx_size
+
+                    if( ctx_size < requested_ctx ) {
+                        console.warn( `[inference] Context reduced: ${ requested_ctx } → ${ ctx_size } (memory limited)` )
+                    }
+
+                    return
+
+                } catch ( err ) {
+
+                    const is_vram_error = /vram|memory|too large|alloc/i.test( err.message )
+
+                    // Non-VRAM error — propagate immediately, don't waste time reloading
+                    if( !is_vram_error ) {
+                        await this._model.dispose()
+                        this._model = null
+                        throw err
+                    }
+
+                    if( ctx_size <= MIN_CTX ) break
+
+                    const next_size = Math.max( MIN_CTX, Math.floor( ctx_size / 2 ) )
+                    console.warn( `[inference] Context ${ ctx_size } too large, trying ${ next_size }` )
+                    ctx_size = next_size
+
                 }
-
-                // Halve and retry
-                ctx_size = Math.max( MIN_CTX, Math.floor( ctx_size / 2 ) )
 
             }
 
+            // All context sizes failed — dispose for a clean slate
+            await this._model.dispose()
+            this._model = null
+
+            if( attempt === 0 ) {
+                console.warn( `[inference] All context sizes failed — reloading model for clean VRAM` )
+            }
+
         }
+
+        throw new Error( `Not enough memory to load this model (tried context sizes down to ${ MIN_CTX })` )
 
     }
 
