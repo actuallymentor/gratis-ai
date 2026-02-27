@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.13.0] - 2026-02-27
+
+### Added
+- Language selector globe on WelcomePage (b36112a)
+- Worker console forwarding and graceful shutdown (c2c8f9d)
+
+### Changed
+- DesktopAppBanner restyled with inverted theme colors and accent pill button (dbb6f03)
+
 ## [0.12.0] - 2026-02-27
 
 ### Added

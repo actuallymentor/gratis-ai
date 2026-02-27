@@ -16,8 +16,8 @@ const Banner = styled.div`
     justify-content: center;
     gap: ${ p => p.theme.spacing.sm };
     padding: ${ p => p.theme.spacing.xs } ${ p => p.theme.spacing.md };
-    background: ${ p => p.theme.colors.accent };
-    color: #fff;
+    background: ${ p => p.theme.colors.text };
+    color: ${ p => p.theme.colors.background };
     font-size: 0.8125rem;
     line-height: 1.4;
     min-height: 2rem;
@@ -38,9 +38,9 @@ const AppLink = styled( Link )`
     align-items: center;
     gap: ${ p => p.theme.spacing.xs };
     padding: 0.15rem ${ p => p.theme.spacing.sm };
-    background: ${ p => p.theme.mode === `dark` ? `#fff` : `#1a1a1a` };
-    color: ${ p => p.theme.mode === `dark` ? `#1a1a1a` : `#fff` };
-    border-radius: ${ p => p.theme.border_radius.sm };
+    background: ${ p => p.theme.colors.accent };
+    color: #fff;
+    border-radius: ${ p => p.theme.border_radius.full };
     font-size: 0.8125rem;
     font-weight: 600;
     text-decoration: none;
@@ -56,12 +56,12 @@ const DismissButton = styled.button`
     align-items: center;
     padding: 0.15rem;
     background: none;
-    color: rgba( 255, 255, 255, 0.5 );
+    color: ${ p => p.theme.colors.background }80;
     border: none;
     cursor: pointer;
     border-radius: ${ p => p.theme.border_radius.sm };
 
-    &:hover { color: #fff; }
+    &:hover { color: ${ p => p.theme.colors.background }; }
 `
 
 /**
