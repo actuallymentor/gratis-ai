@@ -672,22 +672,46 @@ export const get_fitting_models = ( available_bytes ) =>
         .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )
 
 
-// ─── Pair selection ──────────────────────────────────────────────────────────────
+// ─── Uncensored selection ────────────────────────────────────────────────────────
 
 /**
- * Select a smarter/faster model pair for the two-card recommendation UI.
+ * Select the best uncensored model that fits in available memory.
+ *
+ * Filters for `uncensored === true`, sorts by quality score then bpw.
+ * Returns `null` if no uncensored model fits — the UI simply hides the card.
+ *
+ * @param {number} available_bytes - Memory budget from estimate_max_model_bytes()
+ * @returns {ModelDefinition | null}
+ */
+export const select_best_uncensored = ( available_bytes ) => {
+
+    const fitting = MODEL_CATALOG
+        .filter( m => m.uncensored === true )
+        .filter( m => can_fit_in_memory( m, available_bytes ) )
+        .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )
+
+    return fitting[ 0 ] ?? null
+
+}
+
+
+// ─── Option selection ────────────────────────────────────────────────────────────
+
+/**
+ * Select smarter/faster/uncensored options for the recommendation UI.
  *
  * - **smarter** = highest-quality model that fits (same as `select_best_model`)
  * - **faster**  = highest-quality model that fits AND is ≤50% the file size of smarter
+ * - **uncensored** = best uncensored model that fits, or `null`
  *
  * The 50% threshold ensures meaningful differentiation between the two cards.
  * If no meaningfully smaller model exists, `faster` is `null` → UI falls back
  * to a single recommendation card.
  *
  * @param {number} available_bytes - Memory budget from estimate_max_model_bytes()
- * @returns {{ smarter: ModelDefinition, faster: ModelDefinition | null }}
+ * @returns {{ smarter: ModelDefinition, faster: ModelDefinition | null, uncensored: ModelDefinition | null }}
  */
-export const select_model_pair = ( available_bytes ) => {
+export const select_model_options = ( available_bytes ) => {
 
     const smarter = select_best_model( available_bytes )
 
@@ -701,8 +725,9 @@ export const select_model_pair = ( available_bytes ) => {
         .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )
 
     const faster = faster_candidates[ 0 ] ?? null
+    const uncensored = select_best_uncensored( available_bytes )
 
-    return { smarter, faster }
+    return { smarter, faster, uncensored }
 
 }
 
