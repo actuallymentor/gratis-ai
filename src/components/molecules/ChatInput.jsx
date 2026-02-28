@@ -37,6 +37,12 @@ const TextArea = styled.textarea`
     resize: none;
     line-height: 1.5;
 
+    /* Override global :focus-visible — the parent InputPill
+       already shows focus via its :focus-within border color */
+    &:focus-visible {
+        outline: none;
+    }
+
     &::placeholder {
         color: ${ ( { theme } ) => theme.colors.text_muted };
     }

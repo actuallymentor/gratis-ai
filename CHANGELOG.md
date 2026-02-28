@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.1] - 2026-02-28
+
+### Fixed
+- Remove rectangular focus outline inside rounded chat input pill
+- Use fixed height instead of min-height on #root to prevent layout overflow
+
 ## [0.15.0] - 2026-02-28
 
 ### Added
