@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.0] - 2026-02-28
+
+### Added
+- Chat input auto-focus on page load, conversation switch, and generation complete
+- Type-ahead support — textarea stays enabled during generation, queuing next message
+
 ## [0.13.3] - 2026-02-27
 
 ### Fixed

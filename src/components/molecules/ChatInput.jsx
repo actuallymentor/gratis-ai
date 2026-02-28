@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useImperativeHandle } from 'react'
 import styled, { keyframes, css } from 'styled-components'
 import { SendHorizonal, Square, Mic, LoaderCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -159,6 +159,7 @@ const SpinnerIcon = styled( LoaderCircle )`
  * @returns {JSX.Element}
  */
 export default function ChatInput( {
+    ref,
     on_send,
     on_stop,
     is_generating,
@@ -182,6 +183,11 @@ export default function ChatInput( {
 
     const [ text, set_text ] = useState( `` )
     const textarea_ref = useRef( null )
+
+    // Expose focus() to parent via ref
+    useImperativeHandle( ref, () => ( {
+        focus: () => textarea_ref.current?.focus(),
+    } ), [] )
 
     // Whether any voice state is active (recording, transcribing, or loading model)
     const voice_active = is_recording || is_transcribing || is_loading_model
@@ -213,7 +219,7 @@ export default function ChatInput( {
     }, [] )
 
     const handle_send = () => {
-        if( text.trim() && !disabled ) {
+        if( text.trim() && !disabled && !is_generating ) {
             on_send( text.trim() )
             set_text( `` )
             textarea_ref.current?.focus()
@@ -223,7 +229,7 @@ export default function ChatInput( {
     const handle_keydown = ( e ) => {
         if( e.key === `Enter` && !e.shiftKey ) {
             e.preventDefault()
-            handle_send()
+            if( !is_generating ) handle_send()
         }
     }
 
@@ -265,7 +271,7 @@ export default function ChatInput( {
                 onChange={ ( e ) => set_text( e.target.value ) }
                 onKeyDown={ handle_keydown }
                 placeholder={ placeholder }
-                disabled={ disabled || is_generating }
+                disabled={ disabled }
                 rows={ 1 }
             /> }
 

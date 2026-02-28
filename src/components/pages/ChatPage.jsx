@@ -163,6 +163,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const [ model_loaded, set_model_loaded ] = useState( null )
     // Start as null even with a URL param — we validate it exists before accepting it
     const [ current_conversation_id, set_current_conversation_id ] = useState( null )
+    const chat_input_ref = useRef( null )
     const is_generating_ref = useRef( false )
     const query_processed_ref = useRef( false )
 
@@ -292,10 +293,24 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
     }, [ conversation_id, current_conversation_id, load_messages, navigate ] )
 
-    // Track is_generating in a ref for stable closures
+    // Track is_generating in a ref for stable closures,
+    // and re-focus the input when generation completes
     useEffect( () => {
+
+        const was_generating = is_generating_ref.current
         is_generating_ref.current = is_generating
+
+        // Generation just finished — re-focus input for next message
+        if( was_generating && !is_generating ) {
+            chat_input_ref.current?.focus()
+        }
+
     }, [ is_generating ] )
+
+    // Focus the input when switching conversations or navigating to /chat
+    useEffect( () => {
+        chat_input_ref.current?.focus()
+    }, [ conversation_id ] )
 
     /**
      * Persist the current messages to IndexedDB
@@ -489,7 +504,10 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             if( q_param && ( model_loaded || loaded_model_id ) ) {
                 query_processed_ref.current = true
                 set_search_params( {}, { replace: true } )
-                setTimeout( () => send_message( q_param ), 100 )
+                setTimeout( () => {
+                    send_message( q_param )
+                    chat_input_ref.current?.focus()
+                }, 100 )
                 return
             }
 
@@ -711,10 +729,12 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                 </WelcomeContent>
 
                 <ChatInput
+                    ref={ chat_input_ref }
                     on_send={ send_message }
                     on_stop={ handle_stop }
                     is_generating={ is_generating }
                     disabled={ !has_model }
+                    auto_focus
                     on_mic_click={ handle_mic_click }
                     on_mic_stop={ handle_mic_stop }
                     is_recording={ is_recording }
