@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.17.1] - 2026-02-28
+
+### Changed
+- Center low-memory warning layout with icon above text and increased bottom spacing
+- Rewrite low-memory warning text to be friendlier and more concise across all 11 locales
+
+## [0.17.0] - 2026-02-28
+
+### Added
+- Uncensored option card on model selection screen — promotes best-fitting uncensored model to a first-class recommendation alongside Faster and Smarter
+- `select_best_uncensored()` selection engine for memory-aware uncensored model picking
+- Translations for uncensored option card in all 11 locales
+
+### Changed
+- Rename `select_model_pair` → `select_model_options` returning `{ smarter, faster, uncensored }`
+- Card row layout widens to 960px when 3 cards are shown
+
 ## [0.16.0] - 2026-02-28
 
 ### Added

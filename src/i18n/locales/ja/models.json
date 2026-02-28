@@ -7,9 +7,11 @@
 
     "pick_a_model": "モデルを選ぶ",
     "subtitle_two_cards": "お使いのデバイスに合わせて2つの選択肢を用意しました。バランスの良い方をお選びください。",
+    "subtitle_three_cards": "お使いのデバイスに合わせて3つの選択肢を用意しました。バランスの良いものをお選びください。",
     "subtitle_single_card": "お使いのデバイスに最適なAIモデルを選びました。一度ダウンロードすればローカルに保存されます。",
     "faster_option": "高速オプション",
     "smarter_option": "高性能オプション",
+    "uncensored_option": "無検閲オプション",
     "already_downloaded": "ダウンロード済み",
     "initial_download_takes": "初回ダウンロードに{{time}}かかります",
     "show_details": "詳細を表示",
@@ -23,7 +25,7 @@
     "invalid_hf_url": "無効なURLです。hf.co/org/repo:Q4_K_M のようなHuggingFaceリンクを使用してください",
     "may_be_too_large_browser": "このブラウザには大きすぎる可能性があります",
     "large_model_warning": "大きなモデルはブラウザで読み込めない場合があります。より小さい量子化かデスクトップアプリをご検討ください。",
-    "low_memory_warning": "システムの空きメモリは {{free}} しかありませんが、このモデルには約 {{needed}} が必要です。重いアプリケーションを閉じるか、小さいモデルを選んで速度低下を防いでください。",
+    "low_memory_warning": "空きメモリは {{free}} のみ — このモデルには約 {{needed}} 必要です。他のアプリを閉じるか、小さいモデルを選んで速度低下やクラッシュを防ぎましょう。",
 
     "downloading_your_model": "モデルをダウンロード中",
     "one_time_download": "{{name}} — 初回のみのダウンロードです。以降はすべてオフラインで動作します。",

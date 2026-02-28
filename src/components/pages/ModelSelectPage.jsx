@@ -2,11 +2,11 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, LoaderCircle, Link, Zap } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, LoaderCircle, Link, Zap, ShieldOff } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import use_model_manager from '../../hooks/use_model_manager'
 import use_speed_estimate from '../../hooks/use_speed_estimate'
-import { MODEL_CATALOG, select_model_pair, format_file_size, can_fit_in_memory, estimate_download_time, estimate_model_memory, quality_score } from '../../utils/model_catalog'
+import { MODEL_CATALOG, select_model_options, format_file_size, can_fit_in_memory, estimate_download_time, estimate_model_memory, quality_score } from '../../utils/model_catalog'
 import { parse_hf_url, resolve_hf_model } from '../../utils/hf_url_parser'
 import { storage_key } from '../../utils/branding'
 
@@ -48,7 +48,7 @@ const CardRow = styled.div`
     display: flex;
     gap: ${ ( { theme } ) => theme.spacing.md };
     width: 100%;
-    max-width: 680px;
+    max-width: ${ ( { $count } ) => $count >= 3 ? `960px` : `680px` };
     margin-bottom: ${ ( { theme } ) => theme.spacing.md };
 
     @media ( max-width: 680px ) {
@@ -62,7 +62,10 @@ const OptionCard = styled.button`
     flex-direction: column;
     align-items: center;
     padding: ${ ( { theme } ) => theme.spacing.lg };
-    border: 2px solid ${ ( { theme, $active } ) => $active ? theme.colors.accent : theme.colors.border };
+    border: 2px solid ${ ( { theme, $active, $variant } ) =>
+        $active
+            ? $variant === `uncensored` ? theme.colors.error : theme.colors.accent
+            : theme.colors.border };
     border-radius: ${ ( { theme } ) => theme.border_radius.lg };
     text-align: center;
     transition: border-color 0.15s, box-shadow 0.15s;
@@ -70,11 +73,14 @@ const OptionCard = styled.button`
     background: transparent;
 
     &:hover {
-        border-color: ${ ( { theme, $active } ) => $active ? theme.colors.accent : theme.colors.text_muted };
+        border-color: ${ ( { theme, $active, $variant } ) =>
+        $active
+            ? $variant === `uncensored` ? theme.colors.error : theme.colors.accent
+            : theme.colors.text_muted };
     }
 
-    ${ ( { $active, theme } ) => $active && `
-        box-shadow: 0 0 0 1px ${ theme.colors.accent };
+    ${ ( { $active, $variant, theme } ) => $active && `
+        box-shadow: 0 0 0 1px ${ $variant === 'uncensored' ? theme.colors.error : theme.colors.accent };
     ` }
 `
 
@@ -86,7 +92,9 @@ const CardLabel = styled.h2`
     font-weight: 600;
     margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
     color: ${ ( { $variant, theme } ) =>
-        $variant === `faster` ? theme.colors.success : theme.colors.accent };
+        $variant === `faster` ? theme.colors.success
+            : $variant === `uncensored` ? theme.colors.error
+                : theme.colors.accent };
 `
 
 const DownloadEstimate = styled.p`
@@ -316,7 +324,8 @@ const MemoryWarning = styled.div`
 // Low free RAM warning banner (Electron only)
 const LowMemoryWarning = styled.div`
     display: flex;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
     gap: ${ ( { theme } ) => theme.spacing.sm };
     padding: ${ ( { theme } ) => theme.spacing.md };
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
@@ -325,11 +334,12 @@ const LowMemoryWarning = styled.div`
     color: ${ ( { theme } ) => theme.colors.text };
     font-size: 0.85rem;
     line-height: 1.45;
+    text-align: center;
     width: 100%;
     max-width: 680px;
-    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.xl };
 
-    svg { flex-shrink: 0; margin-top: 2px; color: ${ ( { theme } ) => theme.colors.warning || `#c49660` }; }
+    svg { flex-shrink: 0; color: ${ ( { theme } ) => theme.colors.warning || `#c49660` }; }
 `
 
 // Custom model input section
@@ -427,7 +437,7 @@ export default function ModelSelectPage() {
     // Auto-scroll the alternatives panel into view on mobile when expanded
     useEffect( () => {
 
-        if ( !show_alternatives || !expand_panel_ref.current ) return
+        if( !show_alternatives || !expand_panel_ref.current ) return
 
         const timer = setTimeout( () => {
             const prefers_reduced = window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches
@@ -454,9 +464,9 @@ export default function ModelSelectPage() {
     const is_cached = ( model_id ) =>
         cached_models.some( m => m.id === model_id )
 
-    // Select smarter/faster pair based on device memory
-    const { smarter, faster } = useMemo(
-        () => select_model_pair( max_model_bytes ),
+    // Select smarter/faster/uncensored options based on device memory
+    const { smarter, faster, uncensored } = useMemo(
+        () => select_model_options( max_model_bytes ),
         [ max_model_bytes ],
     )
 
@@ -551,22 +561,25 @@ export default function ModelSelectPage() {
 
     }
 
-    // Alternatives exclude both the smarter and faster recommendations
-    const shown_ids = new Set( [ smarter?.id, faster?.id ].filter( Boolean ) )
+    // Alternatives exclude all models shown as recommendation cards
+    const shown_ids = new Set( [ smarter?.id, faster?.id, uncensored?.id ].filter( Boolean ) )
     const alternative_models = catalog_models.filter( m =>
         !shown_ids.has( m.id ) && can_fit_in_memory( m, max_model_bytes )
     )
 
-    // Two-card layout when a meaningfully smaller model exists
-    const show_two_cards = faster !== null
+    // Card row when we have at least 2 options to compare
+    const card_count = 1 + ( faster ? 1 : 0 ) + ( uncensored ? 1 : 0 )
+    const show_card_row = card_count >= 2
 
     return <Container>
 
         <Title>{ t( 'pick_a_model' ) }</Title>
         <Subtitle>
-            { show_two_cards
-                ? t( 'subtitle_two_cards' )
-                : t( 'subtitle_single_card' ) }
+            { card_count >= 3
+                ? t( 'subtitle_three_cards' )
+                : show_card_row
+                    ? t( 'subtitle_two_cards' )
+                    : t( 'subtitle_single_card' ) }
         </Subtitle>
 
         { /* ── Low free RAM warning (Electron only) ── */ }
@@ -578,12 +591,13 @@ export default function ModelSelectPage() {
             } ) }</span>
         </LowMemoryWarning> }
 
-        { /* ── Two-card layout ── */ }
-        { show_two_cards && <CardRow>
+        { /* ── Multi-card layout ── */ }
+        { show_card_row && <CardRow $count={ card_count }>
 
             { /* Faster option */ }
-            <OptionCard
+            { faster && <OptionCard
                 $active={ active_model?.id === faster.id }
+                $variant="faster"
                 onClick={ () => handle_select( faster.id ) }
             >
                 <CardLabel $variant="faster">
@@ -603,11 +617,12 @@ export default function ModelSelectPage() {
                     { faster.name } — { format_file_size( faster.file_size_bytes ) } — { faster.quantization }
                     { faster.benchmarks && <BenchmarkRow benchmarks={ faster.benchmarks } /> }
                 </CardDetails>
-            </OptionCard>
+            </OptionCard> }
 
             { /* Smarter option */ }
             <OptionCard
                 $active={ active_model?.id === smarter.id }
+                $variant="smarter"
                 onClick={ () => handle_select( smarter.id ) }
             >
                 <CardLabel $variant="smarter">
@@ -629,10 +644,35 @@ export default function ModelSelectPage() {
                 </CardDetails>
             </OptionCard>
 
+            { /* Uncensored option */ }
+            { uncensored && <OptionCard
+                $active={ active_model?.id === uncensored.id }
+                $variant="uncensored"
+                onClick={ () => handle_select( uncensored.id ) }
+            >
+                <CardLabel $variant="uncensored">
+                    <ShieldOff size={ 18 } />
+                    { t( 'uncensored_option' ) }
+                </CardLabel>
+                { is_cached( uncensored.id )
+                    ? <CachedBadge><Check size={ 12 } /> { t( 'already_downloaded' ) }</CachedBadge>
+                    : <DownloadEstimate>{ t( 'initial_download_takes', { time: estimate_download_time( uncensored.file_size_bytes, speed_bps ) } ) }</DownloadEstimate> }
+                <CardDetailsToggle onClick={ ( e ) => {
+                    e.stopPropagation(); toggle_details( uncensored.id )
+                } }
+                >
+                    { t( 'show_details' ) } { details_open[ uncensored.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
+                </CardDetailsToggle>
+                <CardDetails $open={ !!details_open[ uncensored.id ] }>
+                    { uncensored.name } — { format_file_size( uncensored.file_size_bytes ) } — { uncensored.quantization }
+                    { uncensored.benchmarks && <BenchmarkRow benchmarks={ uncensored.benchmarks } /> }
+                </CardDetails>
+            </OptionCard> }
+
         </CardRow> }
 
         { /* ── Single-card fallback (no meaningfully smaller model available) ── */ }
-        { !show_two_cards && active_model && <RecommendedCard>
+        { !show_card_row && active_model && <RecommendedCard>
             <RecommendedBadge>
                 <Sparkles size={ 14 } />
                 { custom_model ? t( 'custom_hf_model' ) : t( 'recommended_for_device' ) }

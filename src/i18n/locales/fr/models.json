@@ -7,9 +7,11 @@
 
     "pick_a_model": "Choisissez un modèle",
     "subtitle_two_cards": "Nous avons sélectionné deux options selon votre appareil. Choisissez l'équilibre qui vous convient.",
+    "subtitle_three_cards": "Nous avons sélectionné trois options selon votre appareil. Choisissez l'équilibre qui vous convient.",
     "subtitle_single_card": "Selon votre appareil, nous avons choisi le meilleur modèle d'IA. Il sera téléchargé une fois et stocké localement.",
     "faster_option": "Option plus rapide",
     "smarter_option": "Option plus intelligente",
+    "uncensored_option": "Option non censurée",
     "already_downloaded": "Déjà téléchargé",
     "initial_download_takes": "Le téléchargement initial prend {{time}}",
     "show_details": "Afficher les détails",
@@ -23,7 +25,7 @@
     "invalid_hf_url": "URL non valide. Utilisez un lien HuggingFace comme hf.co/org/repo:Q4_K_M",
     "may_be_too_large_browser": "Risque d'être trop volumineux pour ce navigateur",
     "large_model_warning": "Les modèles volumineux peuvent échouer au chargement dans le navigateur. Envisagez une quantification plus petite ou l'application de bureau.",
-    "low_memory_warning": "Votre système ne dispose que de {{free}} de mémoire disponible, mais ce modèle nécessite environ {{needed}}. Fermez les applications gourmandes ou choisissez un modèle plus petit pour éviter les ralentissements.",
+    "low_memory_warning": "Seulement {{free}} de mémoire libre — ce modèle a besoin d'environ {{needed}}. Essayez de fermer d'autres apps ou de choisir un modèle plus petit pour éviter les ralentissements et plantages éventuels.",
 
     "downloading_your_model": "Téléchargement de votre modèle",
     "one_time_download": "{{name}} — c'est un téléchargement unique. Ensuite, tout fonctionne hors ligne.",

@@ -7,9 +7,11 @@
 
     "pick_a_model": "Kies een model",
     "subtitle_two_cards": "We hebben twee opties gekozen op basis van je apparaat. Kies de balans die bij je past.",
+    "subtitle_three_cards": "We hebben drie opties gekozen op basis van je apparaat. Kies de balans die bij je past.",
     "subtitle_single_card": "Op basis van je apparaat hebben we het beste AI-model gekozen. Het wordt eenmalig gedownload en lokaal opgeslagen.",
     "faster_option": "Snellere optie",
     "smarter_option": "Slimmere optie",
+    "uncensored_option": "Ongecensureerde optie",
     "already_downloaded": "Al gedownload",
     "initial_download_takes": "Eerste download duurt {{time}}",
     "show_details": "Details tonen",
@@ -23,7 +25,7 @@
     "invalid_hf_url": "Ongeldige URL. Gebruik een HuggingFace-link zoals hf.co/org/repo:Q4_K_M",
     "may_be_too_large_browser": "Mogelijk te groot voor deze browser",
     "large_model_warning": "Grote modellen laden mogelijk niet in de browser. Overweeg een kleinere kwantisatie of de desktop-app.",
-    "low_memory_warning": "Je systeem heeft slechts {{free}} geheugen beschikbaar, maar dit model heeft ongeveer {{needed}} nodig. Sluit zware applicaties of kies een kleiner model om vertragingen te voorkomen.",
+    "low_memory_warning": "Slechts {{free}} geheugen vrij — dit model heeft ongeveer {{needed}} nodig. Probeer andere apps te sluiten of kies een kleiner model om vertragingen en mogelijke crashes te voorkomen.",
 
     "downloading_your_model": "Je model wordt gedownload",
     "one_time_download": "{{name}} — dit is een eenmalige download. Daarna werkt alles offline.",
