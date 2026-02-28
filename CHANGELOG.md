@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.14.1] - 2026-02-28
+
+### Fixed
+- Chat input now retains focus after sending a message
+
 ## [0.14.0] - 2026-02-28
 
 ### Added
