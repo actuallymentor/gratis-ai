@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.3] - 2026-02-28
+
+### Fixed
+- Remove nested scroll trap on mobile ModelSelectPage expand panel
+- Auto-scroll alternatives panel into view when expanded on mobile
+
 ## [0.15.2] - 2026-02-28
 
 ### Fixed

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -221,8 +221,8 @@ const ToggleButton = styled.button`
 `
 
 const ExpandPanel = styled.div`
-    overflow-y: ${ ( { $expanded } ) => $expanded ? `auto` : `hidden` };
-    max-height: ${ ( { $expanded } ) => $expanded ? `min( 800px, 40vh )` : `0px` };
+    overflow: hidden;
+    max-height: ${ ( { $expanded } ) => $expanded ? `2000px` : `0px` };
     opacity: ${ ( { $expanded } ) => $expanded ? 1 : 0 };
     visibility: ${ ( { $expanded } ) => $expanded ? `visible` : `hidden` };
     transition: max-height 0.3s ease, opacity 0.2s ease, visibility 0.3s ease;
@@ -422,6 +422,24 @@ export default function ModelSelectPage() {
     const navigate = useNavigate()
     const { t } = useTranslation( 'models' )
     const [ show_alternatives, set_show_alternatives ] = useState( false )
+    const expand_panel_ref = useRef( null )
+
+    // Auto-scroll the alternatives panel into view on mobile when expanded
+    useEffect( () => {
+
+        if ( !show_alternatives || !expand_panel_ref.current ) return
+
+        const timer = setTimeout( () => {
+            const prefers_reduced = window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches
+            expand_panel_ref.current?.scrollIntoView( {
+                behavior: prefers_reduced ? 'instant' : 'smooth',
+                block: 'nearest',
+            } )
+        }, 80 )
+
+        return () => clearTimeout( timer )
+
+    }, [ show_alternatives ] )
 
     // Device memory budget and cached model detection
     const { capabilities, max_model_bytes } = use_device_capabilities()
@@ -662,7 +680,7 @@ export default function ModelSelectPage() {
                 { show_alternatives ? <ChevronUp size={ 14 } /> : <ChevronDown size={ 14 } /> }
             </ToggleButton>
 
-            <ExpandPanel $expanded={ show_alternatives }>
+            <ExpandPanel ref={ expand_panel_ref } $expanded={ show_alternatives }>
                 <ModelList>
                     { alternative_models.map( ( model ) => {
                         const is_selected = model.id === active_model?.id
