@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.2] - 2026-02-28
+
+### Fixed
+- Use streaming TextDecoder for wllama output to prevent Unicode replacement chars on multi-byte boundaries
+
 ## [0.15.1] - 2026-02-28
 
 ### Fixed

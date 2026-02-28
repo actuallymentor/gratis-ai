@@ -344,7 +344,7 @@ export default class WllamaProvider {
         const prompt = this._format_chat( messages )
         console.debug( `[wllama] Prompt (${ this._template_type }):\n`, prompt )
 
-        let last_text = ``
+        const utf8 = new TextDecoder()
         let token_count = 0
         const t0 = performance.now()
         let ttft = null // time to first token
@@ -361,18 +361,22 @@ export default class WllamaProvider {
 
             for await ( const chunk of stream ) {
 
-                // Yield only the new portion of text
-                const new_text = chunk.currentText || ``
-                if( new_text.length > last_text.length ) {
+                token_count++
+
+                // Decode raw token bytes in streaming mode — holds back incomplete
+                // multi-byte UTF-8 sequences instead of emitting replacement chars
+                const text = utf8.decode( chunk.piece, { stream: true } )
+                if( text ) {
 
                     if( ttft === null ) ttft = performance.now() - t0
-
-                    yield new_text.slice( last_text.length )
-                    last_text = new_text
-                    token_count++
+                    yield text
                 }
 
             }
+
+            // Flush any bytes the streaming decoder held back
+            const trailing = utf8.decode()
+            if( trailing ) yield trailing
 
             // Performance summary for this generation
             const elapsed_ms = performance.now() - t0
