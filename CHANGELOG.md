@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.16.0] - 2026-02-28
+
+### Added
+- Benchmark scores for 7 models that previously showed none (SmolLM2, TinyLlama, Llama 3.2 1B, DeepSeek R1 1.5B, and 3 uncensored models)
+- `/100` denominator on all displayed benchmark scores for clarity
+
 ## [0.15.3] - 2026-02-28
 
 ### Fixed

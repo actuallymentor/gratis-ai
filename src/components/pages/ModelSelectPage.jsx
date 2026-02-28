@@ -406,7 +406,7 @@ function BenchmarkRow( { benchmarks } ) {
     return <BenchmarkGrid>
         { Object.entries( BENCHMARK_LABELS ).map( ( [ key, label ] ) =>
             benchmarks[ key ] != null &&
-                <span key={ key }><BenchmarkLabel>{ label }</BenchmarkLabel>{ benchmarks[ key ] }</span>
+                <span key={ key }><BenchmarkLabel>{ label }</BenchmarkLabel>{ benchmarks[ key ] }/100</span>
         ) }
     </BenchmarkGrid>
 }
@@ -696,7 +696,7 @@ export default function ModelSelectPage() {
                                 </OptionName>
                                 <OptionMeta>
                                     { model.parameters_label } — { format_file_size( model.file_size_bytes ) } — { model.quantization }
-                                    { model.benchmarks && <> — <QualityBadge>Score { quality_score( model ).toFixed( 0 ) }</QualityBadge></> }
+                                    { model.benchmarks && <> — <QualityBadge>Score { quality_score( model ).toFixed( 0 ) }/100</QualityBadge></> }
                                     { is_cached( model.id ) ? ` — ✓ ${ t( 'downloaded' ) }` : `` }
                                 </OptionMeta>
                             </OptionInfo>
