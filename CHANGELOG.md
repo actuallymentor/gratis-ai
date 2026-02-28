@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.14.0] - 2026-02-28
+
+### Added
+- Low free RAM warning on model select page — Electron users see a banner when available memory can't cover the selected model plus 20% headroom
+- `low_memory_warning` i18n key across all 11 locales
+
 ## [0.13.2] - 2026-02-27
 
 ### Fixed

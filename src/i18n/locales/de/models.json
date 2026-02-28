@@ -23,6 +23,7 @@
     "invalid_hf_url": "Ungültige URL. Verwende einen HuggingFace-Link wie hf.co/org/repo:Q4_K_M",
     "may_be_too_large_browser": "Möglicherweise zu groß für diesen Browser",
     "large_model_warning": "Große Modelle können im Browser möglicherweise nicht geladen werden. Erwäge eine kleinere Quantisierung oder die Desktop-App.",
+    "low_memory_warning": "Dein System hat nur {{free}} Arbeitsspeicher frei, aber dieses Modell benötigt etwa {{needed}}. Schließe speicherintensive Anwendungen oder wähle ein kleineres Modell, um Verlangsamungen zu vermeiden.",
 
     "downloading_your_model": "Dein Modell wird heruntergeladen",
     "one_time_download": "{{name}} — dies ist ein einmaliger Download. Danach funktioniert alles offline.",

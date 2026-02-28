@@ -6,7 +6,7 @@ import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, Loa
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import use_model_manager from '../../hooks/use_model_manager'
 import use_speed_estimate from '../../hooks/use_speed_estimate'
-import { MODEL_CATALOG, select_model_pair, format_file_size, can_fit_in_memory, estimate_download_time, quality_score } from '../../utils/model_catalog'
+import { MODEL_CATALOG, select_model_pair, format_file_size, can_fit_in_memory, estimate_download_time, estimate_model_memory, quality_score } from '../../utils/model_catalog'
 import { parse_hf_url, resolve_hf_model } from '../../utils/hf_url_parser'
 import { storage_key } from '../../utils/branding'
 
@@ -313,6 +313,25 @@ const MemoryWarning = styled.div`
     margin-top: ${ ( { theme } ) => theme.spacing.sm };
 `
 
+// Low free RAM warning banner (Electron only)
+const LowMemoryWarning = styled.div`
+    display: flex;
+    align-items: flex-start;
+    gap: ${ ( { theme } ) => theme.spacing.sm };
+    padding: ${ ( { theme } ) => theme.spacing.md };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    background: ${ ( { theme } ) => theme.colors.warning ? `${ theme.colors.warning }18` : `#c4966018` };
+    border: 1px solid ${ ( { theme } ) => theme.colors.warning || `#c49660` };
+    color: ${ ( { theme } ) => theme.colors.text };
+    font-size: 0.85rem;
+    line-height: 1.45;
+    width: 100%;
+    max-width: 680px;
+    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+
+    svg { flex-shrink: 0; margin-top: 2px; color: ${ ( { theme } ) => theme.colors.warning || `#c49660` }; }
+`
+
 // Custom model input section
 const CustomModelSection = styled.div`
     margin-top: ${ ( { theme } ) => theme.spacing.md };
@@ -405,7 +424,7 @@ export default function ModelSelectPage() {
     const [ show_alternatives, set_show_alternatives ] = useState( false )
 
     // Device memory budget and cached model detection
-    const { max_model_bytes } = use_device_capabilities()
+    const { capabilities, max_model_bytes } = use_device_capabilities()
     const { cached_models } = use_model_manager()
 
     // Measure real download speed for accurate time estimates
@@ -459,6 +478,12 @@ export default function ModelSelectPage() {
             : smarter
 
     const active_is_cached = active_model && is_cached( active_model.id )
+
+    // Warn Electron users when free RAM is dangerously low for the selected model
+    const is_electron = capabilities?.runtime === 'electron'
+    const free_bytes = capabilities?.memory?.free_bytes
+    const model_needs = active_model ? estimate_model_memory( active_model ) : 0
+    const low_memory = is_electron && free_bytes && model_needs > 0 && free_bytes < model_needs * 1.2
 
     const handle_download = () => {
 
@@ -525,6 +550,15 @@ export default function ModelSelectPage() {
                 ? t( 'subtitle_two_cards' )
                 : t( 'subtitle_single_card' ) }
         </Subtitle>
+
+        { /* ── Low free RAM warning (Electron only) ── */ }
+        { low_memory && <LowMemoryWarning>
+            <AlertTriangle size={ 16 } />
+            <span>{ t( 'low_memory_warning', {
+                free: format_file_size( free_bytes ),
+                needed: format_file_size( model_needs ),
+            } ) }</span>
+        </LowMemoryWarning> }
 
         { /* ── Two-card layout ── */ }
         { show_two_cards && <CardRow>

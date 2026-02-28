@@ -23,6 +23,7 @@
     "invalid_hf_url": "無効なURLです。hf.co/org/repo:Q4_K_M のようなHuggingFaceリンクを使用してください",
     "may_be_too_large_browser": "このブラウザには大きすぎる可能性があります",
     "large_model_warning": "大きなモデルはブラウザで読み込めない場合があります。より小さい量子化かデスクトップアプリをご検討ください。",
+    "low_memory_warning": "システムの空きメモリは {{free}} しかありませんが、このモデルには約 {{needed}} が必要です。重いアプリケーションを閉じるか、小さいモデルを選んで速度低下を防いでください。",
 
     "downloading_your_model": "モデルをダウンロード中",
     "one_time_download": "{{name}} — 初回のみのダウンロードです。以降はすべてオフラインで動作します。",
