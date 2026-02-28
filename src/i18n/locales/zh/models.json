@@ -23,6 +23,7 @@
     "invalid_hf_url": "无效的 URL。请使用 HuggingFace 链接，如 hf.co/org/repo:Q4_K_M",
     "may_be_too_large_browser": "对此浏览器来说可能太大",
     "large_model_warning": "大型模型可能无法在浏览器中加载。请考虑使用更小的量化版本或桌面应用。",
+    "low_memory_warning": "你的系统仅有 {{free}} 可用内存，但此模型大约需要 {{needed}}。请关闭占用内存较多的应用或选择较小的模型，以避免运行缓慢。",
 
     "downloading_your_model": "正在下载模型",
     "one_time_download": "{{name}} — 仅需下载一次。之后所有功能都可离线使用。",

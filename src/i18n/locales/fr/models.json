@@ -23,6 +23,7 @@
     "invalid_hf_url": "URL non valide. Utilisez un lien HuggingFace comme hf.co/org/repo:Q4_K_M",
     "may_be_too_large_browser": "Risque d'être trop volumineux pour ce navigateur",
     "large_model_warning": "Les modèles volumineux peuvent échouer au chargement dans le navigateur. Envisagez une quantification plus petite ou l'application de bureau.",
+    "low_memory_warning": "Votre système ne dispose que de {{free}} de mémoire disponible, mais ce modèle nécessite environ {{needed}}. Fermez les applications gourmandes ou choisissez un modèle plus petit pour éviter les ralentissements.",
 
     "downloading_your_model": "Téléchargement de votre modèle",
     "one_time_download": "{{name}} — c'est un téléchargement unique. Ensuite, tout fonctionne hors ligne.",

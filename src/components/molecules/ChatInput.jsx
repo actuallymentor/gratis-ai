@@ -216,6 +216,7 @@ export default function ChatInput( {
         if( text.trim() && !disabled ) {
             on_send( text.trim() )
             set_text( `` )
+            textarea_ref.current?.focus()
         }
     }
 
