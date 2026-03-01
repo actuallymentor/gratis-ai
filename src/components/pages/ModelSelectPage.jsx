@@ -70,7 +70,6 @@ const variant_color = ( theme, $variant ) =>
             : theme.colors.accent
 
 const OptionCard = styled.button`
-    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;

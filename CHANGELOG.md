@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.20.1] - 2026-03-01
+
+### Fixed
+- Fix 4-card grid layout rendering 3+1 instead of 2×2 (0920649)
+
 ## [0.20.0] - 2026-03-01
 
 ### Added
