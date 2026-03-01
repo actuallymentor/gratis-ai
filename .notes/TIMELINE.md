@@ -1,5 +1,12 @@
 # Timeline
 
+## 2026-03-01 — CI: compare version against latest release tag
+
+- Replaced fragile `HEAD~1` version comparison in `deploy-web.yml` and `release-electron.yml` with `gh release view --json tagName`
+- Removed `fetch-depth: 2` from checkout steps — no longer need commit history
+- Handles no-releases edge case (first release triggers deploy)
+- Semantically correct: "has version changed since last release?" vs "since last commit?"
+
 ## 2026-02-28 — Benchmark scores: fill gaps & add /100 reference (v0.16.0)
 
 - Added benchmark data for 7 models that had `benchmarks: null` (SmolLM2 360M, TinyLlama 1.1B, Llama 3.2 1B, DeepSeek R1 1.5B, Dolphin 8B, Gemma 12B Abliterated, Dolphin Mistral 24B)

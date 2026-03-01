@@ -24,15 +24,15 @@ jobs:
       version: ${{ steps.diff.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
-      - name: Compare version with previous commit
+      - name: Compare version with latest release
         id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          PREV=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
           CURR=$(node -p "require('./package.json').version")
-          echo "prev=$PREV curr=$CURR"
+          PREV=$(gh release view --json tagName -q .tagName 2>/dev/null | sed 's/^v//' || echo "")
+          echo "latest-release=$PREV curr=$CURR"
           if [ "$PREV" != "$CURR" ]; then
             echo "changed=true"  >> "$GITHUB_OUTPUT"
             echo "version=$CURR" >> "$GITHUB_OUTPUT"
