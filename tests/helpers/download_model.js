@@ -50,6 +50,9 @@ export async function download_model_via_ui( page, model, opts = {} ) {
  */
 export async function select_model_on_page( page, model ) {
 
+    // Wait for the model select page to be fully rendered before inspecting
+    await expect( page.getByTestId( `model-select-confirm-btn` ) ).toBeVisible( { timeout: 10_000 } )
+
     // Strategy 1 — Check if the model name appears in the full page text.
     // The card details are in the DOM even when visually collapsed, so we can
     // read the page text without clicking any toggles.
@@ -82,9 +85,8 @@ export async function select_model_on_page( page, model ) {
 
     // Strategy 2 — Model is not a recommendation. Open alternatives and pick from list.
     const toggle = page.getByTestId( `change-model-toggle` )
-    if( await toggle.isVisible() ) {
-        await toggle.click()
-    }
+    await expect( toggle ).toBeVisible( { timeout: 5_000 } )
+    await toggle.click()
 
     // Alternatives are plain buttons inside the expand panel, each containing the model name
     const alternative = page.locator( `button`, { hasText: model.name } )

@@ -95,6 +95,9 @@ test.describe( `Settings Modal`, () => {
     test( `Ctrl+, keyboard shortcut opens settings modal`, async ( { page } ) => {
         await page.goto( `/chat` )
 
+        // Wait for page to be fully loaded so keyboard shortcut handlers are registered
+        await expect( page.getByTestId( `send-btn` ) ).toBeVisible( { timeout: 5_000 } )
+
         // Ensure settings is closed
         await expect( page.getByTestId( `settings-modal` ) ).not.toBeVisible()
 

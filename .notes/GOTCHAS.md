@@ -63,6 +63,24 @@ grow unbounded so `overflow-y: auto` on `ListContainer` never activates. Fix: ch
 to `height: 100dvh` so the flex chain resolves to constrained heights. Safe because
 `body` already has `overflow: hidden`.
 
+## E2E test race: select_model_on_page checks text before render (2026-03-01)
+
+`select_model_on_page` in `tests/helpers/download_model.js` called `page.locator('body').textContent()`
+immediately after URL navigation — before the React component rendered. With empty page text, it
+fell to Strategy 2, skipped the toggle click (not visible yet), then found model buttons inside
+the still-hidden `ExpandPanel`.
+
+**Fix**: Wait for `model-select-confirm-btn` to be visible before reading page text. Also changed
+the toggle visibility check from instant `isVisible()` to `expect().toBeVisible()` with timeout.
+
+## E2E test race: Ctrl+, shortcut test fires before handlers register (2026-03-01)
+
+The `Ctrl+,` keyboard shortcut test pressed the key immediately after navigating to `/chat`,
+before React had mounted and registered `keydown` handlers. The parallel `Ctrl+N` test worked
+because it waited for `send-btn` first.
+
+**Fix**: Added `await expect(page.getByTestId('send-btn')).toBeVisible()` before the key press.
+
 ## Cloudflare Pages → Workers Migration (2026-02-24)
 
 Cloudflare deprecated Pages as a separate product in April 2025, merging it into Workers
