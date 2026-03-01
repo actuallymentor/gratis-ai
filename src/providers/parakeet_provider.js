@@ -6,6 +6,7 @@
  * We only store a lightweight metadata record in the gratisAI `models` store so
  * the app knows "has the user downloaded this before" without duplicating ~640MB.
  */
+import { log } from 'mentie'
 import { get_db } from '../stores/db'
 
 const MODEL_KEY = `parakeet-tdt-0.6b-v3`
@@ -134,7 +135,7 @@ export default class ParakeetProvider {
             } )
 
         } catch ( err ) {
-            console.error( `Failed to save Parakeet metadata:`, err )
+            log.error( `Failed to save Parakeet metadata:`, err )
         }
 
     }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { log } from 'mentie'
 import toast from 'react-hot-toast'
 import ParakeetProvider from '../providers/parakeet_provider'
 import { start_audio_capture, check_microphone_available } from '../utils/audio_capture'
@@ -107,7 +108,7 @@ export default function use_voice_input() {
             set_is_model_cached( true )
 
         } catch ( err ) {
-            console.error( `Voice model download failed:`, err )
+            log.error( `Voice model download failed:`, err )
             toast.error( `Download failed: ${ err.message }` )
             throw err
         } finally {
@@ -156,7 +157,7 @@ export default function use_voice_input() {
             start_level_polling()
         } catch ( err ) {
             toast.error( `Microphone access denied. Please allow microphone permissions.` )
-            console.error( `Mic capture failed:`, err )
+            log.error( `Mic capture failed:`, err )
         }
 
     }, [ start_level_polling ] )
@@ -206,7 +207,7 @@ export default function use_voice_input() {
             return text.trim()
 
         } catch ( err ) {
-            console.error( `Transcription failed:`, err )
+            log.error( `Transcription failed:`, err )
             toast.error( `Transcription failed: ${ err.message }` )
             return ``
         } finally {

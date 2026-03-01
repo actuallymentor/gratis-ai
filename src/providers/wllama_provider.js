@@ -1,4 +1,5 @@
 import { Wllama } from '@wllama/wllama'
+import { log } from 'mentie'
 import { get_db } from '../stores/db'
 
 // WASM paths — served from public/wasm/ (copied there by postinstall script)
@@ -140,7 +141,7 @@ export default class WllamaProvider {
 
         // Skip reload if this exact model is already loaded and healthy
         if( this._loaded_model_id === model_id && this._wllama?.isModelLoaded() ) {
-            console.info( `[wllama] Model ${ model_id } already loaded, skipping reload` )
+            log.info( `[wllama] Model ${ model_id } already loaded, skipping reload` )
             if( on_progress ) on_progress( { progress: 1, status: `Model ready` } )
             return
         }
@@ -178,7 +179,7 @@ export default class WllamaProvider {
         const n_batch = n_threads > 1 ? 1024 : 256
 
         const file_size_mb = ( cached.blob.size / 1_000_000 ).toFixed( 0 )
-        console.info( `[wllama] Loading model ${ model_id } (${ file_size_mb } MB, ${ n_threads } threads, batch ${ n_batch })` )
+        log.info( `[wllama] Loading model ${ model_id } (${ file_size_mb } MB, ${ n_threads } threads, batch ${ n_batch })` )
 
         try {
 
@@ -201,7 +202,7 @@ export default class WllamaProvider {
             // the winning call will complete the load and the store's dedup
             // will surface its result to all callers.
             if( load_err.message?.includes( `already initialized` ) ) {
-                console.warn( `[wllama] Module already initialized — concurrent load detected, deferring` )
+                log.warn( `[wllama] Module already initialized — concurrent load detected, deferring` )
                 this._wllama = null
                 return
             }
@@ -212,7 +213,7 @@ export default class WllamaProvider {
                 || load_err.message?.includes( `out of bounds` )
 
             if( is_memory_error ) {
-                console.error( `[wllama] Out of memory loading ${ model_id } (${ file_size_mb } MB)` )
+                log.error( `[wllama] Out of memory loading ${ model_id } (${ file_size_mb } MB)` )
                 throw new Error( `This model is too large for your browser's memory. Try a smaller model or close other tabs.` )
             }
 
@@ -223,11 +224,11 @@ export default class WllamaProvider {
                 || load_err.message?.includes( `Invalid version number` )
 
             if( is_glue_error ) {
-                console.error( `[wllama] WASM worker protocol error loading ${ model_id } (${ file_size_mb } MB)` )
+                log.error( `[wllama] WASM worker protocol error loading ${ model_id } (${ file_size_mb } MB)` )
                 throw new Error( `Failed to load this model in the browser — it's likely too large for WebAssembly memory. Try a smaller quantization or use the desktop app.` )
             }
 
-            console.error( `[wllama] Failed to load model:`, load_err )
+            log.error( `[wllama] Failed to load model:`, load_err )
             throw load_err
 
         }
@@ -250,7 +251,7 @@ export default class WllamaProvider {
         // where eos_token is not provided to the Jinja template engine)
         const template = this._wllama.getChatTemplate()
         this._template_type = detect_template_type( template )
-        console.info( `[wllama] Detected template type: ${ this._template_type }` )
+        log.info( `[wllama] Detected template type: ${ this._template_type }` )
 
         // Get EOS and BOS token strings by detokenizing their IDs
         // detokenize returns Uint8Array so we need to decode to string
@@ -262,16 +263,16 @@ export default class WllamaProvider {
             if( eos_id >= 0 ) this._eos_str = decoder.decode( await this._wllama.detokenize( [ eos_id ] ) )
             if( bos_id >= 0 ) this._bos_str = decoder.decode( await this._wllama.detokenize( [ bos_id ] ) )
             if( eot_id >= 0 ) this._eot_str = decoder.decode( await this._wllama.detokenize( [ eot_id ] ) )
-            console.info( `[wllama] Tokens — EOS: ${ JSON.stringify( this._eos_str ) }, BOS: ${ JSON.stringify( this._bos_str ) }, EOT: ${ JSON.stringify( this._eot_str ) }` )
+            log.info( `[wllama] Tokens — EOS: ${ JSON.stringify( this._eos_str ) }, BOS: ${ JSON.stringify( this._bos_str ) }, EOT: ${ JSON.stringify( this._eot_str ) }` )
         } catch ( token_err ) {
-            console.warn( `[wllama] Could not resolve special tokens, using defaults`, token_err )
+            log.warn( `[wllama] Could not resolve special tokens, using defaults`, token_err )
         }
 
         // Update last_used_at timestamp — non-critical, don't fail the load if storage is full
         try {
             await db.put( `models`, { ...cached, last_used_at: Date.now() } )
         } catch {
-            console.warn( `[wllama] Could not update last_used_at (storage quota may be full)` )
+            log.warn( `[wllama] Could not update last_used_at (storage quota may be full)` )
         }
 
         if( on_progress ) {
@@ -317,7 +318,7 @@ export default class WllamaProvider {
         // Rough token estimate — wllama doesn't expose token count for non-streaming
         const elapsed_s = ( performance.now() - t0 ) / 1000
         const approx_tokens = response.split( /\s+/ ).length
-        console.info( `[wllama] Chat complete — ~${ approx_tokens } tokens in ${ elapsed_s.toFixed( 1 ) }s (~${ ( approx_tokens / elapsed_s ).toFixed( 1 ) } tk/s)` )
+        log.info( `[wllama] Chat complete — ~${ approx_tokens } tokens in ${ elapsed_s.toFixed( 1 ) }s (~${ ( approx_tokens / elapsed_s ).toFixed( 1 ) } tk/s)` )
 
         return response
 
@@ -342,7 +343,7 @@ export default class WllamaProvider {
         // Use our own chat formatter which correctly includes EOS/BOS tokens
         // (wllama's formatChat has a bug where eos_token is not provided to the Jinja engine)
         const prompt = this._format_chat( messages )
-        console.debug( `[wllama] Prompt (${ this._template_type }):\n`, prompt )
+        log.info( `[wllama] Prompt (${ this._template_type }):\n`, prompt )
 
         const utf8 = new TextDecoder()
         let token_count = 0
@@ -387,12 +388,12 @@ export default class WllamaProvider {
                 const decode_ms = elapsed_ms - ( ttft || 0 )
                 const tks = decode_ms > 0 ? ( token_count / ( decode_ms / 1000 ) ).toFixed( 1 ) : `∞`
 
-                console.info(
+                log.info(
                     `[wllama] ${ token_count } tokens — ttft ${ ttft.toFixed( 0 ) }ms, ${ tks } tk/s (${ ( elapsed_ms / 1000 ).toFixed( 1 ) }s total)`
                 )
 
             } else {
-                console.warn( `[wllama] Model generated 0 tokens. Template type: ${ this._template_type }` )
+                log.warn( `[wllama] Model generated 0 tokens. Template type: ${ this._template_type }` )
             }
 
         } catch ( err ) {

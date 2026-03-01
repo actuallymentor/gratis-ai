@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { v4 as uuid } from 'uuid'
+import { log } from 'mentie'
 import toast from 'react-hot-toast'
 import { ArrowRight, LoaderCircle } from 'lucide-react'
 import AppLayout from '../molecules/AppLayout'
@@ -228,11 +229,11 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         if( is_model_loading ) return
 
         if( active_id ) {
-            console.info( `[ChatPage] Auto-loading saved model: ${ active_id }` )
+            log.info( `[ChatPage] Auto-loading saved model: ${ active_id }` )
             load_model( active_id )
                 .then( () => set_model_loaded( true ) )
                 .catch( ( err ) => {
-                    console.error( `[ChatPage] Auto-load failed:`, err.message )
+                    log.error( `[ChatPage] Auto-load failed:`, err.message )
                     set_model_loaded( false )
                     toast.error( err.message || t( 'common:failed_to_load_model' ) )
                 } )
@@ -611,7 +612,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             localStorage.setItem( storage_key( `active_model_id` ), model_id )
             await refresh_models()
         } catch ( err ) {
-            console.error( `[ChatPage] Failed to switch model:`, err )
+            log.error( `[ChatPage] Failed to switch model:`, err )
             toast.error( err.message || t( 'common:failed_to_load_model' ) )
         }
 

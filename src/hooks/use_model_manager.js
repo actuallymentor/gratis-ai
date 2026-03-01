@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { log } from 'mentie'
 import { get_db } from '../stores/db'
 import { storage_key } from '../utils/branding'
 
@@ -60,7 +61,7 @@ export default function use_model_manager() {
             }
 
         } catch ( err ) {
-            console.error( `Failed to load cached models:`, err )
+            log.error( `Failed to load cached models:`, err )
         }
 
     }, [] )

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { log } from 'mentie'
 import { create_provider } from '../providers/factory'
 
 /**
@@ -73,14 +74,14 @@ const use_llm_store = create( ( set, get ) => ( {
 
             const provider = await get().ensure_provider()
 
-            console.info( `[use_llm] Loading model: ${ model_id }` )
+            log.info( `[use_llm] Loading model: ${ model_id }` )
 
             try {
                 await provider.load_model( model_id, on_progress )
                 set( { loaded_model_id: model_id } )
-                console.info( `[use_llm] Model loaded successfully: ${ model_id }` )
+                log.info( `[use_llm] Model loaded successfully: ${ model_id }` )
             } catch ( err ) {
-                console.error( `[use_llm] Model load failed:`, err.message )
+                log.error( `[use_llm] Model load failed:`, err.message )
                 set( { error: err.message } )
                 throw err
             } finally {
@@ -134,7 +135,7 @@ const use_llm_store = create( ( set, get ) => ( {
 
             const elapsed_ms = performance.now() - start_time
 
-            console.info( `[use_llm] Generation complete: ${ token_count } tokens in ${ elapsed_ms.toFixed( 0 ) }ms` )
+            log.info( `[use_llm] Generation complete: ${ token_count } tokens in ${ elapsed_ms.toFixed( 0 ) }ms` )
 
             // When the model produces nothing, show a helpful message
             if( token_count === 0 && !full_text ) {
@@ -154,7 +155,7 @@ const use_llm_store = create( ( set, get ) => ( {
         } catch ( err ) {
 
             if( err.name !== `AbortError` && !err.message?.includes( `abort` ) ) {
-                console.error( `[use_llm] Generation error:`, err.message )
+                log.error( `[use_llm] Generation error:`, err.message )
                 set( { error: err.message } )
             }
 

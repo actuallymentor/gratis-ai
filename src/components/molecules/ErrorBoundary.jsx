@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import { log } from 'mentie'
 import styled from 'styled-components'
 import { AlertTriangle, RotateCcw } from 'lucide-react'
 import { Translation } from 'react-i18next'
@@ -88,7 +89,7 @@ export default class ErrorBoundary extends Component {
     }
 
     componentDidCatch( error, info ) {
-        console.error( `ErrorBoundary caught:`, error, info.componentStack )
+        log.error( `ErrorBoundary caught:`, error, info.componentStack )
     }
 
     handle_reload = () => {

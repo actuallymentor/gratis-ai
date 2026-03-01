@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.2] - 2026-03-01
+
+### Changed
+- Replace 31 raw `console.*` calls with mentie `log` utility for level-gated, prefixed logging across 9 source files
+
 ## [0.17.1] - 2026-02-28
 
 ### Changed

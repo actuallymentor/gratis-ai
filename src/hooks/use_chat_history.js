@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { log } from 'mentie'
 import { v4 as uuid } from 'uuid'
 import { get_db } from '../stores/db'
 import { storage_key } from '../utils/branding'
@@ -28,7 +29,7 @@ export default function use_chat_history() {
             set_conversations( all.reverse() )
 
         } catch ( err ) {
-            console.error( `Failed to load conversations:`, err )
+            log.error( `Failed to load conversations:`, err )
         } finally {
             set_is_loading( false )
         }

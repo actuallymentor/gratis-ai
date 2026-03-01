@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { useNavigate } from 'react-router-dom'
+import { log } from 'mentie'
 import { ArrowLeftRight, AlertCircle, RotateCcw, PanelLeft } from 'lucide-react'
 import ChatInput from '../molecules/ChatInput'
 import VoiceModelDialog from '../molecules/VoiceModelDialog'
@@ -202,7 +203,7 @@ export default function HomePage() {
 
         load_model( active_id ).catch( ( err ) => {
             if( cancelled ) return
-            console.error( `[HomePage] Preload failed:`, err.message )
+            log.error( `[HomePage] Preload failed:`, err.message )
             set_load_error( err.message )
         } )
 
@@ -231,7 +232,7 @@ export default function HomePage() {
 
         set_load_error( null )
         load_model( active_id ).catch( ( err ) => {
-            console.error( `[HomePage] Retry failed:`, err.message )
+            log.error( `[HomePage] Retry failed:`, err.message )
             set_load_error( err.message )
         } )
 
