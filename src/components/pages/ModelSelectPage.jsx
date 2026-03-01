@@ -46,13 +46,20 @@ const Subtitle = styled.p`
 
 const CardRow = styled.div`
     display: flex;
+    flex-wrap: wrap;
     gap: ${ ( { theme } ) => theme.spacing.md };
     width: 100%;
-    max-width: ${ ( { $count } ) => $count >= 4 ? `1120px` : $count >= 3 ? `960px` : `680px` };
+    max-width: ${ ( { $count } ) => $count >= 4 ? `720px` : $count >= 3 ? `960px` : `680px` };
     margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+
+    /* 4+ cards → 2 per row (2×2 grid), ≤3 → single row */
+    & > * {
+        flex: ${ ( { $count } ) => $count >= 4 ? `1 1 calc( 50% - 0.5rem )` : `1` };
+    }
 
     @media ( max-width: 680px ) {
         flex-direction: column;
+        & > * { flex: 1; }
     }
 `
 
