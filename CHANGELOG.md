@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.1] - 2026-03-01
+
+### Fixed
+- Balance mic and send button visual weight — mic button gets subtle fill background
+- Remove vertical separator line to the left of input buttons on wide screens
+- Center SVG icons vertically within circular action buttons
+
 ## [0.19.0] - 2026-03-01
 
 ### Added

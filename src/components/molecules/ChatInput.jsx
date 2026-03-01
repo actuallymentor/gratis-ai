@@ -56,6 +56,7 @@ const ButtonRow = styled.div`
     gap: ${ ( { theme } ) => theme.spacing.xs };
     flex-shrink: 0;
     align-self: flex-end;
+    border-left: none;
 `
 
 // ── Action buttons — smaller to fit inside the pill ─────────────────
@@ -66,11 +67,14 @@ const SendButton = styled.button`
     justify-content: center;
     width: 2rem;
     height: 2rem;
+    line-height: 0;
     border-radius: ${ ( { theme } ) => theme.border_radius.full };
     background: ${ ( { theme } ) => theme.colors.primary };
     color: ${ ( { theme } ) => theme.colors.background };
     transition: opacity 0.15s;
     flex-shrink: 0;
+
+    & svg { display: block; }
 
     &:hover { opacity: 0.8; }
 
@@ -98,19 +102,22 @@ const MicButton = styled.button`
     justify-content: center;
     width: 2rem;
     height: 2rem;
+    line-height: 0;
     border-radius: ${ ( { theme } ) => theme.border_radius.full };
-    background: transparent;
+    background: ${ ( { theme } ) => theme.colors.surface_hover };
     color: ${ ( { theme, $is_recording } ) => $is_recording
         ? theme.colors.error
         : theme.colors.text_muted };
     transition: color 0.15s, background 0.15s;
     flex-shrink: 0;
 
+    & svg { display: block; }
+
     &:hover {
         color: ${ ( { theme, $is_recording } ) => $is_recording
         ? theme.colors.error
         : theme.colors.text };
-        background: ${ ( { theme } ) => theme.colors.surface_hover };
+        background: ${ ( { theme } ) => theme.colors.border_subtle };
     }
 
     &:disabled {
