@@ -1,0 +1,92 @@
+# Gotchas
+
+## Native inference VRAM context-size crash (2026-02-26)
+
+The Electron native inference path (`inference_worker.js`) passed `model.context_length`
+directly to `createContext({ contextSize })` with no VRAM check. Models like Qwen3 with
+32k context would crash on GPUs with limited VRAM: "A context size of 32768 is too large
+for the available VRAM".
+
+**Fix**: Retry loop in `NativeInference.load()` — halves context size on VRAM errors
+until it fits (floor: 2048). The actual context size is reported back through the IPC
+chain so the UI can inform the user.
+
+## less-lazy prefetch breaks Electron chunk loading (2026-02-26)
+
+The `less-lazy` library's `prefetch()` extracts chunk filenames from `import().toString()`
+and injects `<link rel="prefetch" href="./ChunkName-hash.js">` into `<head>`. These paths
+resolve relative to the HTML document, but chunks live in `assets/` — so every lazy-loaded
+page triggers `ERR_FILE_NOT_FOUND` in Electron.
+
+**Fix**: Skip prefetch in Electron entirely via `maybe_prefetch` identity wrapper in
+`src/routes/Routes.jsx`. Prefetching is a network optimisation with zero value when
+assets load from local disk.
+
+## unload_model during in-flight load → zombie promise (2026-02-26)
+
+Calling `unload_model()` while `load_model()` is in-flight kills the WASM worker
+via `_wllama.exit()`. The pending `loadModel()` promise never settles, so the
+store's `_load_promise` becomes a zombie. The next `load_model()` call deduplicates
+against it and hangs forever.
+
+**Fix**: `unload_model()` now clears `is_loading`, `_load_promise`, `_loading_model_id`,
+`loaded_model_id`, and `error` **synchronously** before calling `provider.unload_model()`.
+This ensures the next `load_model()` call creates a fresh promise.
+
+## Zustand async IIFE dedup race (2026-02-25)
+
+When creating a promise via `(async () => { ... })()` inside a Zustand action,
+any `set()` calls inside the IIFE execute AFTER the first `await` — not synchronously.
+If dedup guards read state set inside the IIFE (like `_loading_model_id`), concurrent
+callers can slip through between the IIFE creation and the first `await`.
+
+**Fix**: set ALL dedup-relevant state in a single synchronous `set()` call OUTSIDE
+the IIFE, immediately after creating the promise.
+
+
+## Wllama streaming emits Unicode replacement chars (2026-02-28)
+
+`chunk.currentText` from wllama's completion stream uses `TextDecoder.decode(buffer)`
+**without** `{ stream: true }`. When a multi-byte UTF-8 character (e.g. `ã` = `0xC3 0xA3`)
+is split across two tokens, the first decode emits `U+FFFD` as a replacement character.
+The delta logic (`new_text.slice(last_text.length)`) captures it before the next token
+completes the sequence.
+
+**Fix**: Use `chunk.piece` (raw `Uint8Array` bytes) with a streaming `TextDecoder`:
+`utf8.decode(chunk.piece, { stream: true })` buffers incomplete sequences. Final
+`utf8.decode()` after the loop flushes any held-back bytes.
+
+## Chat list overflow: min-height vs height on #root (2026-02-28)
+
+`#root` used `min-height: 100dvh` which gives an indefinite height — flex children
+grow unbounded so `overflow-y: auto` on `ListContainer` never activates. Fix: change
+to `height: 100dvh` so the flex chain resolves to constrained heights. Safe because
+`body` already has `overflow: hidden`.
+
+## Cloudflare Pages → Workers Migration (2026-02-24)
+
+Cloudflare deprecated Pages as a separate product in April 2025, merging it into Workers
+under a unified "Applications" dashboard. Key consequences:
+
+- **`wrangler pages deploy` may fail** with "Project not found" if the project was created
+  in the new unified UI. The Pages API (`/pages/projects/`) returns empty for these projects.
+- **Fix**: Use `wrangler deploy` with a `wrangler.toml` that has an `[assets]` block:
+  ```toml
+  name = "project-name"
+  compatibility_date = "2026-02-24"
+
+  [assets]
+  directory = "./dist"
+  ```
+- **`_headers` file still works** with Workers Static Assets for setting response headers
+  (COOP, COEP, etc.), but only for static responses — not Worker-generated responses.
+- **API token scope**: When creating tokens, the template is now "Edit Cloudflare Workers"
+  (not "Edit Cloudflare Pages"). Ensure the token has Pages + Workers permissions under
+  Account Resources for the correct account.
+- **Custom domains**: Add via the dashboard under the application's Settings → Domains & Routes.
+  Cloudflare auto-creates DNS records if the domain is already on Cloudflare DNS.
+
+### References
+- https://blog.cloudflare.com/pages-and-workers-are-converging-into-one-experience/
+- https://developers.cloudflare.com/workers/static-assets/
+- https://developers.cloudflare.com/workers/static-assets/headers/
