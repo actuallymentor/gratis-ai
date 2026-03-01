@@ -1,3 +1,5 @@
+import { log } from 'mentie'
+
 /**
  * Microphone audio capture utility for voice input.
  * Captures 16kHz mono PCM float32 audio via Web Audio API,
@@ -36,6 +38,8 @@ export const start_audio_capture = async () => {
         },
     } )
 
+    log.debug( `[audio] Mic access granted` )
+
     // Create audio context at the required sample rate
     const audio_context = new AudioContext( { sampleRate: 16000 } )
     const source = audio_context.createMediaStreamSource( stream )
@@ -62,6 +66,7 @@ export const start_audio_capture = async () => {
     source.connect( analyser )
     analyser.connect( processor )
     processor.connect( audio_context.destination )
+    log.debug( `[audio] Capture started: ${ audio_context.sampleRate }Hz` )
 
     /**
      * Get the current audio input level as a 0–1 normalised value.
@@ -106,6 +111,7 @@ export const start_audio_capture = async () => {
             offset += chunk.length
         }
 
+        log.debug( `[audio] Stopped: ${ total_length } samples (${ ( total_length / 16000 ).toFixed( 1 ) }s)` )
         return pcm
     }
 

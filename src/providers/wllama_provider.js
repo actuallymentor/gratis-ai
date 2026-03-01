@@ -343,7 +343,7 @@ export default class WllamaProvider {
         // Use our own chat formatter which correctly includes EOS/BOS tokens
         // (wllama's formatChat has a bug where eos_token is not provided to the Jinja engine)
         const prompt = this._format_chat( messages )
-        log.info( `[wllama] Prompt (${ this._template_type }):\n`, prompt )
+        log.insane( `[wllama] Prompt (${ this._template_type }):\n`, prompt )
 
         const utf8 = new TextDecoder()
         let token_count = 0
@@ -423,6 +423,7 @@ export default class WllamaProvider {
     async unload_model() {
 
         if( this._wllama ) {
+            log.info( `[wllama] Unloading model ${ this._loaded_model_id }` )
             try {
                 await this._wllama.exit()
             } catch {

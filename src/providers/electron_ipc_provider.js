@@ -1,3 +1,5 @@
+import { log } from 'mentie'
+
 /**
  * Electron IPC-based LLM provider
  * Forwards LLMProvider interface calls over IPC to the main process
@@ -17,16 +19,22 @@ export default class ElectronIPCProvider {
      */
     async load_model( model_id, on_progress ) {
 
+        log.debug( `[electron] Loading model ${ model_id }` )
         if( on_progress ) on_progress( { progress: 0, status: `Loading model...` } )
 
         const result = await window.electronAPI.load_model( model_id )
         this._loaded_model_id = model_id
 
         // Let the caller know if context was reduced due to VRAM limits
+        if( result?.context_reduced ) {
+            log.warn( `[electron] Context reduced to ${ result.context_size?.toLocaleString() } tokens (VRAM)` )
+        }
+
         const status = result?.context_reduced
             ? `Model ready (context reduced to ${ result.context_size?.toLocaleString() } tokens due to memory limits)`
             : `Model ready`
 
+        log.info( `[electron] Model loaded: ${ model_id }` )
         if( on_progress ) on_progress( { progress: 1, status } )
 
     }
@@ -49,6 +57,8 @@ export default class ElectronIPCProvider {
      * @returns {AsyncGenerator<string>}
      */
     async *chat_stream( messages, opts = {} ) {
+
+        log.debug( `[electron] Streaming with ${ messages.length } messages` )
 
         // Set up token listener before starting stream
         const token_queue = []
@@ -124,6 +134,7 @@ export default class ElectronIPCProvider {
      */
     async unload_model() {
 
+        log.debug( `[electron] Unloading model` )
         await window.electronAPI.unload_model()
         this._loaded_model_id = null
 

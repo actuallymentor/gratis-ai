@@ -1,4 +1,5 @@
 import { openDB } from 'idb'
+import { log } from 'mentie'
 import { DB_NAME } from '../utils/branding'
 
 const DB_VERSION = 1
@@ -9,9 +10,13 @@ const DB_VERSION = 1
  */
 export const get_db = async () => {
 
+    log.debug( `[db] Opening "${ DB_NAME }" v${ DB_VERSION }` )
+
     return openDB( DB_NAME, DB_VERSION, {
 
         upgrade( db ) {
+
+            log.info( `[db] Schema upgrade — creating object stores` )
 
             // Conversations store
             if( !db.objectStoreNames.contains( `conversations` ) ) {
@@ -44,6 +49,7 @@ export const get_db = async () => {
  */
 export const clear_all_data = async () => {
 
+    log.warn( `[db] Clearing ALL data from all stores` )
     const db = await get_db()
     const tx = db.transaction( [ `conversations`, `messages`, `models` ], `readwrite` )
     await Promise.all( [

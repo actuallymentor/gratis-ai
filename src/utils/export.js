@@ -1,3 +1,5 @@
+import { log } from 'mentie'
+
 /**
  * Export a conversation as a markdown file
  * @param {Object} conversation - Conversation object with title
@@ -27,6 +29,8 @@ export const export_conversation = ( conversation, messages ) => {
 
     const timestamp = new Date().toISOString().replace( /[:.]/g, `-` ).slice( 0, 19 )
     const filename = `${ slug }-${ timestamp }.md`
+
+    log.info( `[export] "${ conversation.title }" — ${ messages.length } messages as ${ filename }` )
 
     // Trigger browser download
     const blob = new Blob( [ markdown ], { type: `text/markdown` } )

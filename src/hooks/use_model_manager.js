@@ -39,6 +39,7 @@ export default function use_model_manager() {
                 const total_bytes = sorted.reduce( ( sum, m ) => sum + ( m.file_size_bytes || 0 ), 0 )
                 set_storage_used( total_bytes )
                 set_cached_models( sorted )
+                log.debug( `[models] Refreshed (electron): ${ sorted.length } models, ${ ( total_bytes / 1e6 ).toFixed( 0 ) } MB` )
                 return
 
             }
@@ -53,6 +54,7 @@ export default function use_model_manager() {
             const total_bytes = sorted.reduce( ( sum, m ) => sum + ( m.file_size_bytes || 0 ), 0 )
             set_storage_used( total_bytes )
             set_cached_models( sorted.map( ( { blob, ...rest } ) => rest ) )
+            log.debug( `[models] Refreshed (browser): ${ sorted.length } models, ${ ( total_bytes / 1e6 ).toFixed( 0 ) } MB` )
 
             // Estimate available storage
             if( navigator.storage?.estimate ) {
@@ -95,6 +97,7 @@ export default function use_model_manager() {
                 await db.delete( `models`, model_id )
             }
 
+            log.info( `[models] Deleted model ${ model_id }` )
             await refresh_models()
 
         } finally {

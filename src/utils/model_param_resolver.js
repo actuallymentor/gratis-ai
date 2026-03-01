@@ -1,3 +1,5 @@
+import { log } from 'mentie'
+
 /**
  * Parse a model query parameter into one of three formats:
  * 1. Local model ID (no slashes) — look up by cached model id
@@ -17,15 +19,18 @@ export const parse_model_param = ( model_param ) => {
     if( parts.length >= 3 && model_param.endsWith( `.gguf` ) ) {
         const repo = `${ parts[ 0 ] }/${ parts[ 1 ] }`
         const file = parts.slice( 2 ).join( `/` )
+        log.debug( `[model_param] Parsed as repo_file: ${ model_param }` )
         return { type: `repo_file`, value: model_param, repo, file }
     }
 
     // Format 2: org/reponame (exactly one slash, no .gguf ending)
     if( parts.length === 2 && !model_param.endsWith( `.gguf` ) ) {
+        log.debug( `[model_param] Parsed as repo: ${ model_param }` )
         return { type: `repo`, value: model_param, repo: model_param }
     }
 
     // Format 1: local ID (no slashes)
+    log.debug( `[model_param] Parsed as local: ${ model_param }` )
     return { type: `local`, value: model_param }
 
 }
@@ -42,19 +47,28 @@ export const resolve_cached_model = ( parsed, cached_models ) => {
 
     switch ( parsed.type ) {
 
-    case `local`:
+    case `local`: {
         // Match by ID directly
-        return cached_models.find( ( m ) => m.id === parsed.value ) || null
+        const match = cached_models.find( ( m ) => m.id === parsed.value ) || null
+        log.debug( match ? `[model_param] Resolved -> ${ match.id }` : `[model_param] No cache match for ${ parsed.value }` )
+        return match
+    }
 
-    case `repo`:
+    case `repo`: {
         // Match by HF repo
-        return cached_models.find( ( m ) => m.hugging_face_repo === parsed.repo ) || null
+        const match = cached_models.find( ( m ) => m.hugging_face_repo === parsed.repo ) || null
+        log.debug( match ? `[model_param] Resolved -> ${ match.id }` : `[model_param] No cache match for ${ parsed.value }` )
+        return match
+    }
 
-    case `repo_file`:
+    case `repo_file`: {
         // Match by HF repo + filename
-        return cached_models.find( ( m ) =>
+        const match = cached_models.find( ( m ) =>
             m.hugging_face_repo === parsed.repo && m.file_name === parsed.file
         ) || null
+        log.debug( match ? `[model_param] Resolved -> ${ match.id }` : `[model_param] No cache match for ${ parsed.value }` )
+        return match
+    }
 
     default:
         return null

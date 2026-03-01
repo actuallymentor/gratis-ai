@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.3] - 2026-03-01
+
+### Changed
+- Add ~45 level-gated log calls across 12 files — covers downloads, IPC, DB, settings, audio, and model resolution
+- Upgrade mentie 0.2.38 → 0.5.4 — adds `log.insane()` and `log.debug()` levels
+- Move raw prompt dump from `log.info` to `log.insane` to reduce noise
+
 ## [0.17.2] - 2026-03-01
 
 ### Changed

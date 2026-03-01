@@ -1,3 +1,4 @@
+import { log } from 'mentie'
 import { get_db } from '../stores/db'
 
 const HF_BASE_URL = import.meta.env.VITE_HF_BASE_URL || `https://huggingface.co`
@@ -28,14 +29,19 @@ export const is_model_cached = async ( model_id, expected_repo, expected_file ) 
 
         const models = await window.electronAPI.list_models()
         const cached = models.find( ( m ) => m.id === model_id )
-        if( !cached ) return false
+        if( !cached ) {
+            log.debug( `[download] Cache miss: ${ model_id } (electron)` )
+            return false
+        }
 
         // Verify the cache matches the expected source
         if( expected_repo && cached.hugging_face_repo !== expected_repo ) {
+            log.warn( `[download] Cache stale for ${ model_id }: source changed, clearing` )
             await window.electronAPI.delete_model( model_id )
             return false
         }
         if( expected_file && cached.file_name !== expected_file ) {
+            log.warn( `[download] Cache stale for ${ model_id }: source changed, clearing` )
             await window.electronAPI.delete_model( model_id )
             return false
         }
@@ -52,14 +58,17 @@ export const is_model_cached = async ( model_id, expected_repo, expected_file ) 
     // If caller provided expected source, verify the cache matches
     // A mismatch means the registry changed to a different GGUF file
     if( expected_repo && cached.hugging_face_repo !== expected_repo ) {
+        log.warn( `[download] Cache stale for ${ model_id }: source changed, clearing` )
         await db.delete( `models`, model_id )
         return false
     }
     if( expected_file && cached.file_name !== expected_file ) {
+        log.warn( `[download] Cache stale for ${ model_id }: source changed, clearing` )
         await db.delete( `models`, model_id )
         return false
     }
 
+    log.debug( `[download] Cache hit: ${ model_id }` )
     return true
 
 }
@@ -98,11 +107,16 @@ export const download_model = async ( model, on_progress, signal ) => {
 
     const url = build_download_url( model.hugging_face_repo, model.file_name )
 
+    const size_mb = ( model.file_size_bytes / 1e6 ).toFixed( 0 )
+    log.info( `[download] Starting: ${ model.name } (${ size_mb } MB)` )
+
     on_progress( { progress: 0, bytes_loaded: 0, bytes_total: model.file_size_bytes, status: `Starting download...` } )
 
     // In Electron, delegate to the main process which streams directly to disk.
     // This avoids buffering multi-GB files in the renderer's V8 heap.
     if( window.electronAPI?.download_model ) {
+
+        log.debug( `[download] Using Electron IPC download` )
 
         // Forward progress events from main process
         const cleanup = window.electronAPI.on_download_progress( on_progress )
@@ -182,6 +196,7 @@ export const download_model = async ( model, on_progress, signal ) => {
     const header = new Uint8Array( await blob.slice( 0, 4 ).arrayBuffer() )
     const is_valid_gguf = header[ 0 ] === 0x47 && header[ 1 ] === 0x47 && header[ 2 ] === 0x55 && header[ 3 ] === 0x46
     if( !is_valid_gguf ) {
+        log.warn( `[download] GGUF validation failed — file may be corrupt` )
         throw new Error( `Downloaded file is not a valid GGUF model. The file may be corrupted or the URL may have redirected to an error page.` )
     }
 
@@ -202,6 +217,7 @@ export const download_model = async ( model, on_progress, signal ) => {
         last_used_at: now,
     } )
 
+    log.info( `[download] Complete: ${ model.name } (${ ( blob.size / 1e6 ).toFixed( 0 ) } MB)` )
     on_progress( { progress: 1, bytes_loaded: blob.size, bytes_total: blob.size, status: `Complete` } )
 
 }

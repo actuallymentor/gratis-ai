@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { log } from 'mentie'
 import { STORAGE_PREFIX } from '../utils/branding'
 
 // Default values for all settings
@@ -63,6 +64,7 @@ export default function use_settings() {
     const update_setting = useCallback( ( key, value ) => {
 
         localStorage.setItem( `${ PREFIX }${ key }`, String( value ) )
+        log.debug( `[settings] ${ key } = ${ value }` )
         set_settings( ( prev ) => ( { ...prev, [ key ]: value } ) )
 
     }, [] )
@@ -101,7 +103,8 @@ export default function use_settings() {
             if( e.key?.startsWith( PREFIX ) ) {
                 const setting_key = e.key.slice( PREFIX.length )
                 if( setting_key in DEFAULTS ) {
-                    const val = e.newValue === null ? DEFAULTS[ setting_key ] :  isNaN( Number( e.newValue ) ) ? e.newValue : Number( e.newValue ) 
+                    log.debug( `[settings] Cross-tab sync: ${ setting_key }` )
+                    const val = e.newValue === null ? DEFAULTS[ setting_key ] :  isNaN( Number( e.newValue ) ) ? e.newValue : Number( e.newValue )
                     set_settings( ( prev ) => ( { ...prev, [ setting_key ]: val } ) )
                 }
             }

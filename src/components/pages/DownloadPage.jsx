@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { X, CheckCircle } from 'lucide-react'
+import { log } from 'mentie'
 import { download_model, is_model_cached } from '../../utils/model_download'
 import { format_file_size } from '../../utils/model_catalog'
 import { storage_key } from '../../utils/branding'
@@ -194,6 +195,7 @@ export default function DownloadPage() {
         }
 
         // Brief success flash before navigating
+        log.info( `[download] Complete, redirecting to chat` )
         set_is_complete( true )
         setTimeout( () => navigate( return_to, { replace: true } ), 800 )
 
@@ -214,6 +216,7 @@ export default function DownloadPage() {
         is_model_cached( model.id, model.hugging_face_repo, model.file_name ).then( cached => {
 
             if( cached ) {
+                log.info( `[download] Model already cached, skipping` )
                 on_complete()
                 return
             }
@@ -273,6 +276,7 @@ export default function DownloadPage() {
     }, [ model, navigate, on_complete ] )
 
     const handle_cancel = () => {
+        log.info( `[download] Aborted by user` )
         if( abort_ref.current ) abort_ref.current.abort()
         navigate( `/select-model`, { replace: true } )
     }

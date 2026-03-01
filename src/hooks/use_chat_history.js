@@ -27,6 +27,7 @@ export default function use_chat_history() {
             const all = await db.getAllFromIndex( `conversations`, `updated_at` )
             // Reverse so most recent is first
             set_conversations( all.reverse() )
+            log.debug( `[chat_history] Loaded ${ all.length } conversations` )
 
         } catch ( err ) {
             log.error( `Failed to load conversations:`, err )
@@ -61,6 +62,7 @@ export default function use_chat_history() {
 
         const db = await get_db()
         await db.put( `conversations`, conversation )
+        log.info( `[chat_history] Created conversation ${ id }` )
         await load_conversations()
         return id
 
@@ -85,6 +87,7 @@ export default function use_chat_history() {
 
         const db = await get_db()
         await db.put( `messages`, msg )
+        log.debug( `[chat_history] Saved ${ msg.role } message to ${ conversation_id }` )
 
         // Update conversation timestamp
         const conversation = await db.get( `conversations`, conversation_id )
@@ -117,6 +120,7 @@ export default function use_chat_history() {
      */
     const delete_conversation = useCallback( async ( conversation_id ) => {
 
+        log.info( `[chat_history] Deleting conversation ${ conversation_id }` )
         const db = await get_db()
         const tx = db.transaction( [ `conversations`, `messages` ], `readwrite` )
 
@@ -142,6 +146,7 @@ export default function use_chat_history() {
      */
     const delete_all_conversations = async () => {
 
+        log.warn( `[chat_history] Deleting ALL conversations` )
         const db = await get_db()
         const tx = db.transaction( [ `conversations`, `messages` ], `readwrite` )
         await Promise.all( [
