@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.19.0] - 2026-03-01
+
+### Added
+- Mobile model selector in sidebar — declutters TopBar on small screens
+- "Change Model" button shows icon-only on mobile (text hidden)
+
 ## [0.18.2] - 2026-03-01
 
 ### Fixed

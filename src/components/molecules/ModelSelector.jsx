@@ -110,9 +110,10 @@ const NoModelHint = styled.div`
  * @param {boolean} props.is_switching - Whether a model switch is in progress
  * @param {Function} props.on_switch - Handler for switching models
  * @param {Function} props.on_open_settings - Handler for opening models settings
+ * @param {Function} [props.on_after_select] - Optional callback fired after a model is selected (e.g. to close sidebar)
  * @returns {JSX.Element}
  */
-export default function ModelSelector( { cached_models = [], active_model_id, is_switching, on_switch, on_open_settings } ) {
+export default function ModelSelector( { cached_models = [], active_model_id, is_switching, on_switch, on_open_settings, on_after_select } ) {
 
     const [ is_open, set_is_open ] = useState( false )
     const [ dropdown_max_height, set_dropdown_max_height ] = useState( undefined )
@@ -177,6 +178,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
         if( model_id !== active_model_id && on_switch ) {
             on_switch( model_id )
         }
+        if( on_after_select ) on_after_select()
     }
 
     const handle_add = () => {

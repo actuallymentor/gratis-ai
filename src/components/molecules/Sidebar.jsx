@@ -4,6 +4,7 @@ import { Plus, PanelLeftClose, PanelLeft, Download, Trash2, Trash, Monitor, Refr
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { truncate } from '../../utils/format'
+import ModelSelector from './ModelSelector'
 
 const SidebarContainer = styled.aside`
     display: flex;
@@ -74,6 +75,16 @@ const CollapseButton = styled.button`
     transition: color 0.15s;
 
     &:hover { color: ${ ( { theme } ) => theme.colors.text }; }
+`
+
+// Model selector section — visible on mobile only
+const MobileModelSection = styled.div`
+    display: none;
+    padding: ${ ( { theme } ) => `0 ${ theme.spacing.sm } ${ theme.spacing.xs }` };
+
+    @media ( max-width: ${ ( { theme } ) => theme.breakpoints.mobile } ) {
+        display: block;
+    }
 `
 
 const ConversationListContainer = styled.div`
@@ -247,9 +258,17 @@ const is_electron = () => !!window.electronAPI?.native_inference
  * @param {Function} props.on_export - Handler for exporting a conversation
  * @param {Function} props.on_delete - Handler for deleting a conversation
  * @param {Function} props.on_delete_all - Handler for wiping all conversations
+ * @param {Array} props.cached_models - Array of cached model metadata (for mobile model selector)
+ * @param {string} props.active_model_id - Currently active model ID
+ * @param {boolean} props.is_model_switching - Whether a model switch is in progress
+ * @param {Function} props.on_model_switch - Handler for model switching
+ * @param {Function} props.on_settings_open - Handler for opening settings (model management)
  * @returns {JSX.Element}
  */
-export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversations = [], on_export, on_delete, on_delete_all } ) {
+export default function Sidebar( {
+    collapsed, on_toggle, on_new_chat, conversations = [], on_export, on_delete, on_delete_all,
+    cached_models, active_model_id, is_model_switching, on_model_switch, on_settings_open,
+} ) {
 
     const { t } = useTranslation( 'pages' )
     const navigate = useNavigate()
@@ -380,6 +399,17 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
                     { collapsed ? <PanelLeft size={ 18 } /> : <PanelLeftClose size={ 18 } /> }
                 </CollapseButton>
             </SidebarHeader>
+
+            <MobileModelSection>
+                <ModelSelector
+                    cached_models={ cached_models }
+                    active_model_id={ active_model_id }
+                    is_switching={ is_model_switching }
+                    on_switch={ on_model_switch }
+                    on_open_settings={ on_settings_open }
+                    on_after_select={ close_on_mobile }
+                />
+            </MobileModelSection>
 
             <ConversationListContainer>
 

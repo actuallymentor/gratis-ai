@@ -125,6 +125,11 @@ export default function AppLayout( {
                 on_export={ on_export }
                 on_delete={ on_delete }
                 on_delete_all={ on_delete_all }
+                cached_models={ cached_models }
+                active_model_id={ active_model_id }
+                is_model_switching={ is_model_switching }
+                on_model_switch={ on_model_switch }
+                on_settings_open={ () => set_settings_open( true ) }
             />
             <ContentArea>
                 { children }

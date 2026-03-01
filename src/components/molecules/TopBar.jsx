@@ -59,6 +59,21 @@ const ChangeModelButton = styled.button`
     &:hover { color: ${ ( { theme } ) => theme.colors.text_secondary }; }
 `
 
+// Hide model selector on mobile — it lives in the sidebar instead
+const DesktopOnly = styled.span`
+    display: contents;
+    @media ( max-width: ${ ( { theme } ) => theme.breakpoints.mobile } ) {
+        display: none;
+    }
+`
+
+// Hide "Change Model" text label on mobile, keep the icon
+const ChangeModelLabel = styled.span`
+    @media ( max-width: ${ ( { theme } ) => theme.breakpoints.mobile } ) {
+        display: none;
+    }
+`
+
 // Cycle: system -> light -> dark -> system
 const CYCLE = [ `system`, `light`, `dark` ]
 
@@ -122,20 +137,22 @@ export default function TopBar( {
             >
                 <PanelLeft size={ 18 } />
             </IconButton> }
-            <ModelSelector
-                cached_models={ cached_models }
-                active_model_id={ active_model_id }
-                is_switching={ is_model_switching }
-                on_switch={ on_model_switch }
-                on_open_settings={ on_settings_open }
-            />
+            <DesktopOnly>
+                <ModelSelector
+                    cached_models={ cached_models }
+                    active_model_id={ active_model_id }
+                    is_switching={ is_model_switching }
+                    on_switch={ on_model_switch }
+                    on_open_settings={ on_settings_open }
+                />
+            </DesktopOnly>
             <ChangeModelButton
                 data-testid="change-model-btn"
                 onClick={ () => navigate( `/select-model` ) }
                 aria-label={ t( `common:aria_change_model` ) }
             >
                 <ArrowLeftRight size={ 14 } />
-                { t( `change_model` ) }
+                <ChangeModelLabel>{ t( `change_model` ) }</ChangeModelLabel>
             </ChangeModelButton>
         </LeftSection>
 
