@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.18.2] - 2026-03-01
+
+### Fixed
+- Strip superfluous `<think>` prefix from completed responses when model never emits closing tag
+
 ## [0.18.1] - 2026-03-01
 
 ### Fixed

@@ -44,6 +44,11 @@ const parse_thinking = ( content, is_streaming ) => {
         }
     }
 
+    // Finished streaming with an unclosed <think> — strip the superfluous prefix
+    if( !is_streaming && content.startsWith( `<think>` ) ) {
+        return { thinking: null, response: content.slice( 7 ).trimStart(), is_thinking: false }
+    }
+
     // No think block at all — pass through unchanged
     return { thinking: null, response: content, is_thinking: false }
 
