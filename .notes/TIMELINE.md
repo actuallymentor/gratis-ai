@@ -1,5 +1,14 @@
 # Timeline
 
+## 2026-03-01 — "Waking up the AI" indicator + TTFT-excluded tok/s + slow device warning (v0.18.0)
+
+- Fixed tok/s calculation to exclude TTFT — now measures decode speed only
+- Added `first_token_time`, `ttft_ms`, `decode_ms` to generation stats in `llm_store.js`
+- Created `WakingUpIndicator` atom — animated pulsing dots shown during TTFT gap
+- Created `SlowDeviceWarning` atom — contextual warning when tok/s < 2, web-only, sessionStorage dismiss
+- Wired both into `MessageBubble.jsx` — WakingUp replaces StreamingIndicator until first token, SlowDeviceWarning renders below GenerationStats
+- Added 3 i18n keys to `chat.json` (`waking_up`, `slow_device_warning`, `get_the_desktop_app`)
+
 ## 2026-03-01 — CI: compare version against latest release tag
 
 - Replaced fragile `HEAD~1` version comparison in `deploy-web.yml` and `release-electron.yml` with `gh release view --json tagName`

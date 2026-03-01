@@ -7,7 +7,9 @@ import { Copy, Check, ChevronRight, LoaderCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import StreamingIndicator from '../atoms/StreamingIndicator'
+import WakingUpIndicator from '../atoms/WakingUpIndicator'
 import GenerationStats from '../atoms/GenerationStats'
+import SlowDeviceWarning from '../atoms/SlowDeviceWarning'
 import MessageActions from './MessageActions'
 
 
@@ -427,14 +429,20 @@ const MessageBubble = memo( ( {
                     { response }
                 </ReactMarkdown> }
 
-                { /* Streaming indicator — only when response is actively streaming (not during thinking) */ }
-                { is_streaming && !is_thinking && <StreamingIndicator /> }
+                { /* Streaming indicator — waking up before first token, cursor after */ }
+                { is_streaming && !is_thinking && (
+                    response ? <StreamingIndicator /> : <WakingUpIndicator />
+                ) }
 
             </Bubble> }
 
         { /* Generation stats for completed assistant messages */ }
         { !is_user && !is_streaming && message.stats &&
             <GenerationStats stats={ message.stats } /> }
+
+        { /* Slow device nudge — web-only, once per session */ }
+        { !is_user && !is_streaming && message.stats &&
+            <SlowDeviceWarning tokens_per_second={ message.stats.tokens_per_second } /> }
 
     </BubbleContainer>
 

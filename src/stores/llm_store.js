@@ -121,6 +121,7 @@ const use_llm_store = create( ( set, get ) => ( {
 
         let full_text = ``
         let token_count = 0
+        let first_token_time = null
         const start_time = performance.now()
 
         try {
@@ -128,14 +129,17 @@ const use_llm_store = create( ( set, get ) => ( {
             const stream = provider.chat_stream( messages, opts )
 
             for await ( const chunk of stream ) {
+                if( !first_token_time ) first_token_time = performance.now()
                 full_text += chunk
                 token_count++
                 if( on_token ) on_token( full_text, chunk )
             }
 
             const elapsed_ms = performance.now() - start_time
+            const ttft_ms = first_token_time ? first_token_time - start_time : 0
+            const decode_ms = elapsed_ms - ttft_ms
 
-            log.info( `[use_llm] Generation complete: ${ token_count } tokens in ${ elapsed_ms.toFixed( 0 ) }ms` )
+            log.info( `[use_llm] Generation complete: ${ token_count } tokens in ${ elapsed_ms.toFixed( 0 ) }ms (TTFT ${ ttft_ms.toFixed( 0 ) }ms)` )
 
             // When the model produces nothing, show a helpful message
             if( token_count === 0 && !full_text ) {
@@ -145,8 +149,10 @@ const use_llm_store = create( ( set, get ) => ( {
 
             const generation_stats = {
                 tokens_generated: token_count,
-                tokens_per_second: elapsed_ms > 0 ? token_count / ( elapsed_ms / 1000 ) : 0,
+                tokens_per_second: decode_ms > 0 ? token_count / ( decode_ms / 1000 ) : 0,
                 elapsed_ms,
+                ttft_ms,
+                decode_ms,
             }
 
             set( { stats: generation_stats } )
@@ -160,12 +166,17 @@ const use_llm_store = create( ( set, get ) => ( {
             }
 
             const elapsed_ms = performance.now() - start_time
+            const ttft_ms = first_token_time ? first_token_time - start_time : 0
+            const decode_ms = elapsed_ms - ttft_ms
+
             return {
                 text: full_text,
                 stats: {
                     tokens_generated: token_count,
-                    tokens_per_second: token_count / ( elapsed_ms / 1000 ),
+                    tokens_per_second: decode_ms > 0 ? token_count / ( decode_ms / 1000 ) : 0,
                     elapsed_ms,
+                    ttft_ms,
+                    decode_ms,
                 },
             }
 

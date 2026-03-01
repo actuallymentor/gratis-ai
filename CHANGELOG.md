@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.18.0] - 2026-03-01
+
+### Added
+- "Waking up the AI" animated indicator during TTFT gap before first token arrives
+- Slow device warning nudges web users toward the Desktop app when tok/s < 2
+
+### Fixed
+- tok/s now excludes TTFT — measures decode speed only, reports `ttft_ms` and `decode_ms` in stats
+
 ## [0.17.3] - 2026-03-01
 
 ### Changed

@@ -15,6 +15,10 @@
     "no_model_description": "You need to download an AI model before you can start chatting. It only takes a minute.",
     "set_up_a_model": "Set up a model",
 
+    "waking_up": "Waking up the AI",
+    "slow_device_warning": "Your device appears quite slow. We recommend downloading the Desktop app for better performance.",
+    "get_the_desktop_app": "Get the Desktop app",
+
     "recording": "Recording",
     "transcribing": "Transcribing",
     "loading_voice_model": "Loading voice model"
