@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, LoaderCircle, Link, Zap, ShieldOff } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, LoaderCircle, Link, Zap, ShieldOff, Eye } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import use_model_manager from '../../hooks/use_model_manager'
 import use_speed_estimate from '../../hooks/use_speed_estimate'
@@ -48,13 +48,19 @@ const CardRow = styled.div`
     display: flex;
     gap: ${ ( { theme } ) => theme.spacing.md };
     width: 100%;
-    max-width: ${ ( { $count } ) => $count >= 3 ? `960px` : `680px` };
+    max-width: ${ ( { $count } ) => $count >= 4 ? `1120px` : $count >= 3 ? `960px` : `680px` };
     margin-bottom: ${ ( { theme } ) => theme.spacing.md };
 
     @media ( max-width: 680px ) {
         flex-direction: column;
     }
 `
+
+// Resolve the accent color for a card variant
+const variant_color = ( theme, $variant ) =>
+    $variant === `uncensored` ? theme.colors.error
+        : $variant === `vision` ? theme.colors.info
+            : theme.colors.accent
 
 const OptionCard = styled.button`
     flex: 1;
@@ -63,9 +69,7 @@ const OptionCard = styled.button`
     align-items: center;
     padding: ${ ( { theme } ) => theme.spacing.lg };
     border: 2px solid ${ ( { theme, $active, $variant } ) =>
-        $active
-            ? $variant === `uncensored` ? theme.colors.error : theme.colors.accent
-            : theme.colors.border };
+        $active ? variant_color( theme, $variant ) : theme.colors.border };
     border-radius: ${ ( { theme } ) => theme.border_radius.lg };
     text-align: center;
     transition: border-color 0.15s, box-shadow 0.15s;
@@ -74,13 +78,11 @@ const OptionCard = styled.button`
 
     &:hover {
         border-color: ${ ( { theme, $active, $variant } ) =>
-        $active
-            ? $variant === `uncensored` ? theme.colors.error : theme.colors.accent
-            : theme.colors.text_muted };
+        $active ? variant_color( theme, $variant ) : theme.colors.text_muted };
     }
 
     ${ ( { $active, $variant, theme } ) => $active && `
-        box-shadow: 0 0 0 1px ${ $variant === 'uncensored' ? theme.colors.error : theme.colors.accent };
+        box-shadow: 0 0 0 1px ${ variant_color( theme, $variant ) };
     ` }
 `
 
@@ -94,7 +96,8 @@ const CardLabel = styled.h2`
     color: ${ ( { $variant, theme } ) =>
         $variant === `faster` ? theme.colors.success
             : $variant === `uncensored` ? theme.colors.error
-                : theme.colors.accent };
+                : $variant === `vision` ? theme.colors.info
+                    : theme.colors.accent };
 `
 
 const DownloadEstimate = styled.p`
@@ -117,6 +120,16 @@ const UncensoredTag = styled.span`
     font-size: 0.65rem;
     font-weight: 600;
     color: ${ ( { theme } ) => theme.colors.error };
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-left: 6px;
+    flex-shrink: 0;
+`
+
+const VisionTag = styled.span`
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.info };
     text-transform: uppercase;
     letter-spacing: 0.03em;
     margin-left: 6px;
@@ -464,8 +477,8 @@ export default function ModelSelectPage() {
     const is_cached = ( model_id ) =>
         cached_models.some( m => m.id === model_id )
 
-    // Select smarter/faster/uncensored options based on device memory
-    const { smarter, faster, uncensored } = useMemo(
+    // Select smarter/faster/uncensored/vision options based on device memory
+    const { smarter, faster, uncensored, vision } = useMemo(
         () => select_model_options( max_model_bytes ),
         [ max_model_bytes ],
     )
@@ -562,24 +575,26 @@ export default function ModelSelectPage() {
     }
 
     // Alternatives exclude all models shown as recommendation cards
-    const shown_ids = new Set( [ smarter?.id, faster?.id, uncensored?.id ].filter( Boolean ) )
+    const shown_ids = new Set( [ smarter?.id, faster?.id, uncensored?.id, vision?.id ].filter( Boolean ) )
     const alternative_models = catalog_models.filter( m =>
         !shown_ids.has( m.id ) && can_fit_in_memory( m, max_model_bytes )
     )
 
     // Card row when we have at least 2 options to compare
-    const card_count = 1 + ( faster ? 1 : 0 ) + ( uncensored ? 1 : 0 )
+    const card_count = 1 + ( faster ? 1 : 0 ) + ( uncensored ? 1 : 0 ) + ( vision ? 1 : 0 )
     const show_card_row = card_count >= 2
 
     return <Container>
 
         <Title>{ t( 'pick_a_model' ) }</Title>
         <Subtitle>
-            { card_count >= 3
-                ? t( 'subtitle_three_cards' )
-                : show_card_row
-                    ? t( 'subtitle_two_cards' )
-                    : t( 'subtitle_single_card' ) }
+            { card_count >= 4
+                ? t( 'subtitle_four_cards' )
+                : card_count >= 3
+                    ? t( 'subtitle_three_cards' )
+                    : show_card_row
+                        ? t( 'subtitle_two_cards' )
+                        : t( 'subtitle_single_card' ) }
         </Subtitle>
 
         { /* ── Low free RAM warning (Electron only) ── */ }
@@ -669,6 +684,31 @@ export default function ModelSelectPage() {
                 </CardDetails>
             </OptionCard> }
 
+            { /* Vision option */ }
+            { vision && <OptionCard
+                $active={ active_model?.id === vision.id }
+                $variant="vision"
+                onClick={ () => handle_select( vision.id ) }
+            >
+                <CardLabel $variant="vision">
+                    <Eye size={ 18 } />
+                    { t( 'vision_option' ) }
+                </CardLabel>
+                { is_cached( vision.id )
+                    ? <CachedBadge><Check size={ 12 } /> { t( 'already_downloaded' ) }</CachedBadge>
+                    : <DownloadEstimate>{ t( 'initial_download_takes', { time: estimate_download_time( vision.file_size_bytes, speed_bps ) } ) }</DownloadEstimate> }
+                <CardDetailsToggle onClick={ ( e ) => {
+                    e.stopPropagation(); toggle_details( vision.id )
+                } }
+                >
+                    { t( 'show_details' ) } { details_open[ vision.id ] ? <ChevronUp size={ 12 } /> : <ChevronDown size={ 12 } /> }
+                </CardDetailsToggle>
+                <CardDetails $open={ !!details_open[ vision.id ] }>
+                    { vision.name } — { format_file_size( vision.file_size_bytes ) } — { vision.quantization }
+                    { vision.benchmarks && <BenchmarkRow benchmarks={ vision.benchmarks } /> }
+                </CardDetails>
+            </OptionCard> }
+
         </CardRow> }
 
         { /* ── Single-card fallback (no meaningfully smaller model available) ── */ }
@@ -733,6 +773,7 @@ export default function ModelSelectPage() {
                                 <OptionName>
                                     { model.name }
                                     { model.uncensored && <UncensoredTag>{ t( 'uncensored' ) }</UncensoredTag> }
+                                    { model.vision && <VisionTag>{ t( 'vision' ) }</VisionTag> }
                                 </OptionName>
                                 <OptionMeta>
                                     { model.parameters_label } — { format_file_size( model.file_size_bytes ) } — { model.quantization }

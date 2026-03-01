@@ -21,5 +21,9 @@
 
     "recording": "Recording",
     "transcribing": "Transcribing",
-    "loading_voice_model": "Loading voice model"
+    "loading_voice_model": "Loading voice model",
+
+    "image_requires_vision": "Image input requires vision model support (coming soon)",
+    "unsupported_file_type": "This file type is not supported",
+    "file_too_large": "File is too large (max 100 KB)"
 }

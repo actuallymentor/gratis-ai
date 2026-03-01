@@ -51,6 +51,8 @@
     "aria_check_for_updates": "Buscar actualizaciones",
     "aria_change_language": "Cambiar idioma",
     "aria_change_model": "Cambiar modelo",
+    "aria_attach_file": "Adjuntar archivo",
+    "aria_remove_attachment": "Eliminar adjunto",
 
     "format_tokens": "{{tokens}} tokens · {{tps}} tok/s · {{time}}s",
     "format_just_now": "Justo ahora",

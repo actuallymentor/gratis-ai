@@ -51,6 +51,8 @@
     "aria_check_for_updates": "检查更新",
     "aria_change_language": "更改语言",
     "aria_change_model": "更改模型",
+    "aria_attach_file": "附加文件",
+    "aria_remove_attachment": "移除附件",
 
     "format_tokens": "{{tokens}} 个 token · {{tps}} tok/s · {{time}}秒",
     "format_just_now": "刚刚",

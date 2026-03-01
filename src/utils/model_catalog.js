@@ -41,6 +41,7 @@
  * @property {boolean} reasoning - Whether the model supports native thinking/reasoning mode (<think> tags)
  * @property {string} license - License identifier
  * @property {boolean} [uncensored] - Whether this model has had refusal behavior removed
+ * @property {boolean} [vision] - Whether this model supports image/vision input (requires mmproj)
  * @property {string} [category] - Legacy tier label for backward compat with cached IndexedDB data
  * @property {Benchmarks} [benchmarks] - Benchmark scores (null = unavailable for that benchmark)
  */
@@ -550,6 +551,99 @@ export const MODEL_CATALOG = [
         uncensored: true,
     },
 
+
+    // ── Vision models ─────────────────────────────────────────────────
+    // Multimodal models with image/vision input support via mmproj.
+    // Engine support is pending — these are catalog-ready for when it lands.
+
+    {
+        id: `smolvlm2-2.2b-q4km`,
+        name: `SmolVLM2 2.2B Instruct`,
+        description: `Tiny vision model. Handles images and video on low-resource devices.`,
+        family: `smollm`,
+        parameters: 2_200_000_000,
+        parameters_label: `2.2B`,
+        quantization: `Q4_K_M`,
+        bpw: 4.85,
+        file_size_bytes: 1_112_602_656,
+        context_length: 8_192,
+        layers: 24,
+        kv_heads: 32,
+        head_dim: 64,
+        hugging_face_repo: `ggml-org/SmolVLM2-2.2B-Instruct-GGUF`,
+        file_name: `SmolVLM2-2.2B-Instruct-Q4_K_M.gguf`,
+        reasoning: false,
+        benchmarks: { mmlu: null, gpqa: null, humaneval: null, math: null, gsm8k: null },
+        license: `Apache-2.0`,
+        vision: true,
+    },
+
+    {
+        id: `gemma3-4b-vision-q4km`,
+        name: `Gemma 3 4B IT`,
+        description: `Google's compact vision model. Solid text and image understanding.`,
+        family: `gemma3`,
+        parameters: 4_000_000_000,
+        parameters_label: `4B`,
+        quantization: `Q4_K_M`,
+        bpw: 4.85,
+        file_size_bytes: 2_489_757_856,
+        context_length: 131_072,
+        layers: 26,
+        kv_heads: 4,
+        head_dim: 256,
+        hugging_face_repo: `ggml-org/gemma-3-4b-it-GGUF`,
+        file_name: `gemma-3-4b-it-Q4_K_M.gguf`,
+        reasoning: false,
+        benchmarks: { mmlu: null, gpqa: 30.8, humaneval: 71.3, math: 75.6, gsm8k: 89.2 },
+        license: `Gemma`,
+        vision: true,
+    },
+
+    {
+        id: `qwen25-vl-3b-q4km`,
+        name: `Qwen 2.5 VL 3B Instruct`,
+        description: `Compact vision-language model with strong document and chart understanding.`,
+        family: `qwen2`,
+        parameters: 3_100_000_000,
+        parameters_label: `3B`,
+        quantization: `Q4_K_M`,
+        bpw: 4.85,
+        file_size_bytes: 1_929_901_056,
+        context_length: 32_768,
+        layers: 36,
+        kv_heads: 2,
+        head_dim: 128,
+        hugging_face_repo: `ggml-org/Qwen2.5-VL-3B-Instruct-GGUF`,
+        file_name: `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf`,
+        reasoning: false,
+        benchmarks: { mmlu: null, gpqa: null, humaneval: null, math: null, gsm8k: null },
+        license: `Apache-2.0`,
+        vision: true,
+    },
+
+    {
+        id: `qwen25-vl-7b-q4km`,
+        name: `Qwen 2.5 VL 7B Instruct`,
+        description: `Best-in-class vision model. Excels at documents, charts, and screen understanding.`,
+        family: `qwen2`,
+        parameters: 7_600_000_000,
+        parameters_label: `7.6B`,
+        quantization: `Q4_K_M`,
+        bpw: 4.85,
+        file_size_bytes: 4_683_072_032,
+        context_length: 32_768,
+        layers: 28,
+        kv_heads: 4,
+        head_dim: 128,
+        hugging_face_repo: `ggml-org/Qwen2.5-VL-7B-Instruct-GGUF`,
+        file_name: `Qwen2.5-VL-7B-Instruct-Q4_K_M.gguf`,
+        reasoning: false,
+        benchmarks: { mmlu: null, gpqa: null, humaneval: null, math: null, gsm8k: null },
+        license: `Apache-2.0`,
+        vision: true,
+    },
+
 ]
 
 
@@ -645,9 +739,9 @@ export const quality_score = ( model ) => {
  */
 export const select_best_model = ( available_bytes ) => {
 
-    // Exclude uncensored models from auto-recommendation — they belong in the
-    // alternatives list only, never as the default suggestion
-    const safe = MODEL_CATALOG.filter( m => !m.uncensored )
+    // Exclude uncensored and vision models from auto-recommendation — they
+    // belong in their own cards, never as the default suggestion
+    const safe = MODEL_CATALOG.filter( m => !m.uncensored && !m.vision )
 
     // Models that fit, sorted by quality score desc → bpw desc
     const fitting = safe
@@ -695,6 +789,29 @@ export const select_best_uncensored = ( available_bytes ) => {
 }
 
 
+// ─── Vision selection ─────────────────────────────────────────────────────────────
+
+/**
+ * Select the best vision model that fits in available memory.
+ *
+ * Filters for `vision === true`, sorts by quality score then bpw.
+ * Returns `null` if no vision model fits — the UI simply hides the card.
+ *
+ * @param {number} available_bytes - Memory budget from estimate_max_model_bytes()
+ * @returns {ModelDefinition | null}
+ */
+export const select_best_vision = ( available_bytes ) => {
+
+    const fitting = MODEL_CATALOG
+        .filter( m => m.vision === true )
+        .filter( m => can_fit_in_memory( m, available_bytes ) )
+        .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )
+
+    return fitting[ 0 ] ?? null
+
+}
+
+
 // ─── Option selection ────────────────────────────────────────────────────────────
 
 /**
@@ -703,13 +820,14 @@ export const select_best_uncensored = ( available_bytes ) => {
  * - **smarter** = highest-quality model that fits (same as `select_best_model`)
  * - **faster**  = highest-quality model that fits AND is ≤50% the file size of smarter
  * - **uncensored** = best uncensored model that fits, or `null`
+ * - **vision** = best vision model that fits, or `null`
  *
  * The 50% threshold ensures meaningful differentiation between the two cards.
  * If no meaningfully smaller model exists, `faster` is `null` → UI falls back
  * to a single recommendation card.
  *
  * @param {number} available_bytes - Memory budget from estimate_max_model_bytes()
- * @returns {{ smarter: ModelDefinition, faster: ModelDefinition | null, uncensored: ModelDefinition | null }}
+ * @returns {{ smarter: ModelDefinition, faster: ModelDefinition | null, uncensored: ModelDefinition | null, vision: ModelDefinition | null }}
  */
 export const select_model_options = ( available_bytes ) => {
 
@@ -719,15 +837,16 @@ export const select_model_options = ( available_bytes ) => {
     const half_size = smarter.file_size_bytes * 0.5
 
     const faster_candidates = MODEL_CATALOG
-        .filter( m => !m.uncensored && m.id !== smarter.id )
+        .filter( m => !m.uncensored && !m.vision && m.id !== smarter.id )
         .filter( m => can_fit_in_memory( m, available_bytes ) )
         .filter( m => m.file_size_bytes <= half_size )
         .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )
 
     const faster = faster_candidates[ 0 ] ?? null
     const uncensored = select_best_uncensored( available_bytes )
+    const vision = select_best_vision( available_bytes )
 
-    return { smarter, faster, uncensored }
+    return { smarter, faster, uncensored, vision }
 
 }
 

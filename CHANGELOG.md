@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.20.0] - 2026-03-01
+
+### Added
+- Vision model card on model selection page — promotes best-fitting vision model alongside Faster, Smarter, and Uncensored
+- 4 vision models in catalog: SmolVLM2 2.2B, Gemma 3 4B IT, Qwen 2.5 VL 3B, Qwen 2.5 VL 7B
+- `select_best_vision()` memory-aware selection engine for vision models
+- File attachment in chat input — paperclip button reads text files (40+ extensions, 100 KB limit)
+- Attachment chip UI with filename display and remove button
+- Image file rejection toast with "coming soon" message (pending engine support)
+- Vision and file attachment translations across all 11 locales
+- E2E tests for vision card visibility, selection, and file attachment flow
+
+### Changed
+- Card row layout widens to 1120px when 4 cards are shown
+- Theme palette gains `info` color (soft blue) for vision-related UI elements
+- `select_model_options` returns `{ smarter, faster, uncensored, vision }`
+
 ## [0.19.1] - 2026-03-01
 
 ### Fixed

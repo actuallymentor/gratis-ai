@@ -36,6 +36,25 @@ All architecture configs from `/resolve/main/config.json` on source/mirror repos
 
 ---
 
+## Vision Model GGUF Research (2026-03-01)
+
+Researched 4 vision models for Q4_K_M GGUF file sizes, architecture parameters, and benchmarks.
+All file sizes verified via HF API `/api/models/{repo}/tree/main` endpoint.
+
+### Exact Q4_K_M File Sizes (bytes)
+- SmolVLM2-2.2B-Instruct: 1,112,602,656
+- gemma-3-4b-it: 2,489,757,856
+- Qwen2.5-VL-3B-Instruct: 1,929,901,056
+- Qwen2.5-VL-7B-Instruct: 4,683,072,032
+
+### mmproj files (needed for vision)
+- SmolVLM2: mmproj-SmolVLM2-2.2B-Instruct-f16.gguf (872,303,680) / Q8_0 (592,523,200)
+- Gemma 3 4B: mmproj-model-f16.gguf (851,251,104)
+- Qwen2.5-VL-3B: mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf (1,338,428,128) / Q8_0 (844,757,728)
+- Qwen2.5-VL-7B: mmproj-Qwen2.5-VL-7B-Instruct-f16.gguf (1,354,162,912) / Q8_0 (853,119,712)
+
+---
+
 ## GGUF Quantization Quality Data (Artefact2) — 2026-02-22
 
 Source: https://gist.github.com/Artefact2/b5f810600771265fc1e39442288e8ec9

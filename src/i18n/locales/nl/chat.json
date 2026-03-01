@@ -17,5 +17,9 @@
 
     "recording": "Opnemen",
     "transcribing": "Transcriberen",
-    "loading_voice_model": "Spraakmodel laden"
+    "loading_voice_model": "Spraakmodel laden",
+
+    "image_requires_vision": "Afbeeldingsinvoer vereist ondersteuning voor een visiemodel (binnenkort beschikbaar)",
+    "unsupported_file_type": "Dit bestandstype wordt niet ondersteund",
+    "file_too_large": "Bestand is te groot (max 100 KB)"
 }

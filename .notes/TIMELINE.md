@@ -1,5 +1,24 @@
 # Timeline
 
+## 2026-03-01 — Vision models + file attachment (v0.20.0)
+
+- Added 4 vision models to `MODEL_CATALOG`: SmolVLM2 2.2B, Gemma 3 4B IT, Qwen 2.5 VL 3B, Qwen 2.5 VL 7B (all `vision: true`)
+- Researched exact GGUF file sizes and architecture params from HuggingFace ggml-org repos
+- Added `select_best_vision()` mirroring `select_best_uncensored()` pattern
+- Excluded vision models from `select_best_model()` and `faster_candidates` (same as uncensored)
+- `select_model_options()` now returns `{ smarter, faster, uncensored, vision }`
+- Added `info` color to theme (light: `#6b8ab6`, dark: `#8ab4d4`) for vision UI elements
+- Vision card on ModelSelectPage with Eye icon, info-colored border, `$variant="vision"`
+- Refactored OptionCard border/shadow logic into `variant_color()` helper (DRYs up uncensored+vision)
+- `CardRow` max-width extends to 1120px when 4 cards shown
+- `VisionTag` in alternatives list mirrors `UncensoredTag` pattern
+- File attachment in ChatInput: paperclip button, `TEXT_EXTENSIONS` (40+), `IMAGE_EXTENSIONS` (9), 100KB limit
+- Attachment chip UI with filename truncation and X remove button
+- Image files show toast "coming soon" (pending engine support)
+- Translations: 8 new keys across 3 namespaces (`models`, `chat`, `common`) × 11 locales = 88 translations
+- E2E tests: 6 vision model tests + 8 file attachment tests, all passing
+- Key debugging: headless Chromium reports low `deviceMemory` (~2GB) AND low `jsHeapSizeLimit` — test helper `inject_high_memory` overrides both via `addInitScript`
+
 ## 2026-03-01 — "Waking up the AI" indicator + TTFT-excluded tok/s + slow device warning (v0.18.0)
 
 - Fixed tok/s calculation to exclude TTFT — now measures decode speed only

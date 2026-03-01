@@ -51,6 +51,8 @@
     "aria_check_for_updates": "Check for updates",
     "aria_change_language": "Change language",
     "aria_change_model": "Change model",
+    "aria_attach_file": "Attach file",
+    "aria_remove_attachment": "Remove attachment",
 
     "format_tokens": "{{tokens}} tokens · {{tps}} tok/s · {{time}}s",
     "format_just_now": "Just now",

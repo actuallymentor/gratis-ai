@@ -51,6 +51,8 @@
     "aria_check_for_updates": "Проверить обновления",
     "aria_change_language": "Сменить язык",
     "aria_change_model": "Сменить модель",
+    "aria_attach_file": "Прикрепить файл",
+    "aria_remove_attachment": "Удалить вложение",
 
     "format_tokens": "{{tokens}} токенов · {{tps}} ток/с · {{time}}с",
     "format_just_now": "Только что",

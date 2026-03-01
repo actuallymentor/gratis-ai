@@ -17,5 +17,9 @@
 
     "recording": "Aufnahme",
     "transcribing": "Wird transkribiert",
-    "loading_voice_model": "Sprachmodell wird geladen"
+    "loading_voice_model": "Sprachmodell wird geladen",
+
+    "image_requires_vision": "Bildeingabe erfordert ein Vision-Modell (kommt bald)",
+    "unsupported_file_type": "Dieser Dateityp wird nicht unterstützt",
+    "file_too_large": "Die Datei ist zu groß (max. 100 KB)"
 }

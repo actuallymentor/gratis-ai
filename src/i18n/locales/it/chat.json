@@ -17,5 +17,9 @@
 
     "recording": "Registrazione",
     "transcribing": "Trascrizione in corso",
-    "loading_voice_model": "Caricamento modello vocale"
+    "loading_voice_model": "Caricamento modello vocale",
+
+    "image_requires_vision": "L'input di immagini richiede il supporto del modello visivo (in arrivo)",
+    "unsupported_file_type": "Questo tipo di file non è supportato",
+    "file_too_large": "Il file è troppo grande (max 100 KB)"
 }

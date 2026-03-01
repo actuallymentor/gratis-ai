@@ -51,6 +51,8 @@
     "aria_check_for_updates": "Controleren op updates",
     "aria_change_language": "Taal wijzigen",
     "aria_change_model": "Model wijzigen",
+    "aria_attach_file": "Bestand bijvoegen",
+    "aria_remove_attachment": "Bijlage verwijderen",
 
     "format_tokens": "{{tokens}} tokens · {{tps}} tok/s · {{time}}s",
     "format_just_now": "Zojuist",

@@ -51,6 +51,8 @@
     "aria_check_for_updates": "アップデートを確認",
     "aria_change_language": "言語を変更",
     "aria_change_model": "モデルを変更",
+    "aria_attach_file": "ファイルを添付",
+    "aria_remove_attachment": "添付ファイルを削除",
 
     "format_tokens": "{{tokens}} トークン · {{tps}} tok/s · {{time}}秒",
     "format_just_now": "たった今",

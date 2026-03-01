@@ -34,7 +34,7 @@ export default defineConfig( {
         // Fast UI tests (no inference, no model downloads)
         {
             name: `ui`,
-            testMatch: /\b(chat|history|model_management|query_param|settings|ux_improvements|welcome|theme_toggle|error_handling)\.spec\.js$/,
+            testMatch: /\b(chat|history|model_management|query_param|settings|ux_improvements|welcome|theme_toggle|error_handling|vision_models|file_attachment)\.spec\.js$/,
         },
 
         // Inference tests — download real models and run WASM inference

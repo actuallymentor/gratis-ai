@@ -17,5 +17,9 @@
 
     "recording": "録音中",
     "transcribing": "文字起こし中",
-    "loading_voice_model": "音声モデルを読み込み中"
+    "loading_voice_model": "音声モデルを読み込み中",
+
+    "image_requires_vision": "画像入力にはビジョンモデルのサポートが必要です（近日対応予定）",
+    "unsupported_file_type": "このファイル形式はサポートされていません",
+    "file_too_large": "ファイルが大きすぎます（最大100 KB）"
 }

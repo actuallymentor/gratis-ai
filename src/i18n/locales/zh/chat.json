@@ -17,5 +17,9 @@
 
     "recording": "录音中",
     "transcribing": "正在转录",
-    "loading_voice_model": "正在加载语音模型"
+    "loading_voice_model": "正在加载语音模型",
+
+    "image_requires_vision": "图片输入需要视觉模型支持（即将推出）",
+    "unsupported_file_type": "不支持此文件类型",
+    "file_too_large": "文件过大（最大 100 KB）"
 }
