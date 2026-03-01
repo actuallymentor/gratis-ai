@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.18.1] - 2026-03-01
+
+### Fixed
+- Close sidebar on mobile after tapping "new chat" or a conversation
+
 ## [0.18.0] - 2026-03-01
 
 ### Added

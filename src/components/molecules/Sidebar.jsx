@@ -313,13 +313,20 @@ export default function Sidebar( { collapsed, on_toggle, on_new_chat, conversati
         window.electronAPI.updater.check_for_updates()
     }
 
+    // On mobile, collapse sidebar after navigation
+    const close_on_mobile = () => {
+        if( window.innerWidth <= 768 && on_toggle ) on_toggle()
+    }
+
     const handle_new_chat = () => {
         if( on_new_chat ) on_new_chat()
         navigate( `/chat` )
+        close_on_mobile()
     }
 
     const handle_click_conversation = ( id ) => {
         navigate( `/chat/${ id }` )
+        close_on_mobile()
     }
 
     const handle_export = ( e, conversation ) => {
