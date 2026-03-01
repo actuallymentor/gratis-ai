@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.20.2] - 2026-03-01
+
+### Changed
+- Increase default Electron window size ~20% to 1536×960
+
 ## [0.20.1] - 2026-03-01
 
 ### Fixed

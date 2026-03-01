@@ -226,8 +226,8 @@ const write_manifest = ( manifest ) => {
 const create_window = () => {
 
     main_window = new BrowserWindow( {
-        width: 1280,
-        height: 800,
+        width: 1536,
+        height: 960,
         webPreferences: {
             preload: path.join( __dirname, `../preload/preload.cjs` ),
             contextIsolation: true,
