@@ -148,6 +148,7 @@ vite.config.ts.timestamp-*
 !.nvmrc
 !.gitignore
 !.husky
+!.notes
 !.github
 
 # WASM binaries copied from node_modules by postinstall
