@@ -1,5 +1,13 @@
 # Timeline
 
+## 2026-03-03 — Qwen 3.5 9B vision model (v0.21.0)
+
+- Added Qwen 3.5 9B (`qwen35-9b-vision-q4km`) as top vision model in catalog
+- Hybrid architecture: 3:1 Gated DeltaNet + Gated Attention — only 8/32 layers use KV cache attention
+- `layers: 8` gives accurate memory estimation (~6.25 GB total at 2K context)
+- GGUF from `unsloth/Qwen3.5-9B-GGUF`, file size 5,680,522,464 bytes
+- Demoted Qwen 2.5 VL 7B description from "best-in-class" to "previous-gen"
+
 ## 2026-03-01 — Vision models + file attachment (v0.20.0)
 
 - Added 4 vision models to `MODEL_CATALOG`: SmolVLM2 2.2B, Gemma 3 4B IT, Qwen 2.5 VL 3B, Qwen 2.5 VL 7B (all `vision: true`)

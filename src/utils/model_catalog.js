@@ -625,7 +625,7 @@ export const MODEL_CATALOG = [
     {
         id: `qwen25-vl-7b-q4km`,
         name: `Qwen 2.5 VL 7B Instruct`,
-        description: `Best-in-class vision model. Excels at documents, charts, and screen understanding.`,
+        description: `Previous-gen vision model. Solid at documents, charts, and screen understanding.`,
         family: `qwen2`,
         parameters: 7_600_000_000,
         parameters_label: `7.6B`,
@@ -640,6 +640,34 @@ export const MODEL_CATALOG = [
         file_name: `Qwen2.5-VL-7B-Instruct-Q4_K_M.gguf`,
         reasoning: false,
         benchmarks: { mmlu: null, gpqa: null, humaneval: null, math: null, gsm8k: null },
+        license: `Apache-2.0`,
+        vision: true,
+    },
+
+    {
+        id: `qwen35-9b-vision-q4km`,
+        name: `Qwen 3.5 9B`,
+        description: `Natively multimodal — best-in-class vision, documents, and charts at any size.`,
+        family: `qwen35`,
+        parameters: 9_000_000_000,
+        parameters_label: `9B`,
+        quantization: `Q4_K_M`,
+        bpw: 4.85,
+        file_size_bytes: 5_680_522_464,
+        context_length: 262_144,
+
+        // Hybrid architecture: 3:1 Gated DeltaNet + Gated Attention.
+        // Only 8 of 32 layers use standard softmax attention with KV caches —
+        // the other 24 use linear attention (constant memory, no context scaling).
+        // Setting layers: 8 gives accurate KV cache estimation.
+        layers: 8,
+        kv_heads: 4,
+        head_dim: 256,
+
+        hugging_face_repo: `unsloth/Qwen3.5-9B-GGUF`,
+        file_name: `Qwen3.5-9B-Q4_K_M.gguf`,
+        reasoning: true,
+        benchmarks: { mmlu: null, gpqa: 81.7, humaneval: null, math: null, gsm8k: null },
         license: `Apache-2.0`,
         vision: true,
     },

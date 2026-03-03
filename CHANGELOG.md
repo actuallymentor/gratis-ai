@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.21.0] - 2026-03-03
+
+### Added
+- Qwen 3.5 9B vision model in catalog — natively multimodal with hybrid Gated DeltaNet architecture
+
+### Changed
+- Qwen 2.5 VL 7B description demoted from "best-in-class" to "previous-gen"
+
 ## [0.20.2] - 2026-03-01
 
 ### Changed
