@@ -10,6 +10,8 @@ asarUnpack:
 
 publish:
   provider: github
+  owner: actuallymentor
+  repo: gratis-ai
 
 # --- macOS ---
 mac:

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.21.1] - 2026-03-03
+
+### Fixed
+- Fix Electron auto-update — remove manual `setFeedURL()` conflicting with electron-updater v6, let `app-update.yml` drive config
+- Register updater IPC handlers unconditionally to prevent dev-mode crashes
+- Upload blockmap files in CI for differential downloads
+- Surface update errors in React hook instead of silently swallowing them
+
 ## [0.21.0] - 2026-03-03
 
 ### Added

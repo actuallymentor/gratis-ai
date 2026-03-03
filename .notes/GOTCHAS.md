@@ -1,5 +1,16 @@
 # Gotchas
 
+## electron-updater v6: never call setFeedURL() (2026-03-03)
+
+electron-builder auto-generates `app-update.yml` inside the packaged app's `resources/` directory.
+electron-updater v6 reads this file automatically at runtime. Calling `autoUpdater.setFeedURL()`
+manually **overrides** the auto-generated config and can conflict with v6's internal resolution,
+causing silent update failures.
+
+**Fix**: Remove `setFeedURL()`, add `owner`/`repo` to the `publish` config in `electron-builder.yml`
+so the generated `app-update.yml` contains correct GitHub coordinates. Add `repository` to
+`package.json` as a fallback.
+
 ## Native inference VRAM context-size crash (2026-02-26)
 
 The Electron native inference path (`inference_worker.js`) passed `model.context_length`

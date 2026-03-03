@@ -56,8 +56,7 @@ let main_window = null
 let inference_worker = null
 let active_download_controller = null
 let _is_quitting = false
-
-/* global __GITHUB_REPO__ */
+let _updater_active = false
 
 // ---------------------------------------------------
 // Inference worker bridge — spawns a utilityProcess
@@ -497,6 +496,23 @@ const register_ipc_handlers = () => {
 
     } )
 
+    // Auto-updater IPC — registered unconditionally so the renderer
+    // never hits "No handler registered" errors, even in dev mode
+    ipcMain.handle( `updater:check`, () => {
+        if( !_updater_active ) return { status: `unavailable` }
+        return autoUpdater.checkForUpdates()
+    } )
+
+    ipcMain.handle( `updater:download`, () => {
+        if( !_updater_active ) return { status: `unavailable` }
+        return autoUpdater.downloadUpdate()
+    } )
+
+    ipcMain.handle( `updater:install`, () => {
+        if( !_updater_active ) return { status: `unavailable` }
+        autoUpdater.quitAndInstall()
+    } )
+
 }
 
 // ---------------------------------------------------
@@ -505,19 +521,12 @@ const register_ipc_handlers = () => {
 
 const setup_auto_updater = () => {
 
-    // Skip in dev — no packaged app to update
+    // Skip in dev — no packaged app to update.
+    // electron-updater reads app-update.yml from the packaged resources
+    // automatically, so we must NOT call setFeedURL() manually.
     if( !app.isPackaged ) return
 
-    // Parse owner/repo from build-time define
-    const repo = typeof __GITHUB_REPO__ !== `undefined` ? __GITHUB_REPO__ : ``
-    const [ owner, name ] = repo.split( `/` )
-    if( !owner || !name ) return
-
-    autoUpdater.setFeedURL( {
-        provider: `github`,
-        owner,
-        repo: name,
-    } )
+    _updater_active = true
 
     autoUpdater.autoDownload = false
     autoUpdater.autoInstallOnAppQuit = true
@@ -527,14 +536,20 @@ const setup_auto_updater = () => {
         main_window?.webContents?.send( channel, data )
     }
 
+    autoUpdater.on( `checking-for-update`, () => {
+        console.log( `[updater] Checking for update...` )
+    } )
+
     autoUpdater.on( `update-available`, ( info ) => {
+        console.log( `[updater] Update available: v${ info.version }` )
         send( `updater:available`, {
             version: info.version,
             release_notes: info.releaseNotes || ``,
         } )
     } )
 
-    autoUpdater.on( `update-not-available`, () => {
+    autoUpdater.on( `update-not-available`, ( info ) => {
+        console.log( `[updater] Up to date (current: v${ info.version })` )
         send( `updater:not-available` )
     } )
 
@@ -548,20 +563,21 @@ const setup_auto_updater = () => {
     } )
 
     autoUpdater.on( `update-downloaded`, ( info ) => {
+        console.log( `[updater] Update downloaded: v${ info.version }` )
         send( `updater:downloaded`, { version: info.version } )
     } )
 
     autoUpdater.on( `error`, ( err ) => {
+        console.error( `[updater] Error:`, err?.message || err )
         send( `updater:error`, { message: err?.message || `Update check failed` } )
     } )
 
-    // IPC handlers for renderer-initiated actions
-    ipcMain.handle( `updater:check`, () => autoUpdater.checkForUpdates() )
-    ipcMain.handle( `updater:download`, () => autoUpdater.downloadUpdate() )
-    ipcMain.handle( `updater:install`, () => autoUpdater.quitAndInstall() )
-
     // Auto-check 5 seconds after launch
-    setTimeout( () => autoUpdater.checkForUpdates().catch( () => {} ), 5000 )
+    setTimeout( () => {
+        autoUpdater.checkForUpdates().catch( ( err ) => {
+            console.error( `[updater] Auto-check failed:`, err?.message || err )
+        } )
+    }, 5_000 )
 
 }
 

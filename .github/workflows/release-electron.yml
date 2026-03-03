@@ -195,6 +195,8 @@ jobs:
           mv gratisAI-mac-x64.dmg gratisAI-mac-intel.dmg
           mv gratisAI-mac-arm64.zip gratisAI-mac.zip
           mv gratisAI-mac-x64.zip gratisAI-mac-intel.zip
+          mv gratisAI-mac-arm64.dmg.blockmap gratisAI-mac.dmg.blockmap 2>/dev/null || true
+          mv gratisAI-mac-x64.dmg.blockmap gratisAI-mac-intel.dmg.blockmap 2>/dev/null || true
           sed -i '' 's/gratisAI-mac-arm64/gratisAI-mac/g; s/gratisAI-mac-x64/gratisAI-mac-intel/g' latest*.yml
 
       - name: Upload artifacts to release
@@ -206,4 +208,5 @@ jobs:
             release/*.zip
             release/*.exe
             release/*.AppImage
+            release/*.blockmap
             release/latest*.yml
