@@ -3,7 +3,7 @@
 ## [0.21.3] - 2026-03-03
 
 ### Fixed
-- Skip speed test in Electron to prevent `ERR_FILE_NOT_FOUND` from `file://` fetch URLs
+- Fix speed test in Electron — fetch from hosted app URL with CORS instead of broken `file://` origin
 
 ## [0.21.2] - 2026-03-03
 

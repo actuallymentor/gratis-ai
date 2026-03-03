@@ -43,14 +43,13 @@ export default function use_speed_estimate() {
     // AbortController ref — lets us cancel in-flight fetches on unmount or re-run
     const abort_ref = useRef( null )
 
-    const base_url = import.meta.env.VITE_APP_BASE_URL || window.location.origin
+    // In Electron the origin is file:// — speedtest binaries live on the hosted app
+    const base_url = import.meta.env.VITE_APP_BASE_URL
+        || ( window.electronAPI?.native_inference && import.meta.env.VITE_APP_URL )
+        || window.location.origin
 
 
     const run_estimate = useCallback( async () => {
-
-        // Electron loads via file:// — speedtest binaries aren't reachable.
-        // Download time estimates fall back to navigator.connection.downlink.
-        if( window.electronAPI?.native_inference ) return
 
         // Cancel any previous in-flight measurement
         abort_ref.current?.abort()
@@ -73,7 +72,7 @@ export default function use_speed_estimate() {
 
                 const response = await fetch( url, {
                     cache: 'no-store',
-                    mode: 'same-origin',
+                    mode: base_url === window.location.origin ? 'same-origin' : 'cors',
                     signal: controller.signal,
                 } )
 
