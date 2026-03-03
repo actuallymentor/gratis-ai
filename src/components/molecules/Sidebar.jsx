@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components'
 import { Plus, PanelLeftClose, PanelLeft, Download, Trash2, Trash, Monitor, RefreshCw, LoaderCircle, CheckCircle } from 'lucide-react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import toast from 'react-hot-toast'
 import { truncate } from '../../utils/format'
 import ModelSelector from './ModelSelector'
 
@@ -302,18 +303,21 @@ export default function Sidebar( {
             if( status_ref.current === `checking` ) {
                 update_status( `up_to_date` )
                 reset_after_delay()
+                toast.success( t( `update_toast_up_to_date` ) )
             }
         } )
 
-        const unsub_available = window.electronAPI.updater.on_update_available( () => {
-            // The existing UpdateBanner handles this — just reset our button
+        const unsub_available = window.electronAPI.updater.on_update_available( ( data ) => {
+            // The existing UpdateBanner handles the download flow — just notify and reset
             update_status( `idle` )
+            toast.success( t( `update_toast_available`, { version: data?.version || `` } ) )
         } )
 
-        const unsub_error = window.electronAPI.updater.on_update_error( () => {
+        const unsub_error = window.electronAPI.updater.on_update_error( ( data ) => {
             if( status_ref.current === `checking` ) {
                 update_status( `failed` )
                 reset_after_delay()
+                toast.error( data?.message || t( `update_toast_error` ) )
             }
         } )
 

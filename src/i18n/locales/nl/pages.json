@@ -25,6 +25,9 @@
     "up_to_date": "Up-to-date",
     "check_failed": "Controle mislukt",
     "check_for_updates": "Controleren op updates",
+    "update_toast_up_to_date": "Je hebt de nieuwste versie",
+    "update_toast_available": "Update beschikbaar: v{{version}}",
+    "update_toast_error": "Controle op updates mislukt",
 
     "change_model": "Model wijzigen",
     "theme_label": "Thema: {{theme}}",

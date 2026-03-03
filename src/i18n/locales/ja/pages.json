@@ -25,6 +25,9 @@
     "up_to_date": "最新です",
     "check_failed": "確認に失敗しました",
     "check_for_updates": "アップデートを確認",
+    "update_toast_up_to_date": "最新バージョンです",
+    "update_toast_available": "アップデートがあります: v{{version}}",
+    "update_toast_error": "アップデートの確認に失敗しました",
 
     "change_model": "モデルを変更",
     "theme_label": "テーマ: {{theme}}",

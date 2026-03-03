@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.21.2] - 2026-03-03
+
+### Added
+- Toast notifications for update check outcomes (up to date, available, error)
+
 ## [0.21.1] - 2026-03-03
 
 ### Fixed

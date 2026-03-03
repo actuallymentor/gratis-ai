@@ -25,6 +25,9 @@
     "up_to_date": "À jour",
     "check_failed": "Échec de la vérification",
     "check_for_updates": "Vérifier les mises à jour",
+    "update_toast_up_to_date": "Vous êtes à jour",
+    "update_toast_available": "Mise à jour disponible : v{{version}}",
+    "update_toast_error": "La vérification des mises à jour a échoué",
 
     "change_model": "Changer de modèle",
     "theme_label": "Thème : {{theme}}",

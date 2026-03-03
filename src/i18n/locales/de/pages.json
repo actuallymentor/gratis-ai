@@ -25,6 +25,9 @@
     "up_to_date": "Aktuell",
     "check_failed": "Prüfung fehlgeschlagen",
     "check_for_updates": "Nach Updates suchen",
+    "update_toast_up_to_date": "Du hast die neueste Version",
+    "update_toast_available": "Update verfügbar: v{{version}}",
+    "update_toast_error": "Update-Prüfung fehlgeschlagen",
 
     "change_model": "Modell wechseln",
     "theme_label": "Design: {{theme}}",

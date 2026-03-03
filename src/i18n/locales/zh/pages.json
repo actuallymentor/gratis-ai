@@ -25,6 +25,9 @@
     "up_to_date": "已是最新",
     "check_failed": "检查失败",
     "check_for_updates": "检查更新",
+    "update_toast_up_to_date": "已是最新版本",
+    "update_toast_available": "有可用更新: v{{version}}",
+    "update_toast_error": "检查更新失败",
 
     "change_model": "更换模型",
     "theme_label": "主题: {{theme}}",

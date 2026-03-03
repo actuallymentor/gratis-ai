@@ -25,6 +25,9 @@
     "up_to_date": "Обновлений нет",
     "check_failed": "Проверка не удалась",
     "check_for_updates": "Проверить обновления",
+    "update_toast_up_to_date": "У вас последняя версия",
+    "update_toast_available": "Доступно обновление: v{{version}}",
+    "update_toast_error": "Не удалось проверить обновления",
 
     "change_model": "Сменить модель",
     "theme_label": "Тема: {{theme}}",
