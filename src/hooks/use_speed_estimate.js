@@ -45,7 +45,7 @@ export default function use_speed_estimate() {
 
     // In Electron the origin is file:// — speedtest binaries live on the hosted app
     const base_url = import.meta.env.VITE_APP_BASE_URL
-        || ( window.electronAPI?.native_inference && import.meta.env.VITE_APP_URL )
+        ||  window.electronAPI?.native_inference && import.meta.env.VITE_APP_URL 
         || window.location.origin
 
 

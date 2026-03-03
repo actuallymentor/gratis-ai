@@ -20,5 +20,9 @@
 		"package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml,.eslint*,config.*,.npm*,.ncu*",
 		"README.md": "*.md,LICENSE",
 		"SPECIFICATION.md": "SPECIFICATION.*.md"
-	}
+	},
+	"i18n-ally.localesPaths": [
+		"src/i18n",
+		"src/i18n/locales"
+	]
 }
