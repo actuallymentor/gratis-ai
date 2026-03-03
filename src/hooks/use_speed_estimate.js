@@ -48,6 +48,10 @@ export default function use_speed_estimate() {
 
     const run_estimate = useCallback( async () => {
 
+        // Electron loads via file:// — speedtest binaries aren't reachable.
+        // Download time estimates fall back to navigator.connection.downlink.
+        if( window.electronAPI?.native_inference ) return
+
         // Cancel any previous in-flight measurement
         abort_ref.current?.abort()
         const controller = new AbortController()

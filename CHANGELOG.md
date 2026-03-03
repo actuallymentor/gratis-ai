@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.21.3] - 2026-03-03
+
+### Fixed
+- Skip speed test in Electron to prevent `ERR_FILE_NOT_FOUND` from `file://` fetch URLs
+
 ## [0.21.2] - 2026-03-03
 
 ### Added
