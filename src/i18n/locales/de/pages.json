@@ -39,6 +39,9 @@
     "update_version_ready": "Version {{version}} ist zur Installation bereit",
     "update_downloading": "v{{version}} wird heruntergeladen… {{progress}}%",
     "restart_now": "Jetzt neu starten",
+    "update_ready_title": "Update bereit",
+    "update_ready_description": "Version {{version}} wurde heruntergeladen. Starte die App neu, um das Update anzuwenden.",
+    "update_quit_and_reopen": "Beenden und neu öffnen",
 
     "get_app_tagline": "Lade die Desktop-App herunter für schnellere, vollständig offline nutzbare KI — betrieben von deiner eigenen Hardware.",
     "download_for": "Für {{platform}} herunterladen",

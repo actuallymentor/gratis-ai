@@ -5,7 +5,7 @@ import { log } from 'mentie'
  * Manages the auto-update lifecycle for the Electron app.
  * No-ops gracefully in browser/PWA mode where electronAPI.updater is absent.
  *
- * @returns {{ available_update: object|null, is_downloading: boolean, download_progress: number, is_ready_to_install: boolean, update_error: string|null, dismissed: boolean, download_update: Function, install_update: Function, dismiss: Function }}
+ * @returns {{ available_update: object|null, is_downloading: boolean, download_progress: number, is_ready_to_install: boolean, update_error: string|null, dismissed: boolean, install_update: Function, dismiss: Function }}
  */
 export default function use_auto_updater() {
 
@@ -22,8 +22,11 @@ export default function use_auto_updater() {
         const updater = window.electronAPI?.updater
         if( !updater ) return
 
+        // autoDownload is enabled — download begins immediately after detection
         const off_available = updater.on_update_available( ( data ) => {
             set_available_update( data )
+            set_is_downloading( true )
+            set_download_progress( 0 )
             set_update_error( null )
             set_dismissed( false )
         } )
@@ -56,18 +59,6 @@ export default function use_auto_updater() {
 
     }, [] )
 
-    const download_update = useCallback( () => {
-
-        const updater = window.electronAPI?.updater
-        if( !updater ) return
-
-        set_is_downloading( true )
-        set_download_progress( 0 )
-        set_update_error( null )
-        updater.download_update()
-
-    }, [] )
-
     const install_update = useCallback( () => {
 
         const updater = window.electronAPI?.updater
@@ -86,7 +77,6 @@ export default function use_auto_updater() {
         is_ready_to_install,
         update_error,
         dismissed,
-        download_update,
         install_update,
         dismiss,
     }

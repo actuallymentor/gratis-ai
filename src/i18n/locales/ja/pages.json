@@ -39,6 +39,9 @@
     "update_version_ready": "バージョン{{version}}のインストール準備ができました",
     "update_downloading": "v{{version}}をダウンロード中… {{progress}}%",
     "restart_now": "今すぐ再起動",
+    "update_ready_title": "アップデート準備完了",
+    "update_ready_description": "バージョン {{version}} がダウンロードされました。アップデートを適用するにはアプリを再起動してください。",
+    "update_quit_and_reopen": "終了して再起動",
 
     "get_app_tagline": "デスクトップアプリをダウンロードして、あなたのハードウェアで動く高速な完全オフラインAIを体験しましょう。",
     "download_for": "{{platform}}版をダウンロード",

@@ -1,8 +1,8 @@
 # Memory
 
-## Electron Auto-Update (v0.21.1)
+## Electron Auto-Update (v0.22.0)
 
-`electron-updater` v6 reads `app-update.yml` from packaged resources automatically — never call `setFeedURL()` manually. The `owner`/`repo` fields in `electron-builder.yml` publish config ensure correct `app-update.yml` generation. IPC handlers (`updater:check`, `updater:download`, `updater:install`) are registered unconditionally in `register_ipc_handlers()`, gated by `_updater_active` flag set in `setup_auto_updater()`. `dev-app-update.yml` in project root enables local testing.
+`electron-updater` v6 reads `app-update.yml` from packaged resources automatically — never call `setFeedURL()` manually. `autoDownload = true` — updates download automatically in the background. IPC handlers (`updater:check`, `updater:download`, `updater:install`) are registered unconditionally, gated by `_updater_active` flag. When download completes, `UpdateModal` prompts user to "Quit and Reopen" or cancel. `UpdateBanner` shows download progress only. `dev-app-update.yml` in project root enables local testing.
 
 ## Vision Models & File Attachment (v0.20.0)
 4 vision models added to `MODEL_CATALOG` with `vision: true` — SmolVLM2 2.2B, Gemma 3 4B IT, Qwen 2.5 VL 3B, Qwen 2.5 VL 7B. Vision card on ModelSelectPage uses `info` theme color (soft blue). File attachment in ChatInput reads text files (40+ extensions, 100KB limit), image files show "coming soon" toast. Engine support for vision inference is pending. See `RESEARCH.md` for GGUF research details.

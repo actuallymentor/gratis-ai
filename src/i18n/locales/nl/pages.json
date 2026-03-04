@@ -39,6 +39,9 @@
     "update_version_ready": "Versie {{version}} staat klaar om te installeren",
     "update_downloading": "v{{version}} downloaden… {{progress}}%",
     "restart_now": "Nu herstarten",
+    "update_ready_title": "Update gereed",
+    "update_ready_description": "Versie {{version}} is gedownload. Herstart de app om de update toe te passen.",
+    "update_quit_and_reopen": "Sluiten en heropenen",
 
     "get_app_tagline": "Download de desktop-app voor snellere, volledig offline AI op je eigen hardware.",
     "download_for": "Downloaden voor {{platform}}",

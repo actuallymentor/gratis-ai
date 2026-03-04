@@ -39,6 +39,9 @@
     "update_version_ready": "La versión {{version}} está lista para instalar",
     "update_downloading": "Descargando v{{version}}… {{progress}}%",
     "restart_now": "Reiniciar ahora",
+    "update_ready_title": "Actualización lista",
+    "update_ready_description": "La versión {{version}} se ha descargado. Reinicia la app para aplicar la actualización.",
+    "update_quit_and_reopen": "Cerrar y reabrir",
 
     "get_app_tagline": "Descarga la app de escritorio para una IA más rápida, completamente offline y con tu propio hardware.",
     "download_for": "Descargar para {{platform}}",

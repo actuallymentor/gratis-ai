@@ -528,7 +528,7 @@ const setup_auto_updater = () => {
 
     _updater_active = true
 
-    autoUpdater.autoDownload = false
+    autoUpdater.autoDownload = true
     autoUpdater.autoInstallOnAppQuit = true
 
     // Forward updater events to the renderer

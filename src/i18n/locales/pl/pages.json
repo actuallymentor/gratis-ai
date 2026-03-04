@@ -39,6 +39,9 @@
     "update_version_ready": "Wersja {{version}} jest gotowa do instalacji",
     "update_downloading": "Pobieranie v{{version}}… {{progress}}%",
     "restart_now": "Uruchom ponownie",
+    "update_ready_title": "Aktualizacja gotowa",
+    "update_ready_description": "Wersja {{version}} została pobrana. Uruchom ponownie aplikację, aby zastosować aktualizację.",
+    "update_quit_and_reopen": "Zamknij i otwórz ponownie",
 
     "get_app_tagline": "Pobierz aplikację desktopową — szybsze, w pełni offline AI zasilane Twoim sprzętem.",
     "download_for": "Pobierz dla {{platform}}",

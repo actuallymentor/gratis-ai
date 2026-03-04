@@ -39,6 +39,9 @@
     "update_version_ready": "Версия {{version}} готова к установке",
     "update_downloading": "Скачивание v{{version}}… {{progress}}%",
     "restart_now": "Перезапустить сейчас",
+    "update_ready_title": "Обновление готово",
+    "update_ready_description": "Версия {{version}} загружена. Перезапустите приложение, чтобы применить обновление.",
+    "update_quit_and_reopen": "Закрыть и открыть заново",
 
     "get_app_tagline": "Скачайте десктопное приложение для более быстрого, полностью офлайнового ИИ на мощности вашего оборудования.",
     "download_for": "Скачать для {{platform}}",

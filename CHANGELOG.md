@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.22.0] - 2026-03-04
+
+### Added
+- Auto-download updates and show restart modal when ready to install
+
+### Changed
+- Replace manual download banner with auto-download progress banner + restart modal
+
 ## [0.21.3] - 2026-03-03
 
 ### Fixed

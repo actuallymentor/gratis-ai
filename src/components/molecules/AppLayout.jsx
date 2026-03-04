@@ -4,6 +4,7 @@ import TopBar from './TopBar'
 import Sidebar from './Sidebar'
 import SettingsModal from './SettingsModal'
 import UpdateBanner from '../atoms/UpdateBanner'
+import UpdateModal from '../atoms/UpdateModal'
 import use_auto_updater from '../../hooks/use_auto_updater'
 import { EVENTS } from '../../utils/branding'
 
@@ -109,9 +110,12 @@ export default function AppLayout( {
             available_update={ updater.available_update }
             is_downloading={ updater.is_downloading }
             download_progress={ updater.download_progress }
+        />
+
+        <UpdateModal
+            available_update={ updater.available_update }
             is_ready_to_install={ updater.is_ready_to_install }
             dismissed={ updater.dismissed }
-            on_download={ updater.download_update }
             on_install={ updater.install_update }
             on_dismiss={ updater.dismiss }
         />
