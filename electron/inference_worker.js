@@ -151,7 +151,9 @@ class NativeInference {
 
             console.info( `[inference] System prompt ${ desired ? `set` : `cleared` } — recreating session` )
 
-            if( this._session ) this._session.dispose()
+            // disposeSequence: true releases the context sequence slot so
+            // getSequence() can allocate a fresh one for the new session
+            if( this._session ) this._session.dispose( { disposeSequence: true } )
 
             this._session = new this._LlamaChatSession( {
                 contextSequence: this._context.getSequence(),
@@ -177,10 +179,41 @@ class NativeInference {
         const last_user_message = [ ...messages ].reverse().find( ( m ) => m.role === `user` )
         const prompt = last_user_message?.content || ``
 
-        return this._session.prompt( prompt, {
+        const t0 = performance.now()
+
+        const response = await this._session.prompt( prompt, {
             maxTokens: opts.max_tokens || 2048,
             temperature: opts.temperature || 0.7,
         } )
+
+        const elapsed_s = ( performance.now() - t0 ) / 1000
+        const approx_tokens = response.split( /\s+/ ).length
+        const desc = this._model_description()
+        console.info( `[inference] [${ desc }] Chat complete — ~${ approx_tokens } tokens in ${ elapsed_s.toFixed( 1 ) }s (~${ ( approx_tokens / elapsed_s ).toFixed( 1 ) } tk/s)` )
+
+        return response
+
+    }
+
+    /**
+     * Read the actual model identity from the loaded GGUF metadata.
+     * Returns a human-readable string like "SmolLM2 1.7B (llama, Q4_K_M)"
+     * @returns {string}
+     */
+    _model_description() {
+
+        try {
+
+            const general = this._model?.fileInfo?.metadata?.general
+            const name = general?.name || this._model_path || `unknown`
+            const arch = general?.architecture || `?`
+            const type_desc = this._model?.typeDescription || ``
+
+            return type_desc ? `${ name } (${ arch }, ${ type_desc })` : `${ name } (${ arch })`
+
+        } catch {
+            return this._model_path || `unknown`
+        }
 
     }
 
@@ -199,6 +232,10 @@ class NativeInference {
         const last_user_message = [ ...messages ].reverse().find( ( m ) => m.role === `user` )
         const prompt = last_user_message?.content || ``
 
+        let token_count = 0
+        const t0 = performance.now()
+        let ttft = null
+
         try {
 
             await this._session.prompt( prompt, {
@@ -207,6 +244,8 @@ class NativeInference {
                 signal: this._abort_controller.signal,
                 stopOnAbortSignal: true,
                 onTextChunk: ( text ) => {
+                    token_count++
+                    if( ttft === null ) ttft = performance.now() - t0
                     if( on_text ) on_text( text )
                 },
             } )
@@ -215,6 +254,18 @@ class NativeInference {
             if( err.name !== `AbortError` ) throw err
         } finally {
             this._abort_controller = null
+        }
+
+        // Log completion stats with the actual loaded model identity
+        const elapsed_ms = performance.now() - t0
+        const desc = this._model_description()
+
+        if( token_count > 0 ) {
+            const decode_ms = elapsed_ms - ( ttft || 0 )
+            const tks = decode_ms > 0 ? ( token_count / ( decode_ms / 1000 ) ).toFixed( 1 ) : `∞`
+            console.info( `[inference] [${ desc }] ${ token_count } chunks — ttft ${ ttft.toFixed( 0 ) }ms, ${ tks } tk/s (${ ( elapsed_ms / 1000 ).toFixed( 1 ) }s total)` )
+        } else {
+            console.warn( `[inference] [${ desc }] Model generated 0 tokens` )
         }
 
     }
