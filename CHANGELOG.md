@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.24.0] - 2026-03-09
+
+### Added
+- `/status` chat command — shows loaded model, system prompt, and system metadata without calling the model
+- `APP_VERSION` constant in branding, injected from package.json at build time via Vite `define`
+
 ## [0.23.0] - 2026-03-09
 
 ### Added

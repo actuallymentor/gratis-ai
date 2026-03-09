@@ -16,9 +16,9 @@ import use_settings from '../../hooks/use_settings'
 import use_voice_input from '../../hooks/use_voice_input'
 import { export_conversation } from '../../utils/export'
 import { parse_model_param, resolve_cached_model } from '../../utils/model_param_resolver'
-import { get_model_by_id } from '../../utils/model_catalog'
+import { get_model_by_id, format_file_size } from '../../utils/model_catalog'
 import { useTranslation } from 'react-i18next'
-import { storage_key, EVENTS } from '../../utils/branding'
+import { storage_key, EVENTS, DISPLAY_NAME, APP_VERSION } from '../../utils/branding'
 
 const Container = styled.div`
     display: flex;
@@ -388,9 +388,60 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     }, [ send_message_from_history, current_conversation_id ] )
 
     /**
-     * Send a message and generate a response
+     * Build a /status response with model, prompt, and system metadata.
+     * Bypasses the model entirely — the response is injected locally.
      */
+    const build_status_response = useCallback( () => {
+
+        const model = get_model_by_id( loaded_model_id )
+        const system_prompt = model?.system_prompt || settings.system_prompt || ``
+        const opts = get_generate_options()
+
+        const lines = [
+            `### Loaded model`,
+            model
+                ? [
+                    `- **Name:** ${ model.name }`,
+                    `- **ID:** \`${ model.id }\``,
+                    `- **Family:** ${ model.family }`,
+                    `- **Parameters:** ${ model.parameters_label }`,
+                    `- **Quantization:** ${ model.quantization } (${ model.bpw } bpw)`,
+                    `- **Context length:** ${ model.context_length.toLocaleString() } tokens`,
+                    `- **File size:** ${ format_file_size( model.file_size_bytes ) }`,
+                    model.uncensored ? `- **Uncensored:** yes` : null,
+                    model.reasoning ? `- **Reasoning:** yes` : null,
+                ].filter( Boolean ).join( `\n` )
+                : `- _No model loaded_`,
+            ``,
+            `### System prompt`,
+            system_prompt ? `\`\`\`\n${ system_prompt }\n\`\`\`` : `_No system prompt configured_`,
+            ``,
+            `### System metadata`,
+            `- **App:** ${ DISPLAY_NAME } v${ APP_VERSION }`,
+            `- **Platform:** ${ navigator.platform }`,
+            `- **User agent:** ${ navigator.userAgent }`,
+            `- **Threads:** ${ navigator.hardwareConcurrency || `unknown` }`,
+            `- **Device memory:** ${ navigator.deviceMemory ? `${ navigator.deviceMemory } GB` : `unknown` }`,
+            `- **Temperature:** ${ opts.temperature }`,
+            `- **Max tokens:** ${ opts.max_tokens }`,
+            `- **Top-p:** ${ opts.top_p }  |  Top-k: ${ opts.top_k }  |  Min-p: ${ opts.min_p }`,
+        ]
+
+        return lines.join( `\n` )
+
+    }, [ loaded_model_id, settings.system_prompt, get_generate_options ] )
+
     const send_message = useCallback( async ( text ) => {
+
+        // Intercept /status command — respond locally without calling the model
+        if( text.trim().toLowerCase() === `/status` ) {
+
+            const user_msg = { id: uuid(), role: `user`, content: text }
+            const status_msg = { id: uuid(), role: `assistant`, content: build_status_response() }
+            set_messages( prev => [ ...prev, user_msg, status_msg ] )
+            return
+
+        }
 
         const user_msg = { id: uuid(), role: `user`, content: text }
         set_messages( prev => [ ...prev, user_msg ] )
@@ -460,7 +511,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             }
         }
 
-    }, [ messages, chat_stream, current_conversation_id, create_conversation, save_message, navigate, refresh, get_generate_options, settings.system_prompt, loaded_model_id ] )
+    }, [ messages, chat_stream, current_conversation_id, create_conversation, save_message, navigate, refresh, get_generate_options, settings.system_prompt, loaded_model_id, build_status_response ] )
 
     // Process query parameters (?q= and ?model=)
     useEffect( () => {

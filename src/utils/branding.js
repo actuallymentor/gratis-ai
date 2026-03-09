@@ -14,6 +14,9 @@ const slug = raw.toLowerCase()
 /** The app name exactly as it should appear in the UI */
 export const DISPLAY_NAME = raw
 
+/** App version from package.json (injected at build time) */
+export const APP_VERSION = typeof __APP_VERSION__ !== `undefined` ? __APP_VERSION__ : `dev`
+
 // ── Storage ──────────────────────────────────────────────────────
 
 /** Generic prefix for all app-owned keys: `gratisai:` */
