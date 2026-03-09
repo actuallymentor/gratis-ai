@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.24.2] - 2026-03-09
+
+### Added
+- Log actual model name and architecture from GGUF metadata on completion (wllama + Electron)
+
 ## [0.24.1] - 2026-03-09
 
 ### Fixed

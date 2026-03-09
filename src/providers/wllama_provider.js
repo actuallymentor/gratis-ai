@@ -318,7 +318,9 @@ export default class WllamaProvider {
         // Rough token estimate — wllama doesn't expose token count for non-streaming
         const elapsed_s = ( performance.now() - t0 ) / 1000
         const approx_tokens = response.split( /\s+/ ).length
-        log.info( `[wllama] Chat complete — ~${ approx_tokens } tokens in ${ elapsed_s.toFixed( 1 ) }s (~${ ( approx_tokens / elapsed_s ).toFixed( 1 ) } tk/s)` )
+
+        const [ model_name, model_arch ] = this._model_identity()
+        log.info( `[wllama] [${ model_name } (${ model_arch })] Chat complete — ~${ approx_tokens } tokens in ${ elapsed_s.toFixed( 1 ) }s (~${ ( approx_tokens / elapsed_s ).toFixed( 1 ) } tk/s)` )
 
         return response
 
@@ -381,6 +383,9 @@ export default class WllamaProvider {
 
             // Performance summary for this generation
             const elapsed_ms = performance.now() - t0
+
+            const [ model_name, model_arch ] = this._model_identity()
+
             if( token_count > 0 ) {
 
                 // tk/s excludes the prompt processing time (TTFT) so it reflects
@@ -389,11 +394,11 @@ export default class WllamaProvider {
                 const tks = decode_ms > 0 ? ( token_count / ( decode_ms / 1000 ) ).toFixed( 1 ) : `∞`
 
                 log.info(
-                    `[wllama] ${ token_count } tokens — ttft ${ ttft.toFixed( 0 ) }ms, ${ tks } tk/s (${ ( elapsed_ms / 1000 ).toFixed( 1 ) }s total)`
+                    `[wllama] [${ model_name } (${ model_arch })] ${ token_count } tokens — ttft ${ ttft.toFixed( 0 ) }ms, ${ tks } tk/s (${ ( elapsed_ms / 1000 ).toFixed( 1 ) }s total)`
                 )
 
             } else {
-                log.warn( `[wllama] Model generated 0 tokens. Template type: ${ this._template_type }` )
+                log.warn( `[wllama] [${ model_name }] Model generated 0 tokens. Template type: ${ this._template_type }` )
             }
 
         } catch ( err ) {
@@ -449,6 +454,19 @@ export default class WllamaProvider {
      */
     is_ready() {
         return !!this._wllama && this._wllama.isModelLoaded()
+    }
+
+    /**
+     * Read the actual model identity from GGUF metadata.
+     * Returns [name, architecture] — never assumes the catalog ID matches.
+     * @returns {[string, string]}
+     */
+    _model_identity() {
+        const meta = this._wllama?.getModelMetadata()?.meta || {}
+        return [
+            meta[`general.name`] || this._loaded_model_id || `unknown`,
+            meta[`general.architecture`] || `?`,
+        ]
     }
 
     /**
