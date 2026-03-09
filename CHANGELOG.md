@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.24.3] - 2026-03-09
+
+### Fixed
+- Fix first message vanishing on welcome screen — merge `/chat` and `/chat/:id` into single optional-param route to prevent remount
+
 ## [0.24.2] - 2026-03-09
 
 ### Added

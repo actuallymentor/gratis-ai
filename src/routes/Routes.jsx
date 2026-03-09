@@ -46,8 +46,7 @@ export default function Routes( { theme_preference, theme_mode, on_theme_toggle 
             <Route path="/" element={ <LandingPage /> } />
             <Route path="/select-model" element={ <ModelSelectPage /> } />
             <Route path="/download" element={ <DownloadPage /> } />
-            <Route path="/chat" element={ <ChatPage { ...layout_props } /> } />
-            <Route path="/chat/:id" element={ <ChatPage { ...layout_props } /> } />
+            <Route path="/chat/:id?" element={ <ChatPage { ...layout_props } /> } />
             <Route path="/get-app" element={ <GetAppPage /> } />
             <Route path="*" element={ <NotFoundPage /> } />
         </RouterRoutes>
