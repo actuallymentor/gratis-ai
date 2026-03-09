@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.24.1] - 2026-03-09
+
+### Fixed
+- Fix system prompt not reaching Electron native inference — recreate `LlamaChatSession` with `systemPrompt` when it changes
+
 ## [0.24.0] - 2026-03-09
 
 ### Added

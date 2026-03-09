@@ -50,6 +50,8 @@ class NativeInference {
         this._model_path = null
         this._context_size = null
         this._abort_controller = null
+        this._system_prompt = null
+        this._LlamaChatSession = null
     }
 
     /**
@@ -71,6 +73,7 @@ class NativeInference {
 
         // node-llama-cpp loaded lazily — heavy native dep
         const { getLlama, LlamaChatSession } = await import( `node-llama-cpp` )
+        this._LlamaChatSession = LlamaChatSession
         this._llama = await getLlama()
 
         const MIN_CTX = 512
@@ -135,6 +138,32 @@ class NativeInference {
     }
 
     /**
+     * Ensure the session has the correct system prompt.
+     * If the prompt changed since the last call, dispose the old session
+     * and create a fresh one so the chat template wraps it correctly.
+     */
+    _ensure_system_prompt( messages ) {
+
+        const system_msg = messages.find( ( m ) => m.role === `system` )
+        const desired = system_msg?.content || ``
+
+        if( desired !== this._system_prompt ) {
+
+            console.info( `[inference] System prompt ${ desired ? `set` : `cleared` } — recreating session` )
+
+            if( this._session ) this._session.dispose()
+
+            this._session = new this._LlamaChatSession( {
+                contextSequence: this._context.getSequence(),
+                ...( desired ? { systemPrompt: desired } : {} ),
+            } )
+            this._system_prompt = desired
+
+        }
+
+    }
+
+    /**
      * Single-shot chat completion
      * @param {Array} messages - Chat messages
      * @param {Object} [opts] - Generation options
@@ -142,7 +171,8 @@ class NativeInference {
      */
     async chat( messages, opts = {} ) {
 
-        if( !this._session ) throw new Error( `No model loaded` )
+        if( !this._context ) throw new Error( `No model loaded` )
+        this._ensure_system_prompt( messages )
 
         const last_user_message = [ ...messages ].reverse().find( ( m ) => m.role === `user` )
         const prompt = last_user_message?.content || ``
@@ -162,7 +192,8 @@ class NativeInference {
      */
     async chat_stream( messages, opts, on_text ) {
 
-        if( !this._session ) throw new Error( `No model loaded` )
+        if( !this._context ) throw new Error( `No model loaded` )
+        this._ensure_system_prompt( messages )
         this._abort_controller = new AbortController()
 
         const last_user_message = [ ...messages ].reverse().find( ( m ) => m.role === `user` )
@@ -216,11 +247,12 @@ class NativeInference {
 
         this._model_path = null
         this._context_size = null
+        this._system_prompt = null
 
     }
 
     is_loaded() {
-        return !!this._model && !!this._session
+        return !!this._model && !!this._context
     }
 
     get_model_id() {
