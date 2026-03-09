@@ -16,6 +16,7 @@ import use_settings from '../../hooks/use_settings'
 import use_voice_input from '../../hooks/use_voice_input'
 import { export_conversation } from '../../utils/export'
 import { parse_model_param, resolve_cached_model } from '../../utils/model_param_resolver'
+import { get_model_by_id } from '../../utils/model_catalog'
 import { useTranslation } from 'react-i18next'
 import { storage_key, EVENTS } from '../../utils/branding'
 
@@ -332,8 +333,10 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         const new_messages = [ ...history_msgs, assistant_msg ]
         set_messages( new_messages )
 
-        // Build system prompt from settings hook (centralised source of truth)
-        const system_prompt = settings.system_prompt || ``
+        // Model-specific system prompt takes priority (e.g. uncensored personas),
+        // falling back to user settings → env default
+        const active_model = get_model_by_id( loaded_model_id )
+        const system_prompt = active_model?.system_prompt || settings.system_prompt || ``
         const history = history_msgs.map( ( { role, content } ) => ( { role, content } ) )
         if( system_prompt ) history.unshift( { role: `system`, content: system_prompt } )
 
@@ -366,7 +369,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             // Error handling done in use_llm
         }
 
-    }, [ chat_stream, persist_messages, get_generate_options, settings.system_prompt ] )
+    }, [ chat_stream, persist_messages, get_generate_options, settings.system_prompt, loaded_model_id ] )
 
     /**
      * Regenerate the last assistant message
@@ -407,8 +410,10 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         const assistant_msg = { id: uuid(), role: `assistant`, content: `` }
         set_messages( prev => [ ...prev, assistant_msg ] )
 
-        // Build message history with system prompt from settings hook
-        const system_prompt = settings.system_prompt || ``
+        // Model-specific system prompt takes priority (e.g. uncensored personas),
+        // falling back to user settings → env default
+        const active_model = get_model_by_id( loaded_model_id )
+        const system_prompt = active_model?.system_prompt || settings.system_prompt || ``
         const history = [ ...messages, user_msg ].map( ( { role, content } ) => ( { role, content } ) )
         if( system_prompt ) history.unshift( { role: `system`, content: system_prompt } )
 
@@ -455,7 +460,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             }
         }
 
-    }, [ messages, chat_stream, current_conversation_id, create_conversation, save_message, navigate, refresh, get_generate_options, settings.system_prompt ] )
+    }, [ messages, chat_stream, current_conversation_id, create_conversation, save_message, navigate, refresh, get_generate_options, settings.system_prompt, loaded_model_id ] )
 
     // Process query parameters (?q= and ?model=)
     useEffect( () => {

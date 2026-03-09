@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.23.0] - 2026-03-09
+
+### Added
+- Model-specific system prompts in catalog — uncensored models use their own persona prompt automatically
+- `get_model_by_id()` lookup helper in model_catalog
+
 ## [0.22.0] - 2026-03-04
 
 ### Added
