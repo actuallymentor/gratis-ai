@@ -10,6 +10,14 @@
 ## Vision Model GGUF Research
 See `RESEARCH.md` "Vision Model GGUF Research" section. Load when adding vision models to the catalog or adjusting GGUF download sizes.
 
+## /status Chat Command (v0.24.0)
+
+`/status` typed in the chat bar is intercepted in `ChatPage.send_message` before reaching the model. Displays loaded model info (from `get_model_by_id`), active system prompt, and system metadata. `APP_VERSION` constant in `branding.js` is injected at build time via Vite `define` from `package.json`. ESLint config extended in `eslint.config.js` to declare `__APP_VERSION__` as a global.
+
+## Model-Specific System Prompts (v0.23.0)
+
+`ModelDefinition` supports optional `system_prompt` field. When the active model has one, it takes priority over the global default in `ChatPage`. Currently only Dolphin Mistral 24B Venice has a model-specific prompt. `get_model_by_id()` exported from `model_catalog.js` for catalog lookups.
+
 ## Logging
 
 All `console.*` calls in `src/` (except `nodejs_console.js`) have been replaced with mentie's `log` utility. `electron/inference_worker.js` is excluded — it uses CJS and has its own console-forwarding relay.

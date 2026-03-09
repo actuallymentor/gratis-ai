@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.25.0] - 2026-03-09
+
+### Changed
+- Use full model context capacity on capable systems — estimate max context from RAM + model architecture instead of hard-capping at 2048
+
 ## [0.24.3] - 2026-03-09
 
 ### Fixed

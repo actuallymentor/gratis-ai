@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, utilityProcess } = require( `electron` )
 const { autoUpdater } = require( `electron-updater` )
 const path = require( `path` )
 const fs = require( `fs` )
+const os = require( `os` )
 
 // ---------------------------------------------------
 // Console forwarding — pipes Node.js console output
@@ -220,6 +221,46 @@ const write_manifest = ( manifest ) => {
 }
 
 /**
+ * Estimate the best context size for this system and model.
+ *
+ * Uses the model's architecture data (layers, kv_heads, head_dim) to compute
+ * KV cache cost per token, then works out how many tokens fit in 70% of
+ * total RAM (leaving headroom for OS, Electron, V8). The result is clamped
+ * to the model's advertised context_length so we never exceed what the
+ * architecture supports.
+ *
+ * If architecture data is missing (custom imports), falls back to 2048.
+ * The worker's VRAM retry loop catches any overestimation — this just
+ * gives it a smarter starting point than a hard-coded cap.
+ *
+ * @param {Object} model - Model manifest entry
+ * @returns {number} Context size to request
+ */
+const estimate_context_for_system = ( model ) => {
+
+    const FALLBACK = 2048
+    const RUNTIME_OVERHEAD = 500_000_000
+    const MEMORY_FRACTION = 0.7
+    const max_ctx = model.context_length || FALLBACK
+
+    if( !model.layers || !model.kv_heads || !model.head_dim ) return max_ctx
+
+    // KV cache = 2 (key + value) × layers × kv_heads × head_dim × 2 bytes (FP16) per token
+    const kv_per_token = 2 * model.layers * model.kv_heads * model.head_dim * 2
+
+    const budget = os.totalmem() * MEMORY_FRACTION
+    const available = budget - ( model.file_size_bytes || 0 ) - RUNTIME_OVERHEAD
+
+    if( available <= 0 ) return FALLBACK
+
+    // Round down to nearest 256 for clean alignment
+    const estimated = Math.floor( available / kv_per_token / 256 ) * 256
+
+    return Math.max( FALLBACK, Math.min( max_ctx, estimated ) )
+
+}
+
+/**
  * Create the main application window
  */
 const create_window = () => {
@@ -423,11 +464,10 @@ const register_ipc_handlers = () => {
         const model_path = path.join( MODELS_DIR, model.file_name )
         if( !fs.existsSync( model_path ) ) throw new Error( `Model file missing: ${ model.file_name }` )
 
-        // Start conservative — the worker halves on VRAM failures, so a lower
-        // starting point means fewer failed createContext() calls and faster
-        // load on constrained hardware.  The model's context_length is its
-        // theoretical max, not what we should actually request.
-        const requested_ctx = Math.min( model.context_length || 2048, 2048 )
+        // Estimate the largest context that fits in available memory. Use 70%
+        // of total RAM as the budget (headroom for OS, Electron, V8 heap).
+        // If we overshoot, the worker's VRAM retry loop will halve down safely.
+        const requested_ctx = estimate_context_for_system( model )
 
         const result = await worker_request( `load`, {
             model_path,
@@ -441,7 +481,7 @@ const register_ipc_handlers = () => {
         return {
             success: true,
             context_size: result.context_size,
-            context_reduced: result.context_size < requested_ctx,
+            context_reduced: result.context_size < ( model.context_length || requested_ctx ),
         }
 
     } )

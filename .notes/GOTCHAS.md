@@ -11,6 +11,18 @@ causing silent update failures.
 so the generated `app-update.yml` contains correct GitHub coordinates. Add `repository` to
 `package.json` as a fallback.
 
+## Electron inference worker discards system prompt (2026-03-09)
+
+`NativeInference.chat_stream()` extracted only the last user message content and passed it
+to `LlamaChatSession.prompt()`, discarding the entire messages array including the system
+prompt. Models that depend on system prompts (especially uncensored models like Dolphin
+Mistral) would not respond correctly.
+
+**Fix**: Added `_ensure_system_prompt()` which extracts the system message from the messages
+array and recreates the `LlamaChatSession` with `systemPrompt` whenever it changes. The
+`LlamaChatSession` class reference is stored at load time (`_LlamaChatSession`) since
+node-llama-cpp is loaded via dynamic `import()`.
+
 ## Native inference VRAM context-size crash (2026-02-26)
 
 The Electron native inference path (`inference_worker.js`) passed `model.context_length`
@@ -19,8 +31,14 @@ directly to `createContext({ contextSize })` with no VRAM check. Models like Qwe
 for the available VRAM".
 
 **Fix**: Retry loop in `NativeInference.load()` — halves context size on VRAM errors
-until it fits (floor: 2048). The actual context size is reported back through the IPC
+until it fits (floor: 512). The actual context size is reported back through the IPC
 chain so the UI can inform the user.
+
+**Follow-up (2026-03-09)**: The initial fix over-corrected by hard-capping context at
+2048 in `main.js`. On powerful systems this wasted capacity (e.g. 2048 out of 32768).
+Replaced the hard cap with `estimate_context_for_system()` — uses model architecture
+data + `os.totalmem()` to estimate the largest context that fits, capped at the model's
+`context_length`. The worker retry loop still catches overestimation.
 
 ## less-lazy prefetch breaks Electron chunk loading (2026-02-26)
 
