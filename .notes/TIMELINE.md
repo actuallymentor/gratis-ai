@@ -1,10 +1,12 @@
 # Timeline
 
-## 2026-03-09 — Fix updater:check IPC error serialization
+## 2026-03-09 — Fix updater:check IPC error serialization + draft release pipeline
 
-- Root cause: `autoUpdater.checkForUpdates()` rejection inside `ipcMain.handle` produced `{}` because `Error` properties are non-enumerable
+- Root cause 1: `autoUpdater.checkForUpdates()` rejection inside `ipcMain.handle` produced `{}` because `Error` properties are non-enumerable
 - Fix: wrapped `checkForUpdates()` and `downloadUpdate()` in try/catch, return serializable `{ status, message }` objects
 - Also updated `Sidebar.jsx` `handle_check_for_updates` to handle returned error status (not just event-based errors)
+- Root cause 2: release was published before macOS build finished (~12 min for signing + notarization) → `latest-mac.yml` 404
+- Fix: create release as draft, added `publish-release` job that un-drafts after all build matrix jobs complete
 
 ## 2026-03-03 — Qwen 3.5 9B vision model (v0.21.0)
 

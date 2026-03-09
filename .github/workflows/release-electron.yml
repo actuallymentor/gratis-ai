@@ -51,12 +51,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release (draft until all builds finish)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.check-version.outputs.version }}
           name: v${{ needs.check-version.outputs.version }}
-          draft: false
+          draft: true
           prerelease: false
           generate_release_notes: true
           body: |
@@ -210,3 +210,16 @@ jobs:
             release/*.AppImage
             release/*.blockmap
             release/latest*.yml
+
+  # ── Publish: un-draft the release once all platform builds have uploaded ──
+  publish-release:
+    needs: [check-version, build]
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "v${{ needs.check-version.outputs.version }}" --repo "${{ github.repository }}" --draft=false

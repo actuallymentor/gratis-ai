@@ -92,6 +92,15 @@ grow unbounded so `overflow-y: auto` on `ListContainer` never activates. Fix: ch
 to `height: 100dvh` so the flex chain resolves to constrained heights. Safe because
 `body` already has `overflow: hidden`.
 
+## Release created before all builds finish → 404 on latest-mac.yml (2026-03-09)
+
+The `create-release` job created a **published** (non-draft) release immediately, but macOS
+builds take ~12 minutes for code signing + notarization. electron-updater on user machines
+would find the new release via `/releases/latest/` but `latest-mac.yml` wasn't uploaded yet → 404.
+
+**Fix**: Create the release as `draft: true`. Added a `publish-release` job that runs after
+all `build` matrix jobs complete, using `gh release edit --draft=false` to publish atomically.
+
 ## ipcMain.handle swallows Error details as {} (2026-03-09)
 
 When `autoUpdater.checkForUpdates()` rejects inside an `ipcMain.handle` callback, Electron
