@@ -538,14 +538,26 @@ const register_ipc_handlers = () => {
 
     // Auto-updater IPC — registered unconditionally so the renderer
     // never hits "No handler registered" errors, even in dev mode
-    ipcMain.handle( `updater:check`, () => {
+    ipcMain.handle( `updater:check`, async () => {
         if( !_updater_active ) return { status: `unavailable` }
-        return autoUpdater.checkForUpdates()
+        try {
+            const result = await autoUpdater.checkForUpdates()
+            return { status: `ok`, version: result?.updateInfo?.version }
+        } catch( err ) {
+            console.error( `[updater] Check failed:`, err?.message || err )
+            return { status: `error`, message: err?.message || `Update check failed` }
+        }
     } )
 
-    ipcMain.handle( `updater:download`, () => {
+    ipcMain.handle( `updater:download`, async () => {
         if( !_updater_active ) return { status: `unavailable` }
-        return autoUpdater.downloadUpdate()
+        try {
+            await autoUpdater.downloadUpdate()
+            return { status: `ok` }
+        } catch( err ) {
+            console.error( `[updater] Download failed:`, err?.message || err )
+            return { status: `error`, message: err?.message || `Download failed` }
+        }
     } )
 
     ipcMain.handle( `updater:install`, () => {

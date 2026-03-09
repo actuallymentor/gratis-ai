@@ -92,6 +92,18 @@ grow unbounded so `overflow-y: auto` on `ListContainer` never activates. Fix: ch
 to `height: 100dvh` so the flex chain resolves to constrained heights. Safe because
 `body` already has `overflow: hidden`.
 
+## ipcMain.handle swallows Error details as {} (2026-03-09)
+
+When `autoUpdater.checkForUpdates()` rejects inside an `ipcMain.handle` callback, Electron
+serializes the rejection value for IPC transport. `Error` objects have non-enumerable properties
+(`message`, `stack`), so they serialize as `{}` — producing the useless
+`Error occurred in handler for 'updater:check': {}`.
+
+**Fix**: Wrap `autoUpdater.checkForUpdates()` and `downloadUpdate()` in try/catch,
+return plain objects `{ status: 'error', message }`. Also handle the returned status
+in the renderer (`Sidebar.jsx`) since the event-based `updater:error` path may not fire
+for all rejection scenarios.
+
 ## E2E test race: select_model_on_page checks text before render (2026-03-01)
 
 `select_model_on_page` in `tests/helpers/download_model.js` called `page.locator('body').textContent()`

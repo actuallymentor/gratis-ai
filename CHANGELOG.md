@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.25.1] - 2026-03-09
+
+### Fixed
+- Fix updater:check IPC error serialized as `{}` — catch autoUpdater rejections and return serializable error objects
+
 ## [0.25.0] - 2026-03-09
 
 ### Changed

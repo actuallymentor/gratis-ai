@@ -1,5 +1,11 @@
 # Timeline
 
+## 2026-03-09 — Fix updater:check IPC error serialization
+
+- Root cause: `autoUpdater.checkForUpdates()` rejection inside `ipcMain.handle` produced `{}` because `Error` properties are non-enumerable
+- Fix: wrapped `checkForUpdates()` and `downloadUpdate()` in try/catch, return serializable `{ status, message }` objects
+- Also updated `Sidebar.jsx` `handle_check_for_updates` to handle returned error status (not just event-based errors)
+
 ## 2026-03-03 — Qwen 3.5 9B vision model (v0.21.0)
 
 - Added Qwen 3.5 9B (`qwen35-9b-vision-q4km`) as top vision model in catalog

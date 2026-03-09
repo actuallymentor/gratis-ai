@@ -330,10 +330,16 @@ export default function Sidebar( {
 
     }, [] )
 
-    const handle_check_for_updates = () => {
+    const handle_check_for_updates = async () => {
         if( check_status === `checking` ) return
         update_status( `checking` )
-        window.electronAPI.updater.check_for_updates()
+        const result = await window.electronAPI.updater.check_for_updates()
+        // Handle errors returned as plain objects (not thrown)
+        if( result?.status === `error` ) {
+            update_status( `failed` )
+            reset_after_delay()
+            toast.error( result.message || t( `update_toast_error` ) )
+        }
     }
 
     // On mobile, collapse sidebar after navigation
