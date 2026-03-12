@@ -229,6 +229,24 @@ export async function get_endpoint_health( api_key, endpoint_id ) {
     return api_fetch( `${ INFERENCE_BASE }/${ endpoint_id }/health`, api_key )
 }
 
+/**
+ * Submit an async job to a serverless endpoint.
+ *
+ * The job enters the queue immediately — even if no worker is available yet,
+ * the queue entry triggers RunPod to spin one up.
+ *
+ * @param {string} api_key
+ * @param {string} endpoint_id
+ * @param {Object} input - Worker-specific payload (e.g. OpenAI chat body for vLLM)
+ * @returns {Promise<{ id: string, status: string }>}
+ */
+export async function submit_job( api_key, endpoint_id, input ) {
+    return api_fetch( `${ INFERENCE_BASE }/${ endpoint_id }/run`, api_key, {
+        method: `POST`,
+        body: JSON.stringify( { input } ),
+    } )
+}
+
 
 // ─── GPU pricing & availability (live from API) ─────────────────────────────
 

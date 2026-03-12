@@ -7,7 +7,7 @@
  * @module runpod_provider
  */
 import { log } from 'mentie'
-import { get_endpoint_health } from './runpod_service'
+import { submit_job } from './runpod_service'
 import { record_spend, is_over_limit, get_daily_spend } from './runpod_spend_tracker'
 
 const INFERENCE_BASE = `https://api.runpod.ai/v2`
@@ -39,78 +39,34 @@ export default class RunPodProvider {
     }
 
     /**
-     * "Load" the model — polls the health endpoint until a worker is available.
-     * Shows cold-start progress during the wait.
+     * "Load" the model — fires a background probe job to trigger worker spin-up,
+     * then marks as ready immediately so the chat UI is interactive.
+     *
+     * The user's first message (or the probe) is what actually wakes the endpoint.
+     * During the cold-start TTFT gap, the existing "Waking up the AI" indicator
+     * in the chat bubble provides feedback.
      *
      * @param {string} _model_id - Unused (endpoint already knows its model)
-     * @param {Function} [on_progress] - Progress callback
      */
-    async load_model( _model_id, on_progress ) {
+    async load_model( _model_id ) {
 
-        log.info( `[runpod] Waking endpoint ${ this._endpoint_id } for ${ this._model_name }` )
+        log.info( `[runpod] Activating endpoint ${ this._endpoint_id } for ${ this._model_name }` )
 
-        if( on_progress ) {
-            on_progress( { progress: 0.1, status: `Waking up cloud GPU...` } )
-        }
+        // Fire a lightweight probe job to trigger worker spin-up.
+        // The job queues even if no worker is available yet — the queue entry
+        // is what tells RunPod to spin up a worker.
+        submit_job( this._api_key, this._endpoint_id, {
+            messages: [ { role: `user`, content: `hi` } ],
+            max_tokens: 1,
+        } ).then( job => {
+            log.info( `[runpod] Probe job submitted: ${ job.id } (${ job.status })` )
+        } ).catch( err => {
+            log.debug( `[runpod] Probe failed (non-critical): ${ err.message }` )
+        } )
 
-        // Send a lightweight probe request to trigger worker spin-up
-        try {
-            await fetch( `${ INFERENCE_BASE }/${ this._endpoint_id }/openai/v1/models`, {
-                headers: { Authorization: `Bearer ${ this._api_key }` },
-            } )
-        } catch {
-            // Probe may fail if endpoint is cold — that's fine
-        }
-
-        // Poll health until at least one worker can serve requests.
-        // RunPod reports workers as: idle, initializing, ready, running, throttled, unhealthy.
-        // Any state except initializing and unhealthy means the worker can accept inference.
-        const start = Date.now()
-        const max_wait = 300_000 // 5 minutes max cold start
-
-        while( Date.now() - start < max_wait ) {
-
-            try {
-
-                const health = await get_endpoint_health( this._api_key, this._endpoint_id )
-                const workers = health.workers || {}
-                const available = ( workers.idle || 0 ) + ( workers.running || 0 )
-                    + ( workers.ready || 0 ) + ( workers.throttled || 0 )
-                const initializing = workers.initializing || 0
-
-                const elapsed = ( Date.now() - start ) / 1000
-                const progress = Math.min( 0.95, 0.1 +  elapsed / ( max_wait / 1000 )  * 0.85 )
-
-                if( on_progress ) {
-                    on_progress( {
-                        progress,
-                        status: available > 0
-                            ? `GPU ready — ${ available } worker${ available > 1 ? `s` : `` } active`
-                            : initializing > 0
-                                ? `GPU worker starting up... (${ Math.floor( elapsed ) }s)`
-                                : `Waking up cloud GPU... (${ Math.floor( elapsed ) }s)`,
-                    } )
-                }
-
-                if( available > 0 ) {
-                    this._ready = true
-                    if( on_progress ) on_progress( { progress: 1, status: `Ready` } )
-                    log.info( `[runpod] Endpoint ${ this._endpoint_id } ready in ${ Math.floor( elapsed ) }s` )
-                    return
-                }
-
-            } catch ( err ) {
-                log.debug( `[runpod] Health poll error (will retry): ${ err.message }` )
-            }
-
-            await new Promise( r => setTimeout( r, 3000 ) )
-
-        }
-
-        // Timed out but mark as ready anyway — the first inference call
-        // will trigger spin-up and the user will see the delay there
+        // Mark ready immediately — inference requests will queue until a worker
+        // picks them up, and the chat UI's TTFT indicator handles the wait
         this._ready = true
-        if( on_progress ) on_progress( { progress: 1, status: `Ready (cold start may take a moment)` } )
 
     }
 

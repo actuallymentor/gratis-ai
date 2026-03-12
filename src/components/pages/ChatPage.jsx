@@ -163,8 +163,6 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const [ messages, set_messages ] = useState( [] )
     // Initialize as null = "haven't tried loading yet" to distinguish from "tried and failed"
     const [ model_loaded, set_model_loaded ] = useState( null )
-    // RunPod loading progress — shows status like "Waking up cloud GPU..." during cold starts
-    const [ runpod_status, set_runpod_status ] = useState( null )
     // Start as null even with a URL param — we validate it exists before accepting it
     const [ current_conversation_id, set_current_conversation_id ] = useState( null )
     const chat_input_ref = useRef( null )
@@ -237,24 +235,12 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
         if( active_id ) {
 
-            const is_runpod = active_id.startsWith( `runpod:` )
             log.info( `[ChatPage] Auto-loading saved model: ${ active_id }` )
-
-            // For RunPod models, track cold-start progress so the UI can show
-            // "Waking up cloud GPU..." instead of the generic loading message
-            const on_progress = is_runpod
-                ? ( { status } ) => set_runpod_status( status )
-                : undefined
-
-            load_model( active_id, on_progress )
-                .then( () => {
-                    set_model_loaded( true )
-                    set_runpod_status( null )
-                } )
+            load_model( active_id )
+                .then( () => set_model_loaded( true ) )
                 .catch( ( err ) => {
                     log.error( `[ChatPage] Auto-load failed:`, err.message )
                     set_model_loaded( false )
-                    set_runpod_status( null )
                     toast.error( err.message || t( 'common:failed_to_load_model' ) )
                 } )
 
@@ -688,21 +674,12 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const handle_model_switch = useCallback( async ( model_id ) => {
 
         try {
-
-            const is_runpod = model_id.startsWith( `runpod:` )
-            const on_progress = is_runpod
-                ? ( { status } ) => set_runpod_status( status )
-                : undefined
-
-            await load_model( model_id, on_progress )
+            await load_model( model_id )
             set_model_loaded( true )
-            set_runpod_status( null )
             localStorage.setItem( storage_key( `active_model_id` ), model_id )
             await refresh_models()
-
         } catch ( err ) {
             log.error( `[ChatPage] Failed to switch model:`, err )
-            set_runpod_status( null )
             toast.error( err.message || t( 'common:failed_to_load_model' ) )
         }
 
@@ -759,7 +736,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         if( !has_model && is_loading_model ) {
             return <LoadingContainer data-testid="model-loading">
                 <SpinnerIcon><LoaderCircle size={ 32 } /></SpinnerIcon>
-                <LoadingText>{ runpod_status || t( 'loading_your_model' ) }</LoadingText>
+                <LoadingText>{ t( 'loading_your_model' ) }</LoadingText>
             </LoadingContainer>
         }
 
