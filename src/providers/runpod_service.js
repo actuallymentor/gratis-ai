@@ -140,9 +140,6 @@ export async function create_template( api_key, { model_name, quantization, max_
     if( quantization ) env.QUANTIZATION = quantization
     if( max_model_len ) env.MAX_MODEL_LEN = String( max_model_len )
 
-    // Convert env object to array format expected by REST API
-    const env_array = Object.entries( env ).map( ( [ key, value ] ) => ( { key, value } ) )
-
     const template_name = `gratisai-${ model_name.replace( /\//g, `-` ).toLowerCase() }-${ Date.now() }`
 
     const result = await api_fetch( `${ MANAGEMENT_BASE }/templates`, api_key, {
@@ -151,8 +148,8 @@ export async function create_template( api_key, { model_name, quantization, max_
             name: template_name,
             imageName: VLLM_IMAGE,
             isServerless: true,
-            env: env_array,
-            dockerStartCmd: ``,
+            env,
+            dockerStartCmd: [],
             volumeInGb: 0,
         } ),
     } )
