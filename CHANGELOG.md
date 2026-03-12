@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.27.0] - 2026-03-12
+
+### Added
+- GPU availability awareness in Nerd Mode — queries RunPod `stockStatus` via GraphQL API
+- Availability dot indicator (green/amber/red) on suggested GPU badge
+- Warning when auto-suggested GPU has low availability
+- Availability labels in GPU override dropdown
+
+### Changed
+- GPU suggestion prioritises high-availability pools over cheaper low-availability ones
+- Auto-select never picks a low-availability GPU when medium/high alternatives exist
+
 ## [0.26.0] - 2026-03-12
 
 ### Added
