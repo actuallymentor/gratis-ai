@@ -26,14 +26,12 @@ const VLLM_IMAGE = `runpod/worker-v1-vllm:v2.4.0stable-cuda12.1.0`
 // VRAM values are the minimum guaranteed by any GPU in the pool.
 
 export const GPU_POOLS = [
-    { id: `AMPERE_16`,    name: `16 GB (A4000, RTX 4000)`,   vram_gb: 16,  gpus: `A4000, A4500, RTX 4000` },
-    { id: `AMPERE_24`,    name: `24 GB (L4, A5000, 3090)`,   vram_gb: 24,  gpus: `L4, A5000, 3090` },
-    { id: `ADA_24`,       name: `24 GB (4090)`,              vram_gb: 24,  gpus: `RTX 4090` },
-    { id: `AMPERE_48`,    name: `48 GB (A6000, A40)`,        vram_gb: 48,  gpus: `A6000, A40` },
-    { id: `ADA_48_PRO`,   name: `48 GB (L40, L40S)`,         vram_gb: 48,  gpus: `L40, L40S, 6000 Ada` },
-    { id: `AMPERE_80`,    name: `80 GB (A100)`,              vram_gb: 80,  gpus: `A100` },
-    { id: `ADA_80_PRO`,   name: `80 GB (H100)`,              vram_gb: 80,  gpus: `H100` },
-    { id: `HOPPER_141`,   name: `141 GB (H200)`,             vram_gb: 141, gpus: `H200` },
+    { id: `16gb`,   name: `16 GB (A4000, RTX 4000)`,   vram_gb: 16,  gpu_ids: [ `NVIDIA RTX A4000`, `NVIDIA RTX A4500`, `NVIDIA RTX 4000 Ada Generation`, `NVIDIA RTX 2000 Ada Generation` ] },
+    { id: `24gb`,   name: `24 GB (4090, L4, A5000)`,   vram_gb: 24,  gpu_ids: [ `NVIDIA GeForce RTX 4090`, `NVIDIA L4`, `NVIDIA RTX A5000`, `NVIDIA GeForce RTX 3090` ] },
+    { id: `48gb`,   name: `48 GB (A6000, L40S, A40)`,  vram_gb: 48,  gpu_ids: [ `NVIDIA RTX A6000`, `NVIDIA L40S`, `NVIDIA L40`, `NVIDIA A40`, `NVIDIA RTX 6000 Ada Generation` ] },
+    { id: `80gb`,   name: `80 GB (A100, H100)`,        vram_gb: 80,  gpu_ids: [ `NVIDIA A100-SXM4-80GB`, `NVIDIA A100 80GB PCIe`, `NVIDIA H100 80GB HBM3`, `NVIDIA H100 PCIe` ] },
+    { id: `141gb`,  name: `141 GB (H200)`,             vram_gb: 141, gpu_ids: [ `NVIDIA H200` ] },
+    { id: `192gb`,  name: `192 GB (B200)`,             vram_gb: 192, gpu_ids: [ `NVIDIA B200` ] },
 ]
 
 
@@ -169,18 +167,18 @@ export async function create_template( api_key, { model_name, quantization, max_
  * @param {Object} opts
  * @param {string} opts.template_id - Template ID from create_template()
  * @param {string} opts.name - Human-readable endpoint name
- * @param {string} opts.gpu_id - GPU pool ID (e.g. `AMPERE_16`)
+ * @param {string[]} opts.gpu_ids - GPU type names (e.g. `['NVIDIA GeForce RTX 4090', 'NVIDIA L4']`)
  * @param {number} [opts.idle_timeout] - Minutes before scaling to zero (default 5)
  * @returns {Promise<{ id: string, name: string }>}
  */
-export async function create_endpoint( api_key, { template_id, name, gpu_id, idle_timeout = 5 } ) {
+export async function create_endpoint( api_key, { template_id, name, gpu_ids, idle_timeout = 5 } ) {
 
     const result = await api_fetch( `${ MANAGEMENT_BASE }/endpoints`, api_key, {
         method: `POST`,
         body: JSON.stringify( {
             templateId: template_id,
             name,
-            gpuTypeIds: [ gpu_id ],
+            gpuTypeIds: gpu_ids,
             workersMin: 0,
             workersMax: 1,
             idleTimeout: idle_timeout,
@@ -189,7 +187,7 @@ export async function create_endpoint( api_key, { template_id, name, gpu_id, idl
         } ),
     } )
 
-    log.info( `[runpod] Created endpoint ${ result.id } (${ name }) on ${ gpu_id }` )
+    log.info( `[runpod] Created endpoint ${ result.id } (${ name }) on ${ gpu_ids.join( `, ` ) }` )
     return result
 
 }

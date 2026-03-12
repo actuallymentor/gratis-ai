@@ -398,7 +398,7 @@ export default function NerdSetupPage() {
             const endpoint = await create_endpoint( api_key.trim(), {
                 template_id: template.id,
                 name: `gratisai-${ display_name }`,
-                gpu_id,
+                gpu_ids: gpu_pool.gpu_ids,
                 idle_timeout,
             } )
 
