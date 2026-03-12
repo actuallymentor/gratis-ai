@@ -111,11 +111,14 @@ mutation {
 
 ---
 
-## GraphQL: GPU Types
+## GraphQL: GPU Types & Availability
 
 ```graphql
-query { gpuTypes { id displayName memoryInGb secureCloud communityCloud lowestPrice(input: { gpuCount: 1 }) { minimumBidPrice uninterruptablePrice } } }
+query { gpuTypes { id displayName memoryInGb secureCloud communityCloud lowestPrice(input: { gpuCount: 1 }) { minimumBidPrice uninterruptablePrice stockStatus } } }
 ```
+
+`stockStatus` field on `lowestPrice` returns: `"High"`, `"Medium"`, `"Low"`, or null when GPU is unavailable.
+Used in v0.27.0 to prioritise GPU selection by availability — pool availability = best status among its GPUs.
 
 ---
 

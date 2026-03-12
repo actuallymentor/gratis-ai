@@ -17,6 +17,10 @@
     "gpu_auto": "{{name}} — {{vram}} GB VRAM",
     "gpu_cost": "≈ ${{cost}}/hr",
     "gpu_no_fit": "No GPU with enough VRAM — try a smaller model or quantization",
+    "gpu_low_availability_warning": "Low GPU availability — cold starts may take 5–10 minutes. Consider a different GPU tier or try later.",
+    "availability_high": "High availability",
+    "availability_medium": "Medium availability",
+    "availability_low": "Low availability",
 
     "advanced_title": "Advanced",
     "gpu_override_label": "GPU Override",

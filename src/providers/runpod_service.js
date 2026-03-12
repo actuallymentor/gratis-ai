@@ -228,14 +228,30 @@ export async function get_endpoint_health( api_key, endpoint_id ) {
 }
 
 
-// ─── GPU pricing (live from API) ─────────────────────────────────────────────
+// ─── GPU pricing & availability (live from API) ─────────────────────────────
+
+// Availability tiers — higher number = better availability
+const AVAILABILITY_RANK = { High: 3, Medium: 2, Low: 1 }
 
 /**
- * Fetch current GPU pricing from RunPod's GraphQL API.
- * Returns pricing mapped to our known serverless pool IDs.
+ * Pick the best stock status from an array of statuses.
+ * "High" beats "Medium" beats "Low" beats null.
+ */
+const best_stock_status = ( statuses ) =>
+    statuses.reduce( ( best, s ) =>
+        s && ( AVAILABILITY_RANK[ s ] || 0 ) > ( AVAILABILITY_RANK[ best ] || 0 ) ? s : best
+    , null )
+
+
+/**
+ * Fetch current GPU pricing and availability from RunPod's GraphQL API.
+ *
+ * Returns both pricing and availability mapped to our serverless pool IDs.
+ * A pool's availability is the best status among any of its GPUs — because
+ * the endpoint accepts multiple GPU types and only needs one to be available.
  *
  * @param {string} api_key
- * @returns {Promise<Map<string, number>>} Pool ID → $/hr
+ * @returns {Promise<{ pricing: Map<string, number>, availability: Map<string, string> }>}
  */
 export async function fetch_gpu_pricing( api_key ) {
 
@@ -250,23 +266,23 @@ export async function fetch_gpu_pricing( api_key ) {
                 lowestPrice( input: { gpuCount: 1 } ) {
                     minimumBidPrice
                     uninterruptablePrice
+                    stockStatus
                 }
             }
         }
     ` )
 
-    // Map individual GPU types to serverless pool pricing.
-    // Use the lowest "uninterruptablePrice" for any GPU in the pool.
     const pricing = new Map()
+    const availability = new Map()
 
     for( const pool of GPU_POOLS ) {
 
-        // Find all GPUs that could serve in this pool by matching VRAM
-        const matching = data.gpuTypes.filter( g =>
-            g.memoryInGb === pool.vram_gb && g.communityCloud
-        )
+        // Match GPUs by the exact type names in our pool definition
+        const matching = pool.gpu_ids
+            .map( id => data.gpuTypes.find( g => g.id === id ) )
+            .filter( Boolean )
 
-        // Use the lowest price from matching GPUs
+        // Pricing — lowest on-demand price among pool GPUs
         const prices = matching
             .map( g => g.lowestPrice?.uninterruptablePrice )
             .filter( p => p != null && p > 0 )
@@ -275,9 +291,17 @@ export async function fetch_gpu_pricing( api_key ) {
             pricing.set( pool.id, Math.min( ...prices ) )
         }
 
+        // Availability — best stock status among pool GPUs
+        const statuses = matching
+            .map( g => g.lowestPrice?.stockStatus )
+            .filter( Boolean )
+
+        const best = best_stock_status( statuses )
+        if( best ) availability.set( pool.id, best )
+
     }
 
-    return pricing
+    return { pricing, availability }
 
 }
 
@@ -409,20 +433,32 @@ export function estimate_vram_gb( model_config, quantization, context_length ) {
 }
 
 /**
- * Suggest the cheapest GPU pool that has enough VRAM.
+ * Suggest the best GPU pool that has enough VRAM.
+ *
+ * Prioritises availability over price — a cheap GPU that takes ten minutes
+ * to spin up is worse than a slightly pricier one that's ready now.
+ * Never auto-selects a pool where availability is "Low" or unknown.
  *
  * @param {number} vram_needed_gb - Required VRAM in GB
  * @param {Map<string, number>} [pricing] - Pool ID → $/hr (from fetch_gpu_pricing)
- * @returns {{ pool: Object, price_per_hr: number | null } | null}
+ * @param {Map<string, string>} [availability] - Pool ID → stockStatus
+ * @returns {{ pool: Object, price_per_hr: number | null, availability: string | null } | null}
  */
-export function suggest_gpu( vram_needed_gb, pricing ) {
+export function suggest_gpu( vram_needed_gb, pricing, availability ) {
 
-    // Filter pools with enough VRAM, sort by VRAM ascending (cheapest tends to be smallest)
+    // Filter pools with enough VRAM
     const candidates = GPU_POOLS
         .filter( p => p.vram_gb >= vram_needed_gb )
         .sort( ( a, b ) => {
 
-            // If pricing data available, sort by price
+            // Primary sort: availability tier (High > Medium > Low)
+            if( availability ) {
+                const a_rank = AVAILABILITY_RANK[ availability.get( a.id ) ] || 0
+                const b_rank = AVAILABILITY_RANK[ availability.get( b.id ) ] || 0
+                if( a_rank !== b_rank ) return b_rank - a_rank
+            }
+
+            // Secondary sort: price (if available)
             if( pricing ) {
                 const a_price = pricing.get( a.id ) ?? Infinity
                 const b_price = pricing.get( b.id ) ?? Infinity
@@ -436,27 +472,36 @@ export function suggest_gpu( vram_needed_gb, pricing ) {
 
     if( candidates.length === 0 ) return null
 
-    const [ best ] = candidates
+    // Never auto-select a pool with Low or unknown availability
+    const best = availability
+        ? candidates.find( p => ( AVAILABILITY_RANK[ availability.get( p.id ) ] || 0 ) >= 2 ) || candidates[ 0 ]
+        : candidates[ 0 ]
+
+    const stock = availability?.get( best.id ) || null
+
     return {
         pool: best,
         price_per_hr: pricing?.get( best.id ) ?? null,
+        availability: stock,
     }
 
 }
 
 /**
- * Get all GPU pools annotated with pricing and fitness for a given VRAM requirement.
+ * Get all GPU pools annotated with pricing, availability, and fitness.
  *
  * @param {number} vram_needed_gb
  * @param {Map<string, number>} [pricing]
- * @returns {Array<{ pool: Object, price_per_hr: number | null, fits: boolean }>}
+ * @param {Map<string, string>} [availability]
+ * @returns {Array<{ pool: Object, price_per_hr: number | null, fits: boolean, availability: string | null }>}
  */
-export function get_all_gpus_annotated( vram_needed_gb, pricing ) {
+export function get_all_gpus_annotated( vram_needed_gb, pricing, availability ) {
 
     return GPU_POOLS.map( pool => ( {
         pool,
         price_per_hr: pricing?.get( pool.id ) ?? null,
         fits: pool.vram_gb >= vram_needed_gb,
+        availability: availability?.get( pool.id ) ?? null,
     } ) ).sort( ( a, b ) => a.pool.vram_gb - b.pool.vram_gb )
 
 }

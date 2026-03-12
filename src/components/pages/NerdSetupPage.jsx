@@ -18,6 +18,7 @@ import {
     create_template,
     create_endpoint,
     fetch_model_config,
+    fetch_gpu_pricing,
     estimate_vram_gb,
     suggest_gpu,
     get_all_gpus_annotated,
@@ -148,6 +149,17 @@ const GpuBadge = styled.div`
     border: 1px solid ${ ( { theme } ) => theme.colors.info }40;
     border-radius: ${ ( { theme } ) => theme.border_radius.md };
     background: ${ ( { theme } ) => theme.colors.info }10;
+`
+
+const AVAILABILITY_COLORS = { High: `#22c55e`, Medium: `#f59e0b`, Low: `#ef4444` }
+
+const AvailabilityDot = styled.span`
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: ${ ( { theme } ) => theme.border_radius.full };
+    background: ${ ( { $status } ) => AVAILABILITY_COLORS[ $status ] || `#888` };
+    flex-shrink: 0;
 `
 
 const BrowseButton = styled.button`
@@ -306,9 +318,35 @@ export default function NerdSetupPage() {
         store.system_prompt || import.meta.env.VITE_DEFAULT_SYSTEM_PROMPT || ``
     )
 
+    // GPU pricing & availability (fetched from RunPod API)
+    const [ gpu_pricing, set_gpu_pricing ] = useState( null )
+    const [ gpu_availability, set_gpu_availability ] = useState( null )
+
     // Deploy state
     const [ deploying, set_deploying ] = useState( false )
     const [ deploy_error, set_deploy_error ] = useState( null )
+
+
+    // Fetch GPU pricing & availability when API key looks valid
+    useEffect( () => {
+
+        if( !api_key.trim() || api_key.trim().length < 20 ) return
+
+        let cancelled = false
+
+        fetch_gpu_pricing( api_key.trim() )
+            .then( ( { pricing, availability } ) => {
+                if( cancelled ) return
+                set_gpu_pricing( pricing )
+                set_gpu_availability( availability )
+            } )
+            .catch( () => {
+                // Non-critical — GPU selection still works without live data
+            } )
+
+        return () => { cancelled = true }
+
+    }, [ api_key ] )
 
 
     /**
@@ -334,8 +372,8 @@ export default function NerdSetupPage() {
             const vram = estimate_vram_gb( config, quantization, ctx )
             set_vram_needed( vram )
 
-            // Suggest cheapest GPU that fits
-            const suggestion = suggest_gpu( vram )
+            // Suggest best GPU — prioritises availability, then price
+            const suggestion = suggest_gpu( vram, gpu_pricing, gpu_availability )
             set_suggested_gpu( suggestion )
 
         } catch ( err ) {
@@ -344,7 +382,7 @@ export default function NerdSetupPage() {
             set_model_loading( false )
         }
 
-    }, [ quantization, max_model_len ] )
+    }, [ quantization, max_model_len, gpu_pricing, gpu_availability ] )
 
 
     /**
@@ -435,7 +473,7 @@ export default function NerdSetupPage() {
 
 
     // Resolve available GPUs for the override dropdown
-    const all_gpus = get_all_gpus_annotated( vram_needed )
+    const all_gpus = get_all_gpus_annotated( vram_needed, gpu_pricing, gpu_availability )
     const can_deploy = api_key.trim() && model_name.trim() && !deploying
 
     return <Container>
@@ -503,7 +541,13 @@ export default function NerdSetupPage() {
                 <Cloud size={ 14 } />
                 { t( `gpu_auto`, { name: suggested_gpu.pool.name, vram: suggested_gpu.pool.vram_gb } ) }
                 { suggested_gpu.price_per_hr != null && ` — ${ t( `gpu_cost`, { cost: suggested_gpu.price_per_hr.toFixed( 2 ) } ) }` }
+                { suggested_gpu.availability && <AvailabilityDot $status={ suggested_gpu.availability } title={ t( `availability_${ suggested_gpu.availability.toLowerCase() }` ) } /> }
             </GpuBadge> }
+
+            { /* Warn when auto-suggestion has low availability */ }
+            { suggested_gpu?.availability === `Low` && !gpu_override && <StatusRow $error>
+                <AlertTriangle size={ 12 } /> { t( `gpu_low_availability_warning` ) }
+            </StatusRow> }
 
             { vram_needed > 0 && <Hint>
                 { t( `estimated_vram`, { vram: vram_needed.toFixed( 1 ) } ) }
@@ -531,10 +575,11 @@ export default function NerdSetupPage() {
                         onChange={ ( e ) => set_gpu_override( e.target.value ) }
                     >
                         <option value="">{ suggested_gpu ? `Auto (${ suggested_gpu.pool.name })` : `Auto` }</option>
-                        { all_gpus.map( ( { pool, fits, price_per_hr } ) =>
+                        { all_gpus.map( ( { pool, fits, price_per_hr, availability: avail } ) =>
                             <option key={ pool.id } value={ pool.id } disabled={ !fits }>
                                 { pool.name }
                                 { price_per_hr != null ? ` — $${ price_per_hr.toFixed( 2 ) }/hr` : `` }
+                                { avail ? ` · ${ avail } availability` : `` }
                                 { !fits ? ` (${ t( `gpu_insufficient_vram` ) })` : `` }
                             </option>
                         ) }
