@@ -219,9 +219,11 @@ export async function delete_template( api_key, template_id ) {
 /**
  * Get endpoint health (worker status and job counts).
  *
+ * Worker states: idle, initializing, ready, running, throttled, unhealthy.
+ *
  * @param {string} api_key
  * @param {string} endpoint_id
- * @returns {Promise<{ workers: { idle: number, running: number }, jobs: Object }>}
+ * @returns {Promise<{ workers: Object, jobs: Object }>}
  */
 export async function get_endpoint_health( api_key, endpoint_id ) {
     return api_fetch( `${ INFERENCE_BASE }/${ endpoint_id }/health`, api_key )

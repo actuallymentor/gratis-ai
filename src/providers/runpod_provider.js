@@ -62,7 +62,9 @@ export default class RunPodProvider {
             // Probe may fail if endpoint is cold — that's fine
         }
 
-        // Poll health until at least one worker is running or idle
+        // Poll health until at least one worker can serve requests.
+        // RunPod reports workers as: idle, initializing, ready, running, throttled, unhealthy.
+        // Any state except initializing and unhealthy means the worker can accept inference.
         const start = Date.now()
         const max_wait = 300_000 // 5 minutes max cold start
 
@@ -72,7 +74,9 @@ export default class RunPodProvider {
 
                 const health = await get_endpoint_health( this._api_key, this._endpoint_id )
                 const workers = health.workers || {}
-                const total = ( workers.idle || 0 ) + ( workers.running || 0 )
+                const available = ( workers.idle || 0 ) + ( workers.running || 0 )
+                    + ( workers.ready || 0 ) + ( workers.throttled || 0 )
+                const initializing = workers.initializing || 0
 
                 const elapsed = ( Date.now() - start ) / 1000
                 const progress = Math.min( 0.95, 0.1 +  elapsed / ( max_wait / 1000 )  * 0.85 )
@@ -80,13 +84,15 @@ export default class RunPodProvider {
                 if( on_progress ) {
                     on_progress( {
                         progress,
-                        status: total > 0
-                            ? `GPU ready — ${ total } worker${ total > 1 ? `s` : `` } active`
-                            : `Waking up cloud GPU... (${ Math.floor( elapsed ) }s)`,
+                        status: available > 0
+                            ? `GPU ready — ${ available } worker${ available > 1 ? `s` : `` } active`
+                            : initializing > 0
+                                ? `GPU worker starting up... (${ Math.floor( elapsed ) }s)`
+                                : `Waking up cloud GPU... (${ Math.floor( elapsed ) }s)`,
                     } )
                 }
 
-                if( total > 0 ) {
+                if( available > 0 ) {
                     this._ready = true
                     if( on_progress ) on_progress( { progress: 1, status: `Ready` } )
                     log.info( `[runpod] Endpoint ${ this._endpoint_id } ready in ${ Math.floor( elapsed ) }s` )
