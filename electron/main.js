@@ -652,7 +652,12 @@ const setup_runpod_cors = () => {
 
     session.defaultSession.webRequest.onHeadersReceived( filter, ( details, callback ) => {
 
-        const headers = { ...details.responseHeaders }
+        // Strip any existing CORS headers (case-insensitive) to avoid duplicates
+        const headers = {}
+        for( const [ key, value ] of Object.entries( details.responseHeaders ) ) {
+            if( !key.toLowerCase().startsWith( `access-control-` ) ) headers[ key ] = value
+        }
+
         headers[ `Access-Control-Allow-Origin` ] = [ `*` ]
         headers[ `Access-Control-Allow-Methods` ] = [ `GET, POST, PUT, DELETE, OPTIONS` ]
         headers[ `Access-Control-Allow-Headers` ] = [ `Content-Type, Authorization` ]
