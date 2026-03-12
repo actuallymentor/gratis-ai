@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.26.0] - 2026-03-12
+
+### Added
+- Nerd Mode — run any HuggingFace model on RunPod cloud GPUs with pay-per-second pricing
+- RunPod provider implementing LLMProvider interface for cloud inference (streaming + non-streaming)
+- Setup wizard with auto VRAM estimation from HuggingFace config.json and dynamic GPU suggestion
+- Suggested models modal with 12 curated models from Small to Cloud-only XL
+- Daily spend tracker with configurable limit (localStorage, auto-resets at midnight UTC)
+- Cloud GPU card on model select page
+- Cloud tag and cost/hr display for RunPod models in model selector dropdown
+- Advanced settings: GPU override, quantization, idle timeout, gpu_memory_utilization
+- E2E test suite for Nerd Mode with real RunPod endpoint deployment
+
 ## [0.25.1] - 2026-03-09
 
 ### Fixed

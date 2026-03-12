@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import styled, { useTheme } from 'styled-components'
-import { ChevronDown, Check, Plus, Settings, LoaderCircle, AlertTriangle } from 'lucide-react'
+import { ChevronDown, Check, Plus, Settings, LoaderCircle, AlertTriangle, Cloud } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { format_file_size, can_fit_in_memory } from '../../utils/model_catalog'
@@ -98,6 +98,18 @@ const NoModelHint = styled.div`
     color: ${ ( { theme } ) => theme.colors.text_muted };
     text-align: center;
     line-height: 1.4;
+`
+
+const CloudTag = styled.span`
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.info };
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-left: 4px;
 `
 
 /**
@@ -211,7 +223,8 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                     </NoModelHint>
                     :
                     cached_models.map( ( model ) => {
-                        const too_large = !can_fit_in_memory( model, max_model_bytes )
+                        const is_cloud = model.source === `runpod`
+                        const too_large = !is_cloud && !can_fit_in_memory( model, max_model_bytes )
                         return <ModelOption
                             key={ model.id }
                             data-testid={ `model-option-${ model.id }` }
@@ -222,9 +235,14 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                                 :
                                 <div style={ { width: 14 } } /> }
                             <ModelInfo>
-                                <ModelLabel>{ model.name }</ModelLabel>
+                                <ModelLabel>
+                                    { model.name }
+                                    { is_cloud && <CloudTag><Cloud size={ 10 } /> Cloud</CloudTag> }
+                                </ModelLabel>
                                 <ModelMeta>
-                                    { format_file_size( model.file_size_bytes ) }
+                                    { is_cloud
+                                        ? model.price_per_hr != null ? `≈ $${ model.price_per_hr.toFixed( 2 ) }/hr` : `RunPod`
+                                        : format_file_size( model.file_size_bytes ) }
                                     { too_large ? ` — ${ t( `may_not_fit` ) }` : `` }
                                 </ModelMeta>
                             </ModelInfo>

@@ -55,6 +55,15 @@ export default defineConfig( {
             timeout: 2_400_000,
         },
 
+        // RunPod cloud GPU tests — requires VITE_RUNPOD_API_KEY_CI env var
+        {
+            name: `runpod`,
+            testMatch: /\bnerd_mode\.spec\.js$/,
+            retries: 0,
+            workers: 1,
+            timeout: 600_000,
+        },
+
     ],
 
 } )

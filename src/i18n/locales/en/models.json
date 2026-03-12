@@ -30,6 +30,9 @@
     "large_model_warning": "Large models may fail to load in the browser. Consider a smaller quantization or the desktop app.",
     "low_memory_warning": "Only {{free}} of memory free — this model needs about {{needed}}. Try closing other apps or picking a smaller model to avoid slowdowns and potential crashes.",
 
+    "nerd_option": "Cloud GPU",
+    "nerd_option_subtitle": "Run any model on RunPod cloud GPUs — pay per second",
+
     "downloading_your_model": "Downloading your model",
     "one_time_download": "{{name}} — this is a one-time download. After this, everything works offline.",
     "ready_to_chat": "Ready to chat!",

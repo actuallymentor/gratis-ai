@@ -4,6 +4,7 @@ import { get_db } from '../stores/db'
 import { storage_key } from '../utils/branding'
 
 const active_model_key = storage_key( `active_model_id` )
+const runpod_config_key = storage_key( `runpod_config` )
 
 // Runtime check — true when running inside Electron
 const is_electron = !!window.electronAPI?.native_inference
@@ -68,6 +69,42 @@ export default function use_model_manager() {
 
     }, [] )
 
+    /**
+     * Read RunPod endpoints from localStorage and merge into cached_models.
+     * Returns model-shaped objects with source: 'runpod'.
+     */
+    const get_runpod_models = useCallback( () => {
+
+        try {
+
+            const raw = localStorage.getItem( runpod_config_key )
+            if( !raw ) return []
+
+            const config = JSON.parse( raw )
+            if( !config.endpoints?.length ) return []
+
+            return config.endpoints.map( ep => ( {
+                id: `runpod:${ ep.endpoint_id }`,
+                name: ep.model_name?.split( `/` ).pop() || ep.name,
+                source: `runpod`,
+                gpu_tier: ep.gpu_name,
+                gpu_id: ep.gpu_id,
+                price_per_hr: ep.price_per_hr,
+                endpoint_id: ep.endpoint_id,
+                template_id: ep.template_id,
+                model_name: ep.model_name,
+                created_at: ep.created_at,
+                // Not file-based — these fields prevent "may not fit" warnings
+                file_size_bytes: 0,
+                category: `cloud`,
+            } ) )
+
+        } catch {
+            return []
+        }
+
+    }, [] )
+
     // Load on mount
     useEffect( () => {
         refresh_models()
@@ -106,8 +143,12 @@ export default function use_model_manager() {
 
     }, [ refresh_models ] )
 
+    // Merge RunPod cloud models into the cached models list
+    const runpod_models = get_runpod_models()
+    const all_models = [ ...cached_models, ...runpod_models ]
+
     return {
-        cached_models,
+        cached_models: all_models,
         storage_used,
         storage_estimate,
         is_loading,

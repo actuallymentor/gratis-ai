@@ -18,6 +18,14 @@ See `RESEARCH.md` "Vision Model GGUF Research" section. Load when adding vision 
 
 `ModelDefinition` supports optional `system_prompt` field. When the active model has one, it takes priority over the global default in `ChatPage`. Currently only Dolphin Mistral 24B Venice has a model-specific prompt. `get_model_by_id()` exported from `model_catalog.js` for catalog lookups.
 
+## RunPod API Research (2026-03-12)
+
+See `RUNPOD_API_RESEARCH.md` for comprehensive API research. Load when working on RunPod/Nerd Mode features. Covers: REST management API (`rest.runpod.io/v1`), GraphQL legacy API (`api.runpod.io/graphql`), serverless job API (`api.runpod.ai/v2/{id}/`), OpenAI-compatible vLLM endpoints, GPU pool IDs, template/endpoint CRUD, health checks, streaming SSE format, vLLM env vars.
+
+## Nerd Mode — RunPod Cloud GPU Inference (v0.26.0)
+
+Cloud GPU inference via RunPod serverless endpoints. Two-step deployment: create vLLM template (`rest.runpod.io/v1/templates`), then create endpoint referencing it (`rest.runpod.io/v1/endpoints`). Key files: `runpod_service.js` (API client), `runpod_provider.js` (LLMProvider), `runpod_store.js` (Zustand, localStorage-persisted), `NerdSetupPage.jsx` (setup wizard), `SuggestedModelsModal.jsx` (model browser). Model IDs prefixed with `runpod:` — `llm_store.js` switches provider type based on prefix. E2E tests in `nerd_mode.spec.js` require `VITE_RUNPOD_API_KEY_CI`.
+
 ## Logging
 
 All `console.*` calls in `src/` (except `nodejs_console.js`) have been replaced with mentie's `log` utility. `electron/inference_worker.js` is excluded — it uses CJS and has its own console-forwarding relay.

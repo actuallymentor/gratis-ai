@@ -85,6 +85,12 @@ The built-in models are just the starting point. You can run **any GGUF model fr
 
 The only constraint is your hardware: if a model fits in your RAM, it runs.
 
+## Nerd Mode: cloud GPUs
+
+Want to run **70B+ parameter models** that don't fit on your machine? Nerd Mode deploys any HuggingFace model to [RunPod](https://runpod.io) serverless GPUs. You bring your own API key and pay only for active inference time — endpoints scale to zero when idle.
+
+From the model selection screen, pick **Cloud GPU**, enter your RunPod API key and a model name, and the app handles the rest: it estimates VRAM requirements, picks the cheapest compatible GPU, and deploys a vLLM endpoint for you.
+
 For build instructions, architecture details, model catalog internals, and more, see **[DOCUMENTATION.md](DOCUMENTATION.md)**.
 
 ## For developers

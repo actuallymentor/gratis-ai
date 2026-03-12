@@ -1,0 +1,47 @@
+{
+    "page_title": "Cloud GPU Setup",
+    "page_subtitle": "Run any HuggingFace model on a cloud GPU. Pay only for active inference time — endpoints scale to zero when idle.",
+
+    "api_key_label": "RunPod API Key",
+    "api_key_placeholder": "Enter your RunPod API key",
+    "api_key_hint": "Get a key at runpod.io — you'll only be charged for active GPU time.",
+
+    "model_name_label": "Model",
+    "model_name_placeholder": "org/model-name (e.g. meta-llama/Llama-3.3-70B-Instruct)",
+    "browse_suggested": "Browse suggested models",
+    "validating_model": "Fetching model config...",
+    "model_validated": "{{params}} parameters — {{type}} architecture",
+    "model_error": "Could not fetch model config — check the repo name",
+
+    "gpu_label": "Recommended GPU",
+    "gpu_auto": "{{name}} — {{vram}} GB VRAM",
+    "gpu_cost": "≈ ${{cost}}/hr",
+    "gpu_no_fit": "No GPU with enough VRAM — try a smaller model or quantization",
+
+    "advanced_title": "Advanced",
+    "gpu_override_label": "GPU Override",
+    "gpu_insufficient_vram": "insufficient VRAM",
+    "idle_timeout_label": "Idle Timeout",
+    "idle_timeout_value": "{{minutes}} min",
+    "system_prompt_label": "System Prompt",
+    "daily_limit_label": "Max Daily Spend",
+    "daily_limit_value": "${{amount}}",
+    "quantization_label": "Quantization",
+    "quantization_default": "FP16 (default)",
+    "max_model_len_label": "Max Context Length",
+    "max_model_len_placeholder": "Auto (from model config)",
+    "gpu_utilization_label": "GPU Memory Utilization",
+
+    "deploy_button": "Deploy Endpoint",
+    "deploying": "Creating template and endpoint...",
+    "deploy_error": "Failed to deploy: {{error}}",
+
+    "estimated_vram": "Estimated VRAM: {{vram}} GB",
+    "estimated_cost": "Estimated cost: ${{cost}}/hr",
+
+    "suggested_models_title": "Suggested Models",
+    "group_small": "Small",
+    "group_medium": "Medium",
+    "group_large": "Large",
+    "group_xl": "Cloud-only XL"
+}

@@ -71,6 +71,14 @@ export const MODELS = {
         tier: `heavy`,
     },
 
+    // RunPod cloud model — tiny model for fast cold starts in E2E tests
+    runpod_smollm2: {
+        id: `runpod-smollm2-135m`,
+        name: `SmolLM2 135M Instruct`,
+        hf_repo: `HuggingFaceTB/SmolLM2-135M-Instruct`,
+        tier: `cloud`,
+    },
+
 }
 
 // Default: SmolLM2 + TinyLlama covers two different template types in reasonable time (~15 min).

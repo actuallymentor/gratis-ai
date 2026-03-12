@@ -1,5 +1,21 @@
 # Timeline
 
+## 2026-03-12 — Nerd Mode: RunPod cloud GPU inference
+
+- Added complete RunPod cloud GPU inference feature ("Nerd Mode")
+- New provider layer: `runpod_service.js` (API client, VRAM estimation, GPU suggestion), `runpod_provider.js` (LLMProvider), `runpod_spend_tracker.js` (daily spend limit)
+- New store: `runpod_store.js` (Zustand, localStorage-persisted) for API key, endpoints, preferences
+- New UI: `NerdSetupPage.jsx` (wizard at `/nerd-setup`), `SuggestedModelsModal.jsx` (12 curated models)
+- Two-step deployment: create vLLM template (with model env vars) → create endpoint referencing it
+- Dynamic VRAM estimation from HuggingFace config.json → auto-suggests cheapest GPU pool
+- OpenAI-compatible streaming via SSE from `api.runpod.ai/v2/{endpoint_id}/openai/v1/chat/completions`
+- Model IDs prefixed with `runpod:` — `llm_store.js` auto-switches provider type, lazy-imports RunPod provider
+- `use_model_manager.js` merges RunPod endpoints (from localStorage) into cached_models list
+- `ModelSelector.jsx` shows `Cloud` tag and cost/hr instead of file size for cloud models
+- `ModelSelectPage.jsx` adds "Cloud GPU" card with nerd variant (info color)
+- E2E tests in `nerd_mode.spec.js` (requires `VITE_RUNPOD_API_KEY_CI`)
+- i18n: new `nerd` namespace (English only), 2 keys added to `models.json`
+
 ## 2026-03-09 — Fix updater:check IPC error serialization + draft release pipeline
 
 - Root cause 1: `autoUpdater.checkForUpdates()` rejection inside `ipcMain.handle` produced `{}` because `Error` properties are non-enumerable

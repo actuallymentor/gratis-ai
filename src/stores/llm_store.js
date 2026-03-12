@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { log } from 'mentie'
 import { create_provider } from '../providers/factory'
+import { storage_key } from '../utils/branding'
 
 /**
  * Shared LLM state store — singleton across all pages.
@@ -22,6 +23,7 @@ const use_llm_store = create( ( set, get ) => ( {
     // ── Internal (not consumed by UI) ────────────────────────────────
 
     _provider: null,
+    _provider_type: null,     // 'local' | 'runpod'
     _provider_promise: null,
     _load_promise: null,
     _loading_model_id: null,
@@ -31,20 +33,65 @@ const use_llm_store = create( ( set, get ) => ( {
     /**
      * Ensure the provider is initialised (handles async creation).
      * Uses a shared promise so all concurrent callers get the same instance.
+     *
+     * If the active model starts with 'runpod:', creates a RunPodProvider.
+     * Otherwise, creates the standard local provider (WASM or Electron IPC).
      */
-    ensure_provider: async () => {
+    ensure_provider: async ( model_id ) => {
 
         const state = get()
+        const target_id = model_id || localStorage.getItem( storage_key( `active_model_id` ) ) || ``
+        const needs_runpod = target_id.startsWith( `runpod:` )
+        const current_type = state._provider_type
 
-        if( state._provider ) return state._provider
+        // If we have a provider of the correct type, reuse it
+        if( state._provider && ( needs_runpod ? current_type === `runpod` : current_type === `local` ) ) {
+            return state._provider
+        }
 
+        // Provider type changed — dispose old one if it exists
+        if( state._provider ) {
+            log.info( `[use_llm] Switching provider type: ${ current_type } → ${ needs_runpod ? `runpod` : `local` }` )
+            try {
+                await state._provider.unload_model() 
+            } catch { /* best effort */ }
+            set( { _provider: null, _provider_promise: null, loaded_model_id: null } )
+        }
+
+        if( needs_runpod ) {
+
+            // Lazy import to keep the RunPod provider out of the main bundle
+            // when it's not used
+            const { default: RunPodProvider } = await import( `../providers/runpod_provider.js` )
+
+            const endpoint_id = target_id.replace( `runpod:`, `` )
+
+            // Read config from the RunPod store
+            const runpod_config_raw = localStorage.getItem( storage_key( `runpod_config` ) )
+            const runpod_config = runpod_config_raw ? JSON.parse( runpod_config_raw ) : {}
+            const endpoint = runpod_config.endpoints?.find( e => e.endpoint_id === endpoint_id )
+
+            const provider = new RunPodProvider( {
+                api_key: runpod_config.api_key || ``,
+                endpoint_id,
+                model_name: endpoint?.model_name || ``,
+                daily_limit: runpod_config.daily_spend_limit ?? 2,
+                price_per_hr: endpoint?.price_per_hr ?? 0,
+            } )
+
+            set( { _provider: provider, _provider_type: `runpod` } )
+            return provider
+
+        }
+
+        // Standard local provider
         if( !state._provider_promise ) {
             const promise = create_provider()
             set( { _provider_promise: promise } )
         }
 
         const provider = await get()._provider_promise
-        set( { _provider: provider } )
+        set( { _provider: provider, _provider_type: `local` } )
         return provider
 
     },
@@ -72,7 +119,7 @@ const use_llm_store = create( ( set, get ) => ( {
 
         const promise = ( async () => {
 
-            const provider = await get().ensure_provider()
+            const provider = await get().ensure_provider( model_id )
 
             log.info( `[use_llm] Loading model: ${ model_id }` )
 

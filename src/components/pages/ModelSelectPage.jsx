@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, LoaderCircle, Link, Zap, ShieldOff, Eye } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, LoaderCircle, Link, Zap, ShieldOff, Eye, Cloud } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import use_model_manager from '../../hooks/use_model_manager'
 import use_speed_estimate from '../../hooks/use_speed_estimate'
@@ -67,7 +67,8 @@ const CardRow = styled.div`
 const variant_color = ( theme, $variant ) =>
     $variant === `uncensored` ? theme.colors.error
         : $variant === `vision` ? theme.colors.info
-            : theme.colors.accent
+            : $variant === `nerd` ? theme.colors.info
+                : theme.colors.accent
 
 const OptionCard = styled.button`
     display: flex;
@@ -102,7 +103,7 @@ const CardLabel = styled.h2`
     color: ${ ( { $variant, theme } ) =>
         $variant === `faster` ? theme.colors.success
             : $variant === `uncensored` ? theme.colors.error
-                : $variant === `vision` ? theme.colors.info
+                : $variant === `vision` || $variant === `nerd` ? theme.colors.info
                     : theme.colors.accent };
 `
 
@@ -534,6 +535,12 @@ export default function ModelSelectPage() {
 
     const handle_download = () => {
 
+        // Nerd Mode sentinel — navigate to cloud GPU setup
+        if( selected_model_id === `__nerd__` ) {
+            navigate( `/nerd-setup` )
+            return
+        }
+
         if( !active_model ) return
 
         // Cached models can skip the download page entirely
@@ -586,8 +593,8 @@ export default function ModelSelectPage() {
         !shown_ids.has( m.id ) && can_fit_in_memory( m, max_model_bytes )
     )
 
-    // Card row when we have at least 2 options to compare
-    const card_count = 1 + ( faster ? 1 : 0 ) + ( uncensored ? 1 : 0 ) + ( vision ? 1 : 0 )
+    // Card row when we have at least 2 options to compare (+1 for Nerd Mode cloud card)
+    const card_count = 1 + ( faster ? 1 : 0 ) + ( uncensored ? 1 : 0 ) + ( vision ? 1 : 0 ) + 1
     const show_card_row = card_count >= 2
 
     return <Container>
@@ -714,6 +721,24 @@ export default function ModelSelectPage() {
                     { vision.benchmarks && <BenchmarkRow benchmarks={ vision.benchmarks } /> }
                 </CardDetails>
             </OptionCard> }
+
+            { /* Cloud GPU (Nerd Mode) option */ }
+            <OptionCard
+                data-testid="nerd-mode-card"
+                $active={ selected_model_id === `__nerd__` }
+                $variant="nerd"
+                onClick={ () => {
+                    set_custom_model( null )
+                    set_custom_error( null )
+                    set_selected_model_id( `__nerd__` )
+                } }
+            >
+                <CardLabel $variant="nerd">
+                    <Cloud size={ 18 } />
+                    { t( 'nerd_option' ) }
+                </CardLabel>
+                <DownloadEstimate>{ t( 'nerd_option_subtitle' ) }</DownloadEstimate>
+            </OptionCard>
 
         </CardRow> }
 
