@@ -32,6 +32,7 @@
 
     "nerd_option": "Cloud GPU",
     "nerd_option_subtitle": "Run any model on RunPod cloud GPUs — pay per second",
+    "nerd_continue": "Continue",
 
     "downloading_your_model": "Downloading your model",
     "one_time_download": "{{name}} — this is a one-time download. After this, everything works offline.",

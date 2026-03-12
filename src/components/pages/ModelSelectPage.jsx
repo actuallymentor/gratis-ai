@@ -769,7 +769,7 @@ export default function ModelSelectPage() {
             data-testid="model-select-confirm-btn"
             onClick={ handle_download }
         >
-            { active_is_cached ? t( 'start_chatting' ) : t( 'download_and_start' ) } <ArrowRight size={ 18 } />
+            { selected_model_id === `__nerd__` ? t( 'nerd_continue' ) : active_is_cached ? t( 'start_chatting' ) : t( 'download_and_start' ) } <ArrowRight size={ 18 } />
         </DownloadButton>
 
         { /* Step progress */ }
