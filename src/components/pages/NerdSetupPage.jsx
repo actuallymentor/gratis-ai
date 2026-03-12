@@ -8,7 +8,7 @@
  *   4. (Optional) Advanced: override GPU, idle timeout, quantization, etc.
  *   5. Deploy → creates template + endpoint → navigates to /chat
  */
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -271,6 +271,11 @@ export default function NerdSetupPage() {
 
     const navigate = useNavigate()
     const { t } = useTranslation( `nerd` )
+
+    // Nerd Mode requires Electron (Node.js bypasses CORS for RunPod API calls)
+    useEffect( () => {
+        if( !window.electronAPI ) navigate( `/model-select`, { replace: true } )
+    }, [ navigate ] )
 
     // Store
     const store = use_runpod_store()

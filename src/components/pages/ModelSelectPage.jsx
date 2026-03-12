@@ -593,8 +593,8 @@ export default function ModelSelectPage() {
         !shown_ids.has( m.id ) && can_fit_in_memory( m, max_model_bytes )
     )
 
-    // Card row when we have at least 2 options to compare (+1 for Nerd Mode cloud card)
-    const card_count = 1 + ( faster ? 1 : 0 ) + ( uncensored ? 1 : 0 ) + ( vision ? 1 : 0 ) + 1
+    // Card row when we have at least 2 options to compare (+1 for Nerd Mode cloud card in Electron)
+    const card_count = 1 + ( faster ? 1 : 0 ) + ( uncensored ? 1 : 0 ) + ( vision ? 1 : 0 ) + ( is_electron ? 1 : 0 )
     const show_card_row = card_count >= 2
 
     return <Container>
@@ -722,8 +722,8 @@ export default function ModelSelectPage() {
                 </CardDetails>
             </OptionCard> }
 
-            { /* Cloud GPU (Nerd Mode) option */ }
-            <OptionCard
+            { /* Cloud GPU (Nerd Mode) — Electron only, needs Node.js to bypass CORS */ }
+            { is_electron && <OptionCard
                 data-testid="nerd-mode-card"
                 $active={ selected_model_id === `__nerd__` }
                 $variant="nerd"
@@ -738,7 +738,7 @@ export default function ModelSelectPage() {
                     { t( 'nerd_option' ) }
                 </CardLabel>
                 <DownloadEstimate>{ t( 'nerd_option_subtitle' ) }</DownloadEstimate>
-            </OptionCard>
+            </OptionCard> }
 
         </CardRow> }
 

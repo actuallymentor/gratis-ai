@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, utilityProcess } = require( `electron` )
+const { app, BrowserWindow, ipcMain, utilityProcess, session } = require( `electron` )
 const { autoUpdater } = require( `electron-updater` )
 const path = require( `path` )
 const fs = require( `fs` )
@@ -633,11 +633,47 @@ const setup_auto_updater = () => {
 
 }
 
+/**
+ * Bypass CORS for RunPod API calls (Nerd Mode cloud inference).
+ *
+ * RunPod's REST and inference APIs don't return CORS headers, so the
+ * renderer's fetch() would fail on preflight. We intercept responses
+ * in the main process and inject the required headers. For OPTIONS
+ * preflights that RunPod rejects (404/405), we override the status
+ * to 204 so the browser proceeds with the actual request.
+ */
+const setup_runpod_cors = () => {
+
+    const filter = { urls: [
+        `https://rest.runpod.io/*`,
+        `https://api.runpod.ai/*`,
+        `https://api.runpod.io/*`,
+    ] }
+
+    session.defaultSession.webRequest.onHeadersReceived( filter, ( details, callback ) => {
+
+        const headers = { ...details.responseHeaders }
+        headers[ `Access-Control-Allow-Origin` ] = [ `*` ]
+        headers[ `Access-Control-Allow-Methods` ] = [ `GET, POST, PUT, DELETE, OPTIONS` ]
+        headers[ `Access-Control-Allow-Headers` ] = [ `Content-Type, Authorization` ]
+
+        // Force OPTIONS preflights to succeed even when RunPod returns 404/405
+        if( details.method === `OPTIONS` ) {
+            callback( { responseHeaders: headers, statusLine: `HTTP/1.1 204 No Content` } )
+        } else {
+            callback( { responseHeaders: headers } )
+        }
+
+    } )
+
+}
+
 // App lifecycle
 app.whenReady().then( () => {
 
     ensure_models_dir()
     register_ipc_handlers()
+    setup_runpod_cors()
     create_window()
     setup_auto_updater()
 
