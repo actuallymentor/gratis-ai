@@ -163,6 +163,8 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const [ messages, set_messages ] = useState( [] )
     // Initialize as null = "haven't tried loading yet" to distinguish from "tried and failed"
     const [ model_loaded, set_model_loaded ] = useState( null )
+    // RunPod loading progress — shows status like "Waking up cloud GPU..." during cold starts
+    const [ runpod_status, set_runpod_status ] = useState( null )
     // Start as null even with a URL param — we validate it exists before accepting it
     const [ current_conversation_id, set_current_conversation_id ] = useState( null )
     const chat_input_ref = useRef( null )
@@ -207,12 +209,16 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const [ voice_download_error, set_voice_download_error ] = useState( false )
     const [ voice_text, set_voice_text ] = useState( null )
 
-    // Whether a model is available for inference
-    const has_model = model_loaded === true || !!loaded_model_id
+    // Whether the correct model is available for inference.
+    // If a different model is pending (e.g. RunPod after local), the stale loaded model
+    // must not count — otherwise we'd show the chat as ready with the wrong model.
+    const pending_model_id = localStorage.getItem( storage_key( `active_model_id` ) )
+    const has_model = ( model_loaded === true || !!loaded_model_id )
+        && ( !pending_model_id || loaded_model_id === pending_model_id )
 
     // Whether we're in the process of loading a model (includes the initial mount gap)
-    const has_pending_model = !!localStorage.getItem( storage_key( `active_model_id` ) )
-    const is_loading_model = is_model_loading ||  model_loaded === null && has_pending_model 
+    const has_pending_model = !!pending_model_id
+    const is_loading_model = is_model_loading ||  model_loaded === null && has_pending_model
 
     // Try loading the active model on mount.
     // The store deduplicates — if HomePage already started a load, this is a no-op.
@@ -220,8 +226,8 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
         const active_id = localStorage.getItem( storage_key( `active_model_id` ) )
 
-        // Store already has the model loaded — sync local flag
-        if( loaded_model_id ) {
+        // Store already has the correct model loaded — sync local flag
+        if( loaded_model_id && loaded_model_id === active_id ) {
             set_model_loaded( true )
             return
         }
@@ -230,14 +236,28 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         if( is_model_loading ) return
 
         if( active_id ) {
+
+            const is_runpod = active_id.startsWith( `runpod:` )
             log.info( `[ChatPage] Auto-loading saved model: ${ active_id }` )
-            load_model( active_id )
-                .then( () => set_model_loaded( true ) )
+
+            // For RunPod models, track cold-start progress so the UI can show
+            // "Waking up cloud GPU..." instead of the generic loading message
+            const on_progress = is_runpod
+                ? ( { status } ) => set_runpod_status( status )
+                : undefined
+
+            load_model( active_id, on_progress )
+                .then( () => {
+                    set_model_loaded( true )
+                    set_runpod_status( null )
+                } )
                 .catch( ( err ) => {
                     log.error( `[ChatPage] Auto-load failed:`, err.message )
                     set_model_loaded( false )
+                    set_runpod_status( null )
                     toast.error( err.message || t( 'common:failed_to_load_model' ) )
                 } )
+
         } else {
             // No model configured — transition from null (unknown) to false (no model)
             set_model_loaded( false )
@@ -246,9 +266,14 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     }, [] )
 
     // Sync local model_loaded flag when the store finishes loading
-    // (e.g. a load started by HomePage completes after ChatPage mounts)
+    // (e.g. a load started by HomePage completes after ChatPage mounts).
+    // Only sync when the loaded model matches the pending target — avoids
+    // prematurely marking "loaded" when a stale local model is still in the store.
     useEffect( () => {
-        if( loaded_model_id && model_loaded !== true ) set_model_loaded( true )
+        const target = localStorage.getItem( storage_key( `active_model_id` ) )
+        if( loaded_model_id && loaded_model_id === target && model_loaded !== true ) {
+            set_model_loaded( true )
+        }
     }, [ loaded_model_id ] )
 
     // Listen for global stop-generation shortcut (Ctrl+Shift+Backspace)
@@ -663,12 +688,21 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const handle_model_switch = useCallback( async ( model_id ) => {
 
         try {
-            await load_model( model_id )
+
+            const is_runpod = model_id.startsWith( `runpod:` )
+            const on_progress = is_runpod
+                ? ( { status } ) => set_runpod_status( status )
+                : undefined
+
+            await load_model( model_id, on_progress )
             set_model_loaded( true )
+            set_runpod_status( null )
             localStorage.setItem( storage_key( `active_model_id` ), model_id )
             await refresh_models()
+
         } catch ( err ) {
             log.error( `[ChatPage] Failed to switch model:`, err )
+            set_runpod_status( null )
             toast.error( err.message || t( 'common:failed_to_load_model' ) )
         }
 
@@ -725,7 +759,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         if( !has_model && is_loading_model ) {
             return <LoadingContainer data-testid="model-loading">
                 <SpinnerIcon><LoaderCircle size={ 32 } /></SpinnerIcon>
-                <LoadingText>{ t( 'loading_your_model' ) }</LoadingText>
+                <LoadingText>{ runpod_status || t( 'loading_your_model' ) }</LoadingText>
             </LoadingContainer>
         }
 
