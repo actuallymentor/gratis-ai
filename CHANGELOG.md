@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.30.2] - 2026-03-13
+
+### Fixed
+- Convert idle timeout from minutes to seconds for RunPod API (`idleTimeout * 60`)
+
 ## [0.30.1] - 2026-03-13
 
 ### Fixed

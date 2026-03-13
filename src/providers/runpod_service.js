@@ -242,7 +242,7 @@ export async function create_endpoint( api_key, { template_id, name, gpu_ids, id
             gpuTypeIds: gpu_ids,
             workersMin: 0,
             workersMax: max_workers,
-            idleTimeout: idle_timeout,
+            idleTimeout: idle_timeout * 60,
             scalerType: `QUEUE_DELAY`,
             scalerValue: 4,
         } ),
