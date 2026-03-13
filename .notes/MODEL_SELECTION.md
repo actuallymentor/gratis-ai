@@ -459,7 +459,7 @@ Five benchmarks were selected for maximum cross-model coverage:
 > **⚠️ This section has a shelf life.** Uncensored model releases are less frequent than general-purpose
 > models, but the landscape still evolves. See [Section 9 (Chores)](#9-chores--keeping-this-document-current) for update instructions.
 >
-> **Last verified: 2026-02-23**
+> **Last verified: 2026-03-13**
 
 Standard instruction-tuned models include safety training that causes them to refuse certain prompts.
 This is appropriate for most use cases, but creates problems for legitimate applications: creative
@@ -468,67 +468,56 @@ prompts. "Uncensored" models have this refusal behavior reduced or removed.
 
 ### How models become "uncensored"
 
-| Method | How it works | Quality impact | Examples |
-|:-------|:-------------|:---------------|:---------|
-| **Training-based** | Fine-tuned on datasets with refusal examples removed (e.g. Dolphin methodology) | Minimal — retrained from base model | Dolphin series (cognitivecomputations) |
-| **Abliteration** | Post-hoc removal of refusal direction in activation space via representation engineering | Slight degradation possible on edge cases | mlabonne's abliterated variants |
-| **Venice Edition** | Training-based uncensoring with independent refusal-rate benchmarking | Minimal — quantified refusal rates published | dphn Venice Edition models |
+| Method | How it works | Quality impact | Qualifies? |
+|:-------|:-------------|:---------------|:-----------|
+| **Training-based** | Fine-tuned on datasets with ALL refusal/alignment examples removed (Dolphin methodology) | Minimal — retrained from base model | **Yes** |
+| **Venice Edition** | Training-based uncensoring with independent refusal-rate benchmarking | Minimal — quantified refusal rates published | **Yes** (variant of training-based) |
+| ~~Abliteration~~ | Post-hoc removal of refusal direction in activation space via representation engineering | Fragile — refusal can resurface on edge cases | **No** |
 
 ### Selection criteria
 
 Models in this section must meet **all** of the following:
 
+- **Training-based uncensoring methodology** (abliteration does NOT qualify)
 - GGUF quantizations available (from reputable quantizers)
-- Modern architecture (Llama 3+, Gemma 3+, Mistral v0.3+)
+- Modern architecture (Llama 3+, Mistral v0.3+)
 - Reputable creator with published methodology
 - Documented model card with base model provenance
 
-### 3B–8B (Small)
+### Catalog — all Dolphin models (ascending by size)
 
-| Model | Params | Method | Base Model | Creator | License |
-|:------|-------:|:-------|:-----------|:--------|:--------|
-| **Dolphin 2.9.4 Llama 3.1 8B** | 8B | Training-based | Llama 3.1 8B Instruct | cognitivecomputations | Llama |
-| Gemma-3-4B-it-abliterated-v2 | 4B | Abliteration | Gemma 3 4B IT | mlabonne | Gemma |
-| Meta-Llama-3.1-8B-Instruct-abliterated | 8B | Abliteration | Llama 3.1 8B Instruct | mlabonne | Llama |
+| Model | Params | Base Model | Context | File Size | Creator | License |
+|:------|-------:|:-----------|--------:|----------:|:--------|:--------|
+| Dolphin 3.0 Llama 3.2 1B | 1.2B | Llama 3.2 1B | 131K | 807 MB | cognitivecomputations | Llama |
+| Dolphin 3.0 Llama 3.2 3B | 3.2B | Llama 3.2 3B | 131K | 2.0 GB | cognitivecomputations | Llama |
+| **Dolphin 2.9.4 Llama 3.1 8B** | 8B | Llama 3.1 8B Instruct | 131K | 4.9 GB | cognitivecomputations | Llama |
+| Dolphin 2.9.3 Mistral Nemo 12B | 12.2B | Mistral Nemo 12B | 131K | 7.5 GB | cognitivecomputations | Apache 2.0 |
+| **Dolphin Mistral 24B Venice** | 24B | Mistral Small 24B | 32K | 14.3 GB | dphn | Apache 2.0 |
+| Dolphin 2.9 Llama 3 70B | 70B | Llama 3 70B | 8K | 42.5 GB | cognitivecomputations | Llama |
 
-**Pick:** Dolphin 2.9.4 8B for best overall quality. Gemma-3-4B abliterated for tight memory budgets.
+**Pick:** Dolphin 8B is the best general-purpose uncensored choice. Venice 24B is the gold standard
+with a documented 2.20% refusal rate. The 70B is the most capable but limited to 8K context (Llama 3.0
+base, not 3.1/3.3) and has a known tendency to reference "SYSTEM MESSAGE" in output.
 
-### 12B–24B (Medium)
+### Coverage gaps
 
-| Model | Params | Method | Base Model | Creator | License |
-|:------|-------:|:-------|:-----------|:--------|:--------|
-| **Dolphin-Mistral-24B-Venice-Edition** | 24B | Venice Edition | Mistral Small 24B | dphn | Apache 2.0 |
-| Gemma-3-12B-it-abliterated | 12B | Abliteration | Gemma 3 12B IT | mlabonne | Gemma |
-| Dolphin-2.9.3-Mistral-Nemo-12B | 12B | Training-based | Mistral Nemo 12B | cognitivecomputations | Apache 2.0 |
+No training-based Dolphin models exist for these parameter brackets:
 
-**Pick:** Dolphin-Mistral-24B-Venice-Edition — gold standard at this tier with a documented 2.20%
-refusal rate and Apache 2.0 license. Gemma-3-12B abliterated for a lighter alternative.
-
-### 27B–70B (Large)
-
-| Model | Params | Method | Base Model | Creator | License |
-|:------|-------:|:-------|:-----------|:--------|:--------|
-| **Gemma-3-27B-it-abliterated** | 27B | Abliteration | Gemma 3 27B IT | mlabonne | Gemma |
-| Dolphin-2.9-Llama3-70B | 70B | Training-based | Llama 3 70B | cognitivecomputations | Llama |
-
-**Pick:** Gemma-3-27B abliterated for the best quality-to-size ratio. Dolphin 70B as the flagship
-dense uncensored model for high-memory setups.
+- **4B** — no Dolphin on Phi-4 or Qwen3-4B
+- **14B** — no Dolphin on any 14B base
+- **32B** — no Dolphin on any 32B base
 
 ### GGUF availability
 
-Not all uncensored model creators publish GGUF quantizations directly. These quantizers reliably
-provide GGUF conversions:
-
 | Quantizer | HuggingFace | Notes |
 |:----------|:------------|:------|
+| **bartowski** | [bartowski](https://huggingface.co/bartowski) | Primary quantizer for most Dolphin models, includes imatrix quants |
+| **dphn** | [dphn](https://huggingface.co/dphn) | Publishes GGUF for Venice Edition and Nemo 12B |
 | **QuantFactory** | [QuantFactory](https://huggingface.co/QuantFactory) | Wide coverage, consistent quality |
-| **bartowski** | [bartowski](https://huggingface.co/bartowski) | Popular community quantizer, includes imatrix quants |
-| **mlabonne** | [mlabonne](https://huggingface.co/mlabonne) | Publishes GGUF for his own abliterated models |
 
 > **Cross-reference:** Use the quantization guidance in [§2](#2-best-costbenefit-quantization) to
 > choose the right quant level, and the memory budget tables in [§3](#3-what-fits-where--memory-budget-tables)
-> to verify the model fits your hardware. No 0.5B–3B tier is listed — no reputable uncensored models
-> exist below 4B with modern architectures.
+> to verify the model fits your hardware.
 
 
 ---
@@ -671,13 +660,14 @@ START: How much memory do you have?
 ### Procedure: Updating uncensored models (§6)
 
 1. **Web search** for new releases:
-   - Search: `"uncensored" OR "abliterated" OR "dolphin" site:huggingface.co`
-   - Check creator profiles: [cognitivecomputations][16], [mlabonne][17], [QuantFactory](https://huggingface.co/QuantFactory), [dphn](https://huggingface.co/dphn)
-   - Search: `"uncensored" OR "abliterated" site:reddit.com/r/LocalLLaMA` for community reception
+   - Search: `"dolphin" site:huggingface.co/cognitivecomputations`
+   - Check creator profiles: [cognitivecomputations][16], [dphn](https://huggingface.co/dphn)
+   - Search: `"uncensored" OR "dolphin" site:reddit.com/r/LocalLLaMA` for community reception
 
 2. **Verify each candidate** meets the selection criteria:
+   - **Training-based uncensoring** (abliteration does NOT qualify)
    - GGUF quantizations available from reputable quantizers
-   - Modern architecture (Llama 3+, Gemma 3+, Mistral v0.3+)
+   - Modern architecture (Llama 3+, Mistral v0.3+)
    - Documented model card with base model provenance
    - Reputable creator with published methodology
 

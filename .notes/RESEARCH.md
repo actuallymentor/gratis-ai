@@ -89,3 +89,50 @@ Rankings (strongest to weakest):
 | Aggressive | IQ3_XS, IQ3_XXS, Q3_K_S | 3.2-3.5 | Noticeable loss | Tight memory budgets |
 | Extreme | IQ2_*, Q2_K* | 2.2-3.0 | Significant loss | Research / last resort |
 | Unusable | IQ1_S | 1.78 | Severe loss | Not recommended |
+
+---
+
+## Uncensored Model Verification (2026-03-13)
+
+### Policy: Training-based only
+
+Only models uncensored via the **Dolphin methodology** (full fine-tune on datasets with ALL
+refusal/alignment examples removed) qualify for the catalog. This is a deliberate policy choice:
+
+| Method | Mechanism | Reliability | Accepted? |
+|:-------|:----------|:------------|:----------|
+| **Dolphin training** | Fine-tune on curated dataset without refusals | Stable — behavior is baked into weights | **Yes** |
+| ~~Abliteration~~ | Remove "refusal direction" from activation space post-hoc | Fragile — refusal resurfaces on edge cases | **No** |
+| ~~nicoboss~~ | LoRA-based uncensoring adapter | Adapter-dependent, less reliable | **No** |
+
+**Rationale:** Abliteration uses representation engineering to identify and subtract the "refusal
+direction" in activation space. Research shows this is fragile — the model can revert to refusal
+behavior on prompts that don't align well with the extracted direction. Training-based methods
+are fundamentally more reliable because the refusal behavior was never learned in the first place.
+
+### Verified models
+
+All file sizes verified via HuggingFace API (`/api/models/{repo}/tree/main`).
+
+| Model | Repo | Filename | Size (bytes) | Context |
+|:------|:-----|:---------|-------------:|--------:|
+| Dolphin 3.0 Llama 3.2 1B Q4_K_M | bartowski/Dolphin3.0-Llama3.2-1B-GGUF | Dolphin3.0-Llama3.2-1B-Q4_K_M.gguf | 807,697,440 | 131K |
+| Dolphin 3.0 Llama 3.2 3B Q4_K_M | bartowski/Dolphin3.0-Llama3.2-3B-GGUF | Dolphin3.0-Llama3.2-3B-Q4_K_M.gguf | 2,019,382,400 | 131K |
+| Dolphin 2.9.4 Llama 3.1 8B Q4_K_M | bartowski/dolphin-2.9.4-llama3.1-8b-GGUF | dolphin-2.9.4-llama3.1-8b-Q4_K_M.gguf | 4,920,746,784 | 131K |
+| Dolphin 2.9.3 Mistral Nemo 12B Q4_K_M | dphn/dolphin-2.9.3-mistral-nemo-12b-gguf | dolphin-2.9.3-mistral-nemo-12b.Q4_K_M.gguf | 7,477,218,752 | 131K |
+| Dolphin Mistral 24B Venice Q4_K_M | bartowski/cognitivecomputations_Dolphin-Mistral-24B-Venice-Edition-GGUF | cognitivecomputations_Dolphin-Mistral-24B-Venice-Edition-Q4_K_M.gguf | 14,333,909,376 | 32K |
+| Dolphin 2.9 Llama 3 70B Q4_K_M | bartowski/dolphin-2.9-llama3-70b-GGUF | dolphin-2.9-llama3-70b-Q4_K_M.gguf | 42,520,416,128 | 8K |
+
+### Removed models
+
+- **Gemma 3 12B Abliterated** (`gemma3-12b-abliterated-q4km`) — removed because abliteration is
+  not a training-based methodology. Despite strong benchmarks (MMLU 71.9, GPQA 40.9), refusal
+  behavior can resurface. Replaced by Dolphin 2.9.3 Mistral Nemo 12B.
+
+### Known caveats
+
+- **Dolphin 2.9 Llama 3 70B** has only 8K context (Llama 3.0 base, not 3.1/3.3) and a known
+  tendency to reference "SYSTEM MESSAGE" in output
+- **4 of 6 models lack benchmarks** — `quality_score()` returns 0, so `select_best_uncensored()`
+  will prefer models with published scores (Dolphin 8B, Venice 24B)
+- **Coverage gaps:** no training-based Dolphin models at 4B, 14B, or 32B
