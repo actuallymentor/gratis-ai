@@ -798,6 +798,9 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                     { is_endpoint_warming && <WakingUpIndicator /> }
                 </WelcomeContent>
 
+                { /* Warming indicator persists above the input after the welcome area collapses */ }
+                { is_endpoint_warming && has_messages && <WakingUpIndicator /> }
+
                 <ChatInput
                     ref={ chat_input_ref }
                     on_send={ send_message }

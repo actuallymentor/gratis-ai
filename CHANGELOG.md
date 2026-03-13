@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.30.1] - 2026-03-13
+
+### Fixed
+- "Waking up the AI" indicator now persists above chat input after first message is sent to a cold RunPod endpoint
+
 ## [0.30.0] - 2026-03-13
 
 ### Added
