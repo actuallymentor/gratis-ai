@@ -519,10 +519,11 @@ export default function ModelSelectPage() {
     const [ custom_error, set_custom_error ] = useState( null )
 
     // Resolve the active model — custom > user pick > smarter default
+    // The "__nerd__" sentinel is not a real catalog model — skip fallback for it
     const active_model = custom_model
         ? custom_model
         : selected_model_id
-            ? catalog_models.find( m => m.id === selected_model_id ) ?? smarter
+            ? selected_model_id === `__nerd__` ? null : catalog_models.find( m => m.id === selected_model_id ) ?? smarter
             : smarter
 
     const active_is_cached = active_model && is_cached( active_model.id )

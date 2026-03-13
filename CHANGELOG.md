@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.27.1] - 2026-03-13
+
+### Fixed
+- Fix Nerd Mode cloud card keeping local model highlighted on model select page
+
 ## [0.27.0] - 2026-03-12
 
 ### Added
