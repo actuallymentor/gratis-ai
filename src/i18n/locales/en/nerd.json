@@ -38,9 +38,9 @@
     "max_model_len_placeholder": "Auto (from model config)",
     "gpu_utilization_label": "GPU Memory Utilization",
 
-    "deploy_button": "Deploy Endpoint",
-    "deploying": "Creating template and endpoint...",
-    "deploy_error": "Failed to deploy: {{error}}",
+    "deploy_button": "Create cloud AI and start chat",
+    "deploying": "Setting up your cloud AI...",
+    "deploy_error": "Setup failed: {{error}}",
 
     "estimated_vram": "Estimated VRAM: {{vram}} GB",
     "estimated_cost": "Estimated cost: ${{cost}}/hr",

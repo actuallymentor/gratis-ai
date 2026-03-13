@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.32.2] - 2026-03-13
+
+### Changed
+- Friendlier Nerd Mode labels: "Create cloud AI and start chat", "Setting up your cloud AI..."
+
 ## [0.32.1] - 2026-03-13
 
 ### Fixed
