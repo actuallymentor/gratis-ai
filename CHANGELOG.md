@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.35.1] - 2026-03-13
+
+### Changed
+- RunPod endpoints now deploy on Secure Cloud by default
+
 ## [0.35.0] - 2026-03-13
 
 ### Added
