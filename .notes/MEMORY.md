@@ -26,6 +26,10 @@ See `RUNPOD_API_RESEARCH.md` for comprehensive API research. Load when working o
 
 Cloud GPU inference via RunPod serverless endpoints. Two-step deployment: create vLLM template (`rest.runpod.io/v1/templates`), then create endpoint referencing it (`rest.runpod.io/v1/endpoints`). Key files: `runpod_service.js` (API client), `runpod_provider.js` (LLMProvider), `runpod_store.js` (Zustand, localStorage-persisted), `NerdSetupPage.jsx` (setup wizard), `SuggestedModelsModal.jsx` (model browser). Model IDs prefixed with `runpod:` — `llm_store.js` switches provider type based on prefix. E2E tests in `nerd_mode.spec.js` require `VITE_RUNPOD_API_KEY_CI`.
 
+## Uncensored Model Policy (2026-03-13)
+
+Training-based uncensoring only (Dolphin methodology). Abliteration does NOT qualify. See `RESEARCH.md` "Uncensored Model Verification (2026-03-13)" section for rationale, verified model table, and known caveats. Load when modifying uncensored model entries in `model_catalog.js` or updating `MODEL_SELECTION.md` §6.
+
 ## Logging
 
 All `console.*` calls in `src/` (except `nodejs_console.js`) have been replaced with mentie's `log` utility. `electron/inference_worker.js` is excluded — it uses CJS and has its own console-forwarding relay.

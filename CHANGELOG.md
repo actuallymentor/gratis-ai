@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.29.0] - 2026-03-13
+
+### Added
+- 4 new Dolphin uncensored models: 1B, 3B, 12B, and 70B — coverage from tiny to flagship
+- Training-based-only policy for uncensored models — abliteration no longer qualifies
+
+### Removed
+- Gemma 3 12B Abliterated — replaced by Dolphin 2.9.3 Mistral Nemo 12B (training-based)
+
 ## [0.28.0] - 2026-03-13
 
 ### Added
