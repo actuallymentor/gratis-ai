@@ -736,17 +736,7 @@ describe( `SUGGESTED_MODELS`, () => {
             expect( model.display_name ).toBeTruthy()
             expect( model.param_label ).toBeTruthy()
             expect( model.description ).toBeTruthy()
-            expect( model.group ).toBeTruthy()
-        }
-
-    } )
-
-    test( `model groups are valid`, () => {
-
-        const valid_groups = new Set( [ `small`, `medium`, `large`, `xl`, `uncensored` ] )
-
-        for( const model of SUGGESTED_MODELS ) {
-            expect( valid_groups.has( model.group ) ).toBe( true )
+            expect( model.score ).toBeGreaterThan( 0 )
         }
 
     } )

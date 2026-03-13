@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.32.1] - 2026-03-13
+
+### Fixed
+- Endpoint deduplication — use prefix match since RunPod appends ` -fb` suffix to names
+
 ## [0.32.0] - 2026-03-13
 
 ### Added

@@ -147,7 +147,9 @@ export async function find_existing_endpoint( api_key, model_name ) {
     const target_name = endpoint_name_for_model( model_name )
     const endpoints = await list_endpoints( api_key )
 
-    return endpoints.find( ep => ep.name === target_name ) || null
+    // RunPod may append suffixes to the name (e.g. " -fb" for flashboot),
+    // so match by prefix rather than exact equality
+    return endpoints.find( ep => ep.name.startsWith( target_name ) ) || null
 
 }
 
