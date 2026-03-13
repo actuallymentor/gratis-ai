@@ -344,7 +344,9 @@ export default function NerdSetupPage() {
                 // Non-critical — GPU selection still works without live data
             } )
 
-        return () => { cancelled = true }
+        return () => {
+            cancelled = true 
+        }
 
     }, [ api_key ] )
 

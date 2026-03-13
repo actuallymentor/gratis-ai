@@ -18,9 +18,9 @@ See `RESEARCH.md` "Vision Model GGUF Research" section. Load when adding vision 
 
 `ModelDefinition` supports optional `system_prompt` field. When the active model has one, it takes priority over the global default in `ChatPage`. Currently only Dolphin Mistral 24B Venice has a model-specific prompt. `get_model_by_id()` exported from `model_catalog.js` for catalog lookups.
 
-## RunPod API Research (2026-03-12)
+## RunPod API Research (2026-03-12, updated 2026-03-13)
 
-See `RUNPOD_API_RESEARCH.md` for comprehensive API research. Load when working on RunPod/Nerd Mode features. Covers: REST management API (`rest.runpod.io/v1`), GraphQL legacy API (`api.runpod.io/graphql`), serverless job API (`api.runpod.ai/v2/{id}/`), OpenAI-compatible vLLM endpoints, GPU pool IDs, template/endpoint CRUD, health checks, streaming SSE format, vLLM env vars.
+See `RUNPOD_API_RESEARCH.md` for comprehensive API research. Load when working on RunPod/Nerd Mode features. Covers: REST management API (`rest.runpod.io/v1`), GraphQL legacy API (`api.runpod.io/graphql`), serverless job API (`api.runpod.ai/v2/{id}/`), OpenAI-compatible vLLM endpoints, GPU pool IDs, template/endpoint CRUD, health checks, streaming SSE format, vLLM env vars. **Critical**: serverless templates require explicit `volumeInGb: 0` -- see GOTCHAS.md.
 
 ## Nerd Mode — RunPod Cloud GPU Inference (v0.26.0)
 

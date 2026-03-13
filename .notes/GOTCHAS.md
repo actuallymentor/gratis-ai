@@ -131,6 +131,21 @@ because it waited for `send-btn` first.
 
 **Fix**: Added `await expect(page.getByTestId('send-btn')).toBeVisible()` before the key press.
 
+## RunPod REST API: serverless template creation is broken (2026-03-13)
+
+The REST API `POST /v1/templates` with `isServerless: true` is broken. The `volumeInGb` field
+defaults to 20 when omitted, and the server rejects any `volumeInGb > 0` (including 0!) for
+serverless templates: `"Serverless templates do not support volumeInGb."`
+
+This means `isServerless: true` cannot be used via the REST API at all — regardless of whether
+`volumeInGb` is included, omitted, or set to 0.
+
+The GraphQL `saveTemplate` mutation works correctly with `volumeInGb: 0` + `isServerless: true`.
+Required GraphQL fields: `containerDiskInGb: 20`, `dockerArgs: ""`.
+
+**Fix**: `create_template()` in `runpod_service.js` uses the GraphQL API instead of REST.
+Template deletion and endpoint CRUD still work via REST.
+
 ## Cloudflare Pages → Workers Migration (2026-02-24)
 
 Cloudflare deprecated Pages as a separate product in April 2025, merging it into Workers

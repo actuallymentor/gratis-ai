@@ -128,30 +128,40 @@ async function graphql( api_key, query, variables = {} ) {
  */
 export async function create_template( api_key, { model_name, quantization, max_model_len, gpu_memory_utilization = 0.95 } ) {
 
-    const env = {
+    const env_map = {
         MODEL_NAME: model_name,
         GPU_MEMORY_UTILIZATION: String( gpu_memory_utilization ),
         RAW_OPENAI_OUTPUT: `1`,
         TRUST_REMOTE_CODE: `false`,
     }
 
-    if( quantization ) env.QUANTIZATION = quantization
-    if( max_model_len ) env.MAX_MODEL_LEN = String( max_model_len )
+    if( quantization ) env_map.QUANTIZATION = quantization
+    if( max_model_len ) env_map.MAX_MODEL_LEN = String( max_model_len )
+
+    // GraphQL expects env as [{key, value}] array
+    const env = Object.entries( env_map ).map( ( [ key, value ] ) => ( { key, value } ) )
 
     const template_name = `gratisai-${ model_name.replace( /\//g, `-` ).toLowerCase() }-${ Date.now() }`
 
-    const result = await api_fetch( `${ MANAGEMENT_BASE }/templates`, api_key, {
-        method: `POST`,
-        body: JSON.stringify( {
+    // Use GraphQL API — the REST API has a bug where it rejects `isServerless: true`
+    // templates due to a `volumeInGb` default conflict (as of 2026-03)
+    const data = await graphql( api_key, `
+        mutation CreateTemplate( $input: SaveTemplateInput! ) {
+            saveTemplate( input: $input ) { id name }
+        }
+    `, {
+        input: {
             name: template_name,
             imageName: VLLM_IMAGE,
             isServerless: true,
-            env,
-            dockerStartCmd: [],
             volumeInGb: 0,
-        } ),
+            containerDiskInGb: 20,
+            dockerArgs: ``,
+            env,
+        },
     } )
 
+    const result = data.saveTemplate
     log.info( `[runpod] Created template ${ result.id } for ${ model_name }` )
     return result
 

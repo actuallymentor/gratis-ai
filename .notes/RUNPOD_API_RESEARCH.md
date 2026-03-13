@@ -39,7 +39,15 @@ Response 204: no content
 
 ### Create: POST /v1/templates
 Required: `name` (string, unique), `imageName` (string)
-Optional: `category` (NVIDIA|AMD|CPU), `containerDiskInGb` (int), `volumeInGb` (int), `volumeMountPath` (string), `ports` (string[]), `env` (object {key:value}), `dockerEntrypoint` (string[]), `dockerStartCmd` (string[]), `readme` (string), `isPublic` (bool), `containerRegistryAuthId` (string)
+Optional: `category` (NVIDIA|AMD|CPU), `containerDiskInGb` (int, default 50), `volumeInGb` (int, default 20), `volumeMountPath` (string, default "/workspace"), `ports` (string[], default ["8888/http","22/tcp"]), `env` (object {key:value}), `dockerEntrypoint` (string[]), `dockerStartCmd` (string[]), `readme` (string), `isPublic` (bool), `isServerless` (bool, default false), `containerRegistryAuthId` (string)
+
+#### GOTCHA: volumeInGb and serverless templates (2026-03-13)
+When `isServerless: true`, the API server rejects any `volumeInGb > 0` with error:
+`"create template: save template: Serverless templates do not support volumeInGb."`
+**The default for `volumeInGb` is 20** — so if you omit it, the server applies the default
+of 20, then validates it against `isServerless: true`, and rejects it.
+**Fix**: Explicitly pass `volumeInGb: 0` for serverless templates. The GraphQL docs say
+"always pass 0 for volumeInGb" for serverless, and this applies to REST API as well.
 
 ### List: GET /v1/templates?includeRunpodTemplates=bool&includePublicTemplates=bool
 Response 200: array of Template objects
