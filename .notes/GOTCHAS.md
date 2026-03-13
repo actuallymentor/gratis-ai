@@ -154,6 +154,18 @@ via `find_existing_endpoint()` will always miss, causing duplicate endpoints on 
 
 **Fix**: Use `ep.name.startsWith(target_name)` instead of `ep.name === target_name`.
 
+## RunPod API has no cloudType for serverless endpoints (2026-03-13)
+
+`cloudType: 'SECURE'` was added to `create_endpoint()` in v0.35.1 but does not exist in
+the RunPod REST or GraphQL API for serverless endpoints. It causes a 400 error:
+`"Key provided in request body which is not in input schema: 'cloudType'"`.
+
+Secure Cloud vs Community Cloud is a property of GPU availability (read-only on GPU type
+queries), not a configurable option for serverless endpoints. RunPod's scheduler assigns
+workers to whatever infrastructure has the requested GPU available.
+
+**Fix (v0.36.1)**: Removed `cloudType: 'SECURE'` from the request body.
+
 ## RunPod idle timeout is in seconds (2026-03-13)
 
 The RunPod API `idleTimeout` field is in **seconds**, not minutes. The UI stores/displays

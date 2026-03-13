@@ -19,6 +19,7 @@ import {
     create_endpoint,
     find_existing_endpoint,
     endpoint_name_for_model,
+    build_fallback_gpu_ids,
     fetch_model_config,
     fetch_gpu_pricing,
     estimate_vram_gb,
@@ -458,7 +459,8 @@ export default function NerdSetupPage() {
             const gpu_pool = GPU_POOLS.find( p => p.id === gpu_id ) || GPU_POOLS[ 0 ]
 
             // 1. Check for an existing endpoint with the same deterministic name + GPU tier
-            const existing = await find_existing_endpoint( trimmed_key, trimmed_model, gpu_pool.vram_gb )
+            const gpu_count = gpu_pool.gpu_count || 1
+            const existing = await find_existing_endpoint( trimmed_key, trimmed_model, gpu_pool.vram_gb, gpu_count )
 
             let endpoint_id
             let template_id = null
@@ -476,15 +478,17 @@ export default function NerdSetupPage() {
                     quantization: quantization !== `fp16` ? quantization : undefined,
                     max_model_len: max_model_len ? parseInt( max_model_len ) : undefined,
                     gpu_memory_utilization: gpu_utilization,
+                    tensor_parallel_size: gpu_count,
                 } )
 
                 template_id = template.id
 
-                // 2b. Create endpoint with deterministic name
+                // 2b. Create endpoint with deterministic name + cross-tier fallback GPUs
                 const endpoint = await create_endpoint( trimmed_key, {
                     template_id: template.id,
-                    name: endpoint_name_for_model( trimmed_model, gpu_pool.vram_gb ),
-                    gpu_ids: gpu_pool.gpu_ids,
+                    name: endpoint_name_for_model( trimmed_model, gpu_pool.vram_gb, gpu_count ),
+                    gpu_ids: build_fallback_gpu_ids( gpu_pool ),
+                    gpu_count,
                     idle_timeout,
                     max_workers,
                 } )

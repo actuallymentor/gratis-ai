@@ -34,6 +34,8 @@ Cloud GPU inference via RunPod serverless endpoints. Two-step deployment: create
 
 **v0.36.0 — Auto-recreate missing endpoints**: `load_model()` in `runpod_provider.js` calls `ensure_endpoint()` before probing — verifies endpoint exists via `get_endpoint()` (404-safe), recreates if deleted using `find_existing_endpoint()` → `create_template()` → `create_endpoint()`. `RunPodProvider` constructor accepts `gpu_id` and `on_endpoint_recreated` callback. `runpod_store.js` has `update_endpoint_id()` action. `llm_store.js` wires the callback to update store + localStorage. Falls back gracefully if `gpu_id` missing (directs user to Nerd Setup).
 
+**v0.37.0 — Multi-GPU pools + cross-tier fallbacks**: `GPU_POOLS` expanded with `gpu_count` field on all pools + 4 new multi-GPU pools (2×24, 2×48, 4×24, 2×80). `build_fallback_gpu_ids(pool)` appends higher-VRAM GPUs with same `gpu_count` as fallbacks. `create_template()` accepts `tensor_parallel_size` (sets `TENSOR_PARALLEL_SIZE` env for vLLM). `create_endpoint()` accepts `gpu_count` (passes `gpuCount` to API). `endpoint_name_for_model()` produces multi-GPU names (e.g. `2x24gb`). `fetch_gpu_pricing()` queries per-gpu_count pricing. All callers (`NerdSetupPage`, `ensure_endpoint`) updated to pass gpu_count and use fallback IDs.
+
 ## Logging
 
 All `console.*` calls in `src/` (except `nodejs_console.js`) have been replaced with mentie's `log` utility. `electron/inference_worker.js` is excluded — it uses CJS and has its own console-forwarding relay.

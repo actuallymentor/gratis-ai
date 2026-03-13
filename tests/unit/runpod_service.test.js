@@ -10,6 +10,7 @@ import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import {
     GPU_POOLS,
     endpoint_name_for_model,
+    build_fallback_gpu_ids,
     fetch_gpu_pricing,
     fetch_model_config,
     estimate_vram_bytes,
@@ -53,19 +54,24 @@ describe( `GPU info`, () => {
 
     test( `GPU_POOLS has all expected pool tiers`, () => {
 
-        expect( GPU_POOLS.length ).toBeGreaterThanOrEqual( 5 )
+        expect( GPU_POOLS.length ).toBeGreaterThanOrEqual( 8 )
 
         const ids = GPU_POOLS.map( p => p.id )
         expect( ids ).toContain( `16gb` )
         expect( ids ).toContain( `24gb` )
+        expect( ids ).toContain( `2x24gb` )
         expect( ids ).toContain( `48gb` )
         expect( ids ).toContain( `80gb` )
+        expect( ids ).toContain( `2x48gb` )
+        expect( ids ).toContain( `4x24gb` )
+        expect( ids ).toContain( `2x80gb` )
 
         // Every pool has required fields
         for( const pool of GPU_POOLS ) {
             expect( pool.id ).toBeTruthy()
             expect( pool.name ).toBeTruthy()
             expect( pool.vram_gb ).toBeGreaterThan( 0 )
+            expect( pool.gpu_count ).toBeGreaterThanOrEqual( 1 )
             expect( pool.gpu_ids ).toBeInstanceOf( Array )
             expect( pool.gpu_ids.length ).toBeGreaterThan( 0 )
         }
@@ -152,6 +158,140 @@ describe( `endpoint_name_for_model`, () => {
 
         expect( endpoint_name_for_model( `Qwen/Qwen3-8B`, undefined ) )
             .toBe( `gratisai-qwen-qwen3-8b` )
+
+    } )
+
+    test( `multi-GPU names include count prefix on per-GPU VRAM`, () => {
+
+        // 2× 24 GB pool → 48 GB total VRAM → 2x24gb suffix
+        expect( endpoint_name_for_model( `Qwen/Qwen3-8B`, 48, 2 ) )
+            .toBe( `gratisai-qwen-qwen3-8b-2x24gb` )
+
+        // 4× 24 GB pool → 96 GB total VRAM → 4x24gb suffix
+        expect( endpoint_name_for_model( `Qwen/Qwen3-8B`, 96, 4 ) )
+            .toBe( `gratisai-qwen-qwen3-8b-4x24gb` )
+
+        // 2× 80 GB pool → 160 GB total VRAM → 2x80gb suffix
+        expect( endpoint_name_for_model( `meta-llama/Llama-3.3-70B-Instruct`, 160, 2 ) )
+            .toBe( `gratisai-meta-llama-llama-3.3-70b-instruct-2x80gb` )
+
+    } )
+
+    test( `single GPU (gpu_count=1) uses plain VRAM suffix`, () => {
+
+        expect( endpoint_name_for_model( `Qwen/Qwen3-8B`, 24, 1 ) )
+            .toBe( `gratisai-qwen-qwen3-8b-24gb` )
+
+    } )
+
+} )
+
+
+describe( `build_fallback_gpu_ids`, () => {
+
+    test( `smallest single-GPU pool includes all higher single-GPU fallbacks`, () => {
+
+        const pool_16 = GPU_POOLS.find( p => p.id === `16gb` )
+        const ids = build_fallback_gpu_ids( pool_16 )
+
+        // Should start with 16gb's own GPUs
+        for( const gpu of pool_16.gpu_ids ) {
+            expect( ids ).toContain( gpu )
+        }
+
+        // Should include GPUs from 24gb, 48gb, 80gb, 141gb, 192gb
+        const pool_24 = GPU_POOLS.find( p => p.id === `24gb` )
+        const pool_48 = GPU_POOLS.find( p => p.id === `48gb` )
+        const pool_80 = GPU_POOLS.find( p => p.id === `80gb` )
+
+        for( const gpu of pool_24.gpu_ids ) expect( ids ).toContain( gpu )
+        for( const gpu of pool_48.gpu_ids ) expect( ids ).toContain( gpu )
+        for( const gpu of pool_80.gpu_ids ) expect( ids ).toContain( gpu )
+
+        // Should NOT include multi-GPU pool GPUs that aren't also in single-GPU pools
+        // (all multi-GPU pool GPUs overlap with single-GPU pools, so just verify no dupes)
+        expect( ids.length ).toBe( new Set( ids ).size )
+
+    } )
+
+    test( `largest single-GPU pool (192gb) returns only its own GPUs`, () => {
+
+        const pool_192 = GPU_POOLS.find( p => p.id === `192gb` )
+        const ids = build_fallback_gpu_ids( pool_192 )
+
+        expect( ids ).toEqual( pool_192.gpu_ids )
+
+    } )
+
+    test( `24gb pool starts with own GPUs then higher single-GPU tiers`, () => {
+
+        const pool_24 = GPU_POOLS.find( p => p.id === `24gb` )
+        const ids = build_fallback_gpu_ids( pool_24 )
+
+        // First entries should be the pool's own GPUs in order
+        for( let i = 0; i < pool_24.gpu_ids.length; i++ ) {
+            expect( ids[ i ] ).toBe( pool_24.gpu_ids[ i ] )
+        }
+
+        // Should include 48gb and 80gb GPUs
+        const pool_48 = GPU_POOLS.find( p => p.id === `48gb` )
+        for( const gpu of pool_48.gpu_ids ) expect( ids ).toContain( gpu )
+
+        // Should NOT include multi-GPU pool IDs (different gpu_count)
+        // Verify by checking length — should not have duplicates
+        expect( ids.length ).toBe( new Set( ids ).size )
+
+    } )
+
+    test( `multi-GPU pool (2x24gb) includes only same-gpu_count fallbacks`, () => {
+
+        const pool_2x24 = GPU_POOLS.find( p => p.id === `2x24gb` )
+        const ids = build_fallback_gpu_ids( pool_2x24 )
+
+        // Should start with 2x24gb's own GPUs
+        for( const gpu of pool_2x24.gpu_ids ) {
+            expect( ids ).toContain( gpu )
+        }
+
+        // Should include 2x48gb and 2x80gb GPUs (same gpu_count=2)
+        const pool_2x48 = GPU_POOLS.find( p => p.id === `2x48gb` )
+        const pool_2x80 = GPU_POOLS.find( p => p.id === `2x80gb` )
+
+        for( const gpu of pool_2x48.gpu_ids ) expect( ids ).toContain( gpu )
+        for( const gpu of pool_2x80.gpu_ids ) expect( ids ).toContain( gpu )
+
+        // Should NOT include 4x24gb GPUs (different gpu_count=4)
+        // Note: 4x24gb shares some GPU names with 2x24gb, but the key is that
+        // only gpu_count=2 pools are appended as fallbacks
+        expect( ids.length ).toBe( new Set( ids ).size )
+
+    } )
+
+    test( `4x24gb pool has no same-gpu_count fallbacks`, () => {
+
+        const pool_4x24 = GPU_POOLS.find( p => p.id === `4x24gb` )
+        const ids = build_fallback_gpu_ids( pool_4x24 )
+
+        // Only pool with gpu_count=4, so no fallbacks exist
+        expect( ids ).toEqual( pool_4x24.gpu_ids )
+
+    } )
+
+    test( `no duplicate GPU IDs in any fallback result`, () => {
+
+        for( const pool of GPU_POOLS ) {
+            const ids = build_fallback_gpu_ids( pool )
+            expect( ids.length ).toBe( new Set( ids ).size )
+        }
+
+    } )
+
+    test( `unknown pool returns its own gpu_ids unchanged`, () => {
+
+        const fake_pool = { id: `fake`, gpu_count: 1, gpu_ids: [ `NVIDIA Fake` ] }
+        const ids = build_fallback_gpu_ids( fake_pool )
+
+        expect( ids ).toEqual( [ `NVIDIA Fake` ] )
 
     } )
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.37.0] - 2026-03-13
+
+### Added
+- Multi-GPU pools: 2×24 GB, 2×48 GB, 4×24 GB, 2×80 GB — dramatically better availability than single large GPUs
+- Cross-tier GPU fallbacks via `build_fallback_gpu_ids()` — endpoints auto-fall back to higher-VRAM GPUs with the same GPU count
+- `TENSOR_PARALLEL_SIZE` env var in vLLM templates for multi-GPU inference
+- `gpuCount` parameter in endpoint creation for multi-GPU workers
+- Multi-GPU endpoint naming: `2x24gb`, `4x24gb` suffixes distinguish configs
+
+### Changed
+- `fetch_gpu_pricing()` queries per-GPU-count pricing (gpuCount 1, 2, 4) for accurate multi-GPU availability and cost
+- `find_existing_endpoint()` accepts `gpu_count` for correct multi-GPU name matching
+- `ensure_endpoint()` uses fallback GPU IDs and multi-GPU params when recreating endpoints
+
 ## [0.36.1] - 2026-03-13
 
 ### Fixed

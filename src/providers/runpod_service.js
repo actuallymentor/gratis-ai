@@ -27,13 +27,50 @@ const VLLM_IMAGE = `runpod/worker-v1-vllm:v2.4.0stable-cuda12.1.0`
 // VRAM values are the minimum guaranteed by any GPU in the pool.
 
 export const GPU_POOLS = [
-    { id: `16gb`,   name: `16 GB (A4000, RTX 4000)`,   vram_gb: 16,  gpu_ids: [ `NVIDIA RTX A4000`, `NVIDIA RTX A4500`, `NVIDIA RTX 4000 Ada Generation`, `NVIDIA RTX 2000 Ada Generation` ] },
-    { id: `24gb`,   name: `24 GB (4090, L4, A5000)`,   vram_gb: 24,  gpu_ids: [ `NVIDIA GeForce RTX 4090`, `NVIDIA L4`, `NVIDIA RTX A5000`, `NVIDIA GeForce RTX 3090` ] },
-    { id: `48gb`,   name: `48 GB (A6000, L40S, A40)`,  vram_gb: 48,  gpu_ids: [ `NVIDIA RTX A6000`, `NVIDIA L40S`, `NVIDIA L40`, `NVIDIA A40`, `NVIDIA RTX 6000 Ada Generation` ] },
-    { id: `80gb`,   name: `80 GB (A100, H100)`,        vram_gb: 80,  gpu_ids: [ `NVIDIA A100-SXM4-80GB`, `NVIDIA A100 80GB PCIe`, `NVIDIA H100 80GB HBM3`, `NVIDIA H100 PCIe` ] },
-    { id: `141gb`,  name: `141 GB (H200)`,             vram_gb: 141, gpu_ids: [ `NVIDIA H200` ] },
-    { id: `192gb`,  name: `192 GB (B200)`,             vram_gb: 192, gpu_ids: [ `NVIDIA B200` ] },
+    { id: `16gb`,    name: `16 GB (A4000, RTX 4000)`,    vram_gb: 16,  gpu_count: 1, gpu_ids: [ `NVIDIA RTX A4000`, `NVIDIA RTX A4500`, `NVIDIA RTX 4000 Ada Generation`, `NVIDIA RTX 2000 Ada Generation` ] },
+    { id: `24gb`,    name: `24 GB (4090, L4, A5000)`,    vram_gb: 24,  gpu_count: 1, gpu_ids: [ `NVIDIA GeForce RTX 4090`, `NVIDIA L4`, `NVIDIA RTX A5000`, `NVIDIA GeForce RTX 3090` ] },
+    { id: `2x24gb`,  name: `2× 24 GB (4090, 3090)`,     vram_gb: 48,  gpu_count: 2, gpu_ids: [ `NVIDIA GeForce RTX 4090`, `NVIDIA GeForce RTX 3090`, `NVIDIA RTX A5000`, `NVIDIA L4` ] },
+    { id: `48gb`,    name: `48 GB (A6000, L40S, A40)`,   vram_gb: 48,  gpu_count: 1, gpu_ids: [ `NVIDIA RTX A6000`, `NVIDIA L40S`, `NVIDIA L40`, `NVIDIA A40`, `NVIDIA RTX 6000 Ada Generation` ] },
+    { id: `80gb`,    name: `80 GB (A100, H100)`,         vram_gb: 80,  gpu_count: 1, gpu_ids: [ `NVIDIA A100-SXM4-80GB`, `NVIDIA A100 80GB PCIe`, `NVIDIA H100 80GB HBM3`, `NVIDIA H100 PCIe` ] },
+    { id: `2x48gb`,  name: `2× 48 GB (A6000, L40S)`,    vram_gb: 96,  gpu_count: 2, gpu_ids: [ `NVIDIA RTX A6000`, `NVIDIA L40S`, `NVIDIA L40`, `NVIDIA A40`, `NVIDIA RTX 6000 Ada Generation` ] },
+    { id: `4x24gb`,  name: `4× 24 GB (4090, 3090)`,     vram_gb: 96,  gpu_count: 4, gpu_ids: [ `NVIDIA GeForce RTX 4090`, `NVIDIA GeForce RTX 3090`, `NVIDIA RTX A5000` ] },
+    { id: `141gb`,   name: `141 GB (H200)`,              vram_gb: 141, gpu_count: 1, gpu_ids: [ `NVIDIA H200` ] },
+    { id: `2x80gb`,  name: `2× 80 GB (A100, H100)`,     vram_gb: 160, gpu_count: 2, gpu_ids: [ `NVIDIA A100-SXM4-80GB`, `NVIDIA A100 80GB PCIe`, `NVIDIA H100 80GB HBM3` ] },
+    { id: `192gb`,   name: `192 GB (B200)`,              vram_gb: 192, gpu_count: 1, gpu_ids: [ `NVIDIA B200` ] },
 ]
+
+
+// ─── GPU fallback ────────────────────────────────────────────────────────────
+
+/**
+ * Build a priority-ordered `gpuTypeIds` array with cross-tier fallbacks.
+ *
+ * Starts with the selected pool's own GPUs, then appends GPUs from all
+ * higher-VRAM pools that share the same `gpu_count`. This constraint is
+ * critical — a single-GPU endpoint can't fall back to multi-GPU (different
+ * TENSOR_PARALLEL_SIZE template), and vice versa.
+ *
+ * @param {Object} pool - A pool object from GPU_POOLS
+ * @returns {string[]} Deduplicated, priority-ordered GPU type IDs
+ */
+export function build_fallback_gpu_ids( pool ) {
+
+    const pool_index = GPU_POOLS.findIndex( p => p.id === pool.id )
+    if( pool_index === -1 ) return pool.gpu_ids
+
+    const ids = [ ...pool.gpu_ids ]
+
+    // Append GPUs from larger pools with the same gpu_count
+    for( let i = pool_index + 1; i < GPU_POOLS.length; i++ ) {
+        if( GPU_POOLS[ i ].gpu_count !== pool.gpu_count ) continue
+        for( const id of GPU_POOLS[ i ].gpu_ids ) {
+            if( !ids.includes( id ) ) ids.push( id )
+        }
+    }
+
+    return ids
+
+}
 
 
 // ─── HTTP helpers ────────────────────────────────────────────────────────────
@@ -88,18 +125,30 @@ async function graphql( api_key, query, variables = {} ) {
  * Deterministic endpoint name for a model + GPU tier.
  *
  * Includes the GPU VRAM so that upgrading to a more powerful GPU creates a
- * new endpoint instead of recycling the old one.
+ * new endpoint instead of recycling the old one. Multi-GPU configs get a
+ * `{count}x` prefix on the VRAM suffix (e.g. `2x24gb`).
  *
- * `meta-llama/Llama-3.3-70B-Instruct`, 80 → `gratisai-meta-llama-llama-3.3-70b-instruct-80gb`
+ * `meta-llama/Llama-3.3-70B-Instruct`, 80    → `gratisai-meta-llama-llama-3.3-70b-instruct-80gb`
+ * `Qwen/Qwen3-8B`, 48, 2                     → `gratisai-qwen-qwen3-8b-2x24gb`
  *
  * @param {string} model_name - HuggingFace model ID (e.g. `meta-llama/Llama-3.3-70B-Instruct`)
  * @param {number} [gpu_vram_gb] - GPU pool VRAM in GB (e.g. 24, 48, 80). Omit for legacy names without GPU suffix.
+ * @param {number} [gpu_count=1] - Number of GPUs per worker (> 1 for multi-GPU pools)
  * @returns {string}
  */
-export function endpoint_name_for_model( model_name, gpu_vram_gb ) {
+export function endpoint_name_for_model( model_name, gpu_vram_gb, gpu_count = 1 ) {
 
     const base = `gratisai-${ model_name.replace( /\//g, `-` ).toLowerCase() }`
-    return gpu_vram_gb ? `${ base }-${ gpu_vram_gb }gb` : base
+
+    if( !gpu_vram_gb ) return base
+
+    // Multi-GPU: show per-GPU VRAM with count prefix (e.g. 2x24gb)
+    if( gpu_count > 1 ) {
+        const per_gpu = Math.round( gpu_vram_gb / gpu_count )
+        return `${ base }-${ gpu_count }x${ per_gpu }gb`
+    }
+
+    return `${ base }-${ gpu_vram_gb }gb`
 
 }
 
@@ -176,7 +225,8 @@ export async function ensure_endpoint( api_key, { endpoint_id, model_name, gpu_i
     }
 
     // 3. Maybe another tab already recreated it under the deterministic name
-    const found = await find_existing_endpoint( api_key, model_name, pool.vram_gb )
+    const gpu_count = pool.gpu_count || 1
+    const found = await find_existing_endpoint( api_key, model_name, pool.vram_gb, gpu_count )
 
     if( found ) {
         log.info( `[runpod] Found existing endpoint ${ found.id } (${ found.name })` )
@@ -184,17 +234,20 @@ export async function ensure_endpoint( api_key, { endpoint_id, model_name, gpu_i
     }
 
     // 4. Create from scratch — defaults match NerdSetupPage behaviour
+
     const template = await create_template( api_key, {
         model_name,
         gpu_memory_utilization: 0.95,
+        tensor_parallel_size: gpu_count,
     } )
 
-    const name = endpoint_name_for_model( model_name, pool.vram_gb )
+    const name = endpoint_name_for_model( model_name, pool.vram_gb, gpu_count )
 
     const ep = await create_endpoint( api_key, {
         template_id: template.id,
         name,
-        gpu_ids: pool.gpu_ids,
+        gpu_ids: build_fallback_gpu_ids( pool ),
+        gpu_count,
     } )
 
     log.info( `[runpod] Recreated endpoint ${ ep.id } (${ name })` )
@@ -222,11 +275,12 @@ export async function list_endpoints( api_key ) {
  * @param {string} api_key
  * @param {string} model_name - HuggingFace model ID
  * @param {number} [gpu_vram_gb] - GPU pool VRAM in GB (must match the deployed tier)
+ * @param {number} [gpu_count=1] - Number of GPUs per worker (for multi-GPU name matching)
  * @returns {Promise<Object | null>}
  */
-export async function find_existing_endpoint( api_key, model_name, gpu_vram_gb ) {
+export async function find_existing_endpoint( api_key, model_name, gpu_vram_gb, gpu_count = 1 ) {
 
-    const target_name = endpoint_name_for_model( model_name, gpu_vram_gb )
+    const target_name = endpoint_name_for_model( model_name, gpu_vram_gb, gpu_count )
     const endpoints = await list_endpoints( api_key )
 
     // RunPod may append suffixes to the name (e.g. " -fb" for flashboot),
@@ -250,9 +304,10 @@ export async function find_existing_endpoint( api_key, model_name, gpu_vram_gb )
  * @param {string} [opts.quantization] - vLLM quantization method (awq, gptq, etc.)
  * @param {number} [opts.max_model_len] - Override max context length
  * @param {number} [opts.gpu_memory_utilization] - VRAM fraction (default 0.95)
+ * @param {number} [opts.tensor_parallel_size] - Multi-GPU tensor parallelism (default 1, must match endpoint gpuCount)
  * @returns {Promise<{ id: string, name: string }>}
  */
-export async function create_template( api_key, { model_name, quantization, max_model_len, gpu_memory_utilization = 0.95 } ) {
+export async function create_template( api_key, { model_name, quantization, max_model_len, gpu_memory_utilization = 0.95, tensor_parallel_size = 1 } ) {
 
     const env_map = {
         MODEL_NAME: model_name,
@@ -263,6 +318,7 @@ export async function create_template( api_key, { model_name, quantization, max_
 
     if( quantization ) env_map.QUANTIZATION = quantization
     if( max_model_len ) env_map.MAX_MODEL_LEN = String( max_model_len )
+    if( tensor_parallel_size > 1 ) env_map.TENSOR_PARALLEL_SIZE = String( tensor_parallel_size )
 
     // GraphQL expects env as [{key, value}] array
     const env = Object.entries( env_map ).map( ( [ key, value ] ) => ( { key, value } ) )
@@ -304,11 +360,12 @@ export async function create_template( api_key, { model_name, quantization, max_
  * @param {string} opts.template_id - Template ID from create_template()
  * @param {string} opts.name - Human-readable endpoint name
  * @param {string[]} opts.gpu_ids - GPU type names (e.g. `['NVIDIA GeForce RTX 4090', 'NVIDIA L4']`)
+ * @param {number} [opts.gpu_count] - GPUs per worker (default 1, for multi-GPU tensor parallelism)
  * @param {number} [opts.idle_timeout] - Minutes before scaling to zero (default 5)
  * @param {number} [opts.max_workers] - Maximum concurrent workers (default 5)
  * @returns {Promise<{ id: string, name: string }>}
  */
-export async function create_endpoint( api_key, { template_id, name, gpu_ids, idle_timeout = 5, max_workers = 5 } ) {
+export async function create_endpoint( api_key, { template_id, name, gpu_ids, gpu_count = 1, idle_timeout = 5, max_workers = 5 } ) {
 
     const result = await api_fetch( `${ MANAGEMENT_BASE }/endpoints`, api_key, {
         method: `POST`,
@@ -316,6 +373,7 @@ export async function create_endpoint( api_key, { template_id, name, gpu_ids, id
             templateId: template_id,
             name,
             gpuTypeIds: gpu_ids,
+            gpuCount: gpu_count,
             workersMin: 0,
             workersMax: max_workers,
             idleTimeout: idle_timeout * 60,
@@ -412,34 +470,48 @@ const best_stock_status = ( statuses ) =>
  */
 export async function fetch_gpu_pricing( api_key ) {
 
-    const data = await graphql( api_key, `
-        query GpuTypes {
-            gpuTypes {
-                id
-                displayName
-                memoryInGb
-                secureCloud
-                communityCloud
-                lowestPrice( input: { gpuCount: 1 } ) {
-                    minimumBidPrice
-                    uninterruptablePrice
-                    stockStatus
+    // Gather unique gpu_count values — query pricing once per distinct count
+    const gpu_counts = [ ...new Set( GPU_POOLS.map( p => p.gpu_count || 1 ) ) ]
+
+    const pricing_by_count = new Map()
+
+    for( const count of gpu_counts ) {
+
+        const data = await graphql( api_key, `
+            query GpuTypes {
+                gpuTypes {
+                    id
+                    displayName
+                    memoryInGb
+                    secureCloud
+                    communityCloud
+                    lowestPrice( input: { gpuCount: ${ count } } ) {
+                        minimumBidPrice
+                        uninterruptablePrice
+                        stockStatus
+                    }
                 }
             }
-        }
-    ` )
+        ` )
+
+        pricing_by_count.set( count, data.gpuTypes )
+
+    }
 
     const pricing = new Map()
     const availability = new Map()
 
     for( const pool of GPU_POOLS ) {
 
+        const gpu_data = pricing_by_count.get( pool.gpu_count || 1 )
+        if( !gpu_data ) continue
+
         // Match GPUs by the exact type names in our pool definition
         const matching = pool.gpu_ids
-            .map( id => data.gpuTypes.find( g => g.id === id ) )
+            .map( id => gpu_data.find( g => g.id === id ) )
             .filter( Boolean )
 
-        // Pricing — lowest on-demand price among pool GPUs
+        // Pricing — lowest on-demand price among pool GPUs (already scaled by gpuCount from API)
         const prices = matching
             .map( g => g.lowestPrice?.uninterruptablePrice )
             .filter( p => p != null && p > 0 )

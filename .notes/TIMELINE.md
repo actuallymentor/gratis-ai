@@ -1,5 +1,24 @@
 # Timeline
 
+## 2026-03-13 — Multi-GPU pools + cross-tier GPU fallbacks (v0.37.0)
+
+- Added 4 multi-GPU pools: 2×24 GB, 2×48 GB, 4×24 GB, 2×80 GB with `gpu_count` field on all pools
+- `build_fallback_gpu_ids(pool)` appends GPUs from higher-VRAM pools with same `gpu_count`
+- `create_template()` accepts `tensor_parallel_size` — sets `TENSOR_PARALLEL_SIZE` env var for multi-GPU vLLM
+- `create_endpoint()` accepts `gpu_count` — passes `gpuCount` to RunPod API
+- `endpoint_name_for_model()` produces multi-GPU names: `2x24gb`, `4x24gb` suffixes
+- `find_existing_endpoint()` accepts `gpu_count` for correct name matching
+- `ensure_endpoint()` uses fallback GPU IDs + multi-GPU params when recreating
+- `fetch_gpu_pricing()` queries per-gpu_count pricing (1, 2, 4) for accurate multi-GPU availability
+- NerdSetupPage deploy flow passes gpu_count/tensor_parallel_size and uses fallback GPU IDs
+- 7 new unit tests for `build_fallback_gpu_ids`, 2 new tests for multi-GPU endpoint naming
+
+## 2026-03-13 — Remove invalid cloudType from endpoint creation (v0.36.1)
+
+- Removed `cloudType: 'SECURE'` from `create_endpoint()` — not in RunPod API schema, caused 400 errors
+- v0.35.1 YANKED — Secure Cloud is not configurable for serverless endpoints
+- Version bumped to 0.36.1
+
 ## 2026-03-13 — Cloud/Local tags, offline banner, WakingUp fix (v0.35.0)
 
 - Cloud/Local tag on HomePage ModelRow — `ModelTag` styled component with `$cloud` prop
