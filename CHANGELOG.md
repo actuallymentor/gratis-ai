@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.34.0] - 2026-03-13
+
+### Changed
+- Include GPU VRAM in deterministic endpoint name — changing GPU tier now creates a new endpoint instead of recycling
+
 ## [0.33.0] - 2026-03-13
 
 ### Changed

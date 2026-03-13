@@ -457,15 +457,15 @@ export default function NerdSetupPage() {
             const gpu_id = gpu_override || suggested_gpu?.pool?.id || GPU_POOLS[ 0 ].id
             const gpu_pool = GPU_POOLS.find( p => p.id === gpu_id ) || GPU_POOLS[ 0 ]
 
-            // 1. Check for an existing endpoint with the same deterministic name
-            const existing = await find_existing_endpoint( trimmed_key, trimmed_model )
+            // 1. Check for an existing endpoint with the same deterministic name + GPU tier
+            const existing = await find_existing_endpoint( trimmed_key, trimmed_model, gpu_pool.vram_gb )
 
             let endpoint_id
             let template_id = null
 
             if( existing ) {
 
-                // Recycle — reuse the endpoint as-is (even if GPU/config differs)
+                // Recycle — reuse the endpoint with the same model + GPU tier
                 endpoint_id = existing.id
 
             } else {
@@ -483,7 +483,7 @@ export default function NerdSetupPage() {
                 // 2b. Create endpoint with deterministic name
                 const endpoint = await create_endpoint( trimmed_key, {
                     template_id: template.id,
-                    name: endpoint_name_for_model( trimmed_model ),
+                    name: endpoint_name_for_model( trimmed_model, gpu_pool.vram_gb ),
                     gpu_ids: gpu_pool.gpu_ids,
                     idle_timeout,
                     max_workers,

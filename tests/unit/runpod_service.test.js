@@ -132,6 +132,29 @@ describe( `endpoint_name_for_model`, () => {
 
     } )
 
+    test( `appends GPU VRAM suffix when provided`, () => {
+
+        expect( endpoint_name_for_model( `Qwen/Qwen3-8B`, 24 ) )
+            .toBe( `gratisai-qwen-qwen3-8b-24gb` )
+
+        expect( endpoint_name_for_model( `meta-llama/Llama-3.3-70B-Instruct`, 80 ) )
+            .toBe( `gratisai-meta-llama-llama-3.3-70b-instruct-80gb` )
+
+    } )
+
+    test( `omits GPU suffix when gpu_vram_gb is falsy`, () => {
+
+        expect( endpoint_name_for_model( `Qwen/Qwen3-8B`, 0 ) )
+            .toBe( `gratisai-qwen-qwen3-8b` )
+
+        expect( endpoint_name_for_model( `Qwen/Qwen3-8B`, null ) )
+            .toBe( `gratisai-qwen-qwen3-8b` )
+
+        expect( endpoint_name_for_model( `Qwen/Qwen3-8B`, undefined ) )
+            .toBe( `gratisai-qwen-qwen3-8b` )
+
+    } )
+
 } )
 
 

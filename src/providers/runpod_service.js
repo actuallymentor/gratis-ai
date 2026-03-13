@@ -85,15 +85,22 @@ async function graphql( api_key, query, variables = {} ) {
 // ─── Endpoint naming ─────────────────────────────────────────────────────────
 
 /**
- * Deterministic endpoint name for a model — includes org and repo.
+ * Deterministic endpoint name for a model + GPU tier.
  *
- * `meta-llama/Llama-3.3-70B-Instruct` → `gratisai-meta-llama-llama-3.3-70b-instruct`
+ * Includes the GPU VRAM so that upgrading to a more powerful GPU creates a
+ * new endpoint instead of recycling the old one.
+ *
+ * `meta-llama/Llama-3.3-70B-Instruct`, 80 → `gratisai-meta-llama-llama-3.3-70b-instruct-80gb`
  *
  * @param {string} model_name - HuggingFace model ID (e.g. `meta-llama/Llama-3.3-70B-Instruct`)
+ * @param {number} [gpu_vram_gb] - GPU pool VRAM in GB (e.g. 24, 48, 80). Omit for legacy names without GPU suffix.
  * @returns {string}
  */
-export function endpoint_name_for_model( model_name ) {
-    return `gratisai-${ model_name.replace( /\//g, `-` ).toLowerCase() }`
+export function endpoint_name_for_model( model_name, gpu_vram_gb ) {
+
+    const base = `gratisai-${ model_name.replace( /\//g, `-` ).toLowerCase() }`
+    return gpu_vram_gb ? `${ base }-${ gpu_vram_gb }gb` : base
+
 }
 
 
@@ -111,15 +118,16 @@ export async function list_endpoints( api_key ) {
 
 /**
  * Find an existing endpoint whose name matches the deterministic name
- * for the given model. Returns the endpoint object or `null`.
+ * for the given model + GPU tier. Returns the endpoint object or `null`.
  *
  * @param {string} api_key
  * @param {string} model_name - HuggingFace model ID
+ * @param {number} [gpu_vram_gb] - GPU pool VRAM in GB (must match the deployed tier)
  * @returns {Promise<Object | null>}
  */
-export async function find_existing_endpoint( api_key, model_name ) {
+export async function find_existing_endpoint( api_key, model_name, gpu_vram_gb ) {
 
-    const target_name = endpoint_name_for_model( model_name )
+    const target_name = endpoint_name_for_model( model_name, gpu_vram_gb )
     const endpoints = await list_endpoints( api_key )
 
     // RunPod may append suffixes to the name (e.g. " -fb" for flashboot),
