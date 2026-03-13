@@ -8,7 +8,7 @@ import styled from 'styled-components'
 import { X, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useEffect } from 'react'
-import { SUGGESTED_MODELS } from '../../providers/runpod_service'
+import { get_cloud_models, quality_score } from '../../utils/model_catalog'
 
 const Overlay = styled.div`
     position: fixed;
@@ -183,25 +183,26 @@ export default function SuggestedModelsModal( { is_open, on_close, on_select, cu
             </Header>
 
             <Body>
-                { SUGGESTED_MODELS.map( ( model ) => {
+                { get_cloud_models().map( ( model ) => {
 
-                    const is_active = current_model === model.hf_repo
+                    const is_active = current_model === model.hf_model_repo
+                    const score = Math.round( quality_score( model ) )
 
                     return <ModelRow
-                        key={ model.hf_repo }
+                        key={ model.hf_model_repo }
                         $active={ is_active }
-                        onClick={ () => handle_select( model.hf_repo ) }
-                        data-testid={ `suggested-model-${ model.hf_repo }` }
+                        onClick={ () => handle_select( model.hf_model_repo ) }
+                        data-testid={ `suggested-model-${ model.hf_model_repo }` }
                     >
                         <ModelInfo>
                             <ModelName>
-                                { model.display_name }
-                                <ParamTag>{ model.param_label }</ParamTag>
+                                { model.name }
+                                <ParamTag>{ model.parameters_label }</ParamTag>
                                 { model.uncensored && <UncensoredTag>{ t( `uncensored_tag` ) }</UncensoredTag> }
                             </ModelName>
                             <ModelMeta>
                                 { model.description }
-                                { model.score != null && <> — <ScoreBadge>Score { model.score }/100</ScoreBadge></> }
+                                { score > 0 && <> — <ScoreBadge>Score { score }/100</ScoreBadge></> }
                             </ModelMeta>
                         </ModelInfo>
                         { is_active && <CheckIcon><Check size={ 16 } /></CheckIcon> }

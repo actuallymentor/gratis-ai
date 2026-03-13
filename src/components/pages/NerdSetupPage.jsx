@@ -26,6 +26,7 @@ import {
     get_all_gpus_annotated,
     GPU_POOLS,
 } from '../../providers/runpod_service'
+import { find_by_hf_repo, estimate_cloud_vram_gb } from '../../utils/model_catalog'
 import { storage_key } from '../../utils/branding'
 import SuggestedModelsModal from '../molecules/SuggestedModelsModal'
 
@@ -369,17 +370,41 @@ export default function NerdSetupPage() {
 
         try {
 
-            const config = await fetch_model_config( name.trim() )
-            set_model_config( config )
-
-            // Estimate VRAM
             const ctx = max_model_len ? parseInt( max_model_len ) : undefined
-            const vram = estimate_vram_gb( config, quantization, ctx )
-            set_vram_needed( vram )
 
-            // Suggest best GPU — prioritises availability, then price
-            const suggestion = suggest_gpu( vram, gpu_pricing, gpu_availability )
-            set_suggested_gpu( suggestion )
+            // Catalog-first path — skip HF fetch for known models
+            const catalog_model = find_by_hf_repo( name.trim() )
+
+            if( catalog_model ) {
+
+                // Known model — use catalog architecture data directly
+                const vram = estimate_cloud_vram_gb( catalog_model, quantization, ctx )
+                set_vram_needed( vram )
+
+                const suggestion = suggest_gpu( vram, gpu_pricing, gpu_availability )
+                set_suggested_gpu( suggestion )
+
+                // Synthetic config for display compatibility
+                set_model_config( {
+                    num_params: catalog_model.parameters,
+                    num_layers: catalog_model.layers,
+                    model_type: catalog_model.family,
+                    context_length: catalog_model.context_length,
+                } )
+
+            } else {
+
+                // Unknown model — fall back to HF fetch
+                const config = await fetch_model_config( name.trim() )
+                set_model_config( config )
+
+                const vram = estimate_vram_gb( config, quantization, ctx )
+                set_vram_needed( vram )
+
+                const suggestion = suggest_gpu( vram, gpu_pricing, gpu_availability )
+                set_suggested_gpu( suggestion )
+
+            }
 
         } catch ( err ) {
             set_model_error( err.message )

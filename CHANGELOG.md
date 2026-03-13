@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.33.0] - 2026-03-13
+
+### Changed
+- Unify RunPod cloud model list with MODEL_CATALOG — single source of truth for local and cloud models
+- NerdSetupPage skips HuggingFace fetch for known catalog models (instant VRAM estimation)
+
+### Added
+- 6 cloud-only models: DeepSeek R1 671B, Qwen3 235B MoE, Mistral Small 24B, Llama 4 Scout, Llama 3.2 3B, Gemma 3 12B Abliterated
+- MoE architecture fields in model catalog (active_parameters, num_experts, num_active_experts)
+- Cloud VRAM estimation helpers (estimate_cloud_vram, get_cloud_models, find_by_hf_repo)
+- Catalog-aware GPU bridge functions (choose_best_gpu, choose_best_gpu_annotated)
+
+### Removed
+- SUGGESTED_MODELS array from runpod_service.js (replaced by MODEL_CATALOG)
+
 ## [0.32.3] - 2026-03-13
 
 ### Fixed

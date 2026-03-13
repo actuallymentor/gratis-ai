@@ -493,7 +493,7 @@ export default function ModelSelectPage() {
     // All catalog models for the alternatives list, sorted: fits-in-memory first → params desc
     const catalog_models = useMemo( () => {
 
-        return [ ...MODEL_CATALOG ].sort( ( a, b ) => {
+        return [ ...MODEL_CATALOG ].filter( m => !m.cloud_only ).sort( ( a, b ) => {
 
             const a_fits = can_fit_in_memory( a, max_model_bytes ) ? 1 : 0
             const b_fits = can_fit_in_memory( b, max_model_bytes ) ? 1 : 0

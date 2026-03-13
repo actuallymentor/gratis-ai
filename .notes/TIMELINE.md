@@ -1,5 +1,19 @@
 # Timeline
 
+## 2026-03-13 — Unify RunPod model list with MODEL_CATALOG
+
+- Deleted `SUGGESTED_MODELS` from `runpod_service.js` — MODEL_CATALOG is now the single source of truth
+- Added `hf_model_repo` field to 9 dual-use entries (Q4_K_M primary variants) for cloud deployment
+- Added 6 cloud-only models: DeepSeek R1 671B, Qwen3 235B MoE, Mistral Small 24B, Llama 4 Scout, Llama 3.2 3B, Gemma 3 12B Abliterated
+- New typedef fields: `hf_model_repo`, `cloud_only`, `moe`, `active_parameters`, `num_experts`, `num_active_experts`
+- New helpers: `get_cloud_models()`, `find_by_hf_repo()`, `estimate_cloud_vram()`, `estimate_cloud_vram_gb()`
+- New bridge functions in runpod_service: `choose_best_gpu()`, `choose_best_gpu_annotated()`
+- `SuggestedModelsModal` rewired from `SUGGESTED_MODELS` → `get_cloud_models()` from catalog
+- `NerdSetupPage` uses catalog-first path: known models skip HF fetch, fall back for unknown repos
+- `ModelSelectPage` alternatives list filters out `cloud_only` models
+- All local selection functions (`select_best_model`, `get_fitting_models`, etc.) guard against `cloud_only`
+- Tests updated: removed SUGGESTED_MODELS tests, added catalog helper tests
+
 ## 2026-03-12 — Nerd Mode: RunPod cloud GPU inference
 
 - Added complete RunPod cloud GPU inference feature ("Nerd Mode")

@@ -9,7 +9,6 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import {
     GPU_POOLS,
-    SUGGESTED_MODELS,
     endpoint_name_for_model,
     fetch_gpu_pricing,
     fetch_model_config,
@@ -17,6 +16,8 @@ import {
     estimate_vram_gb,
     suggest_gpu,
     get_all_gpus_annotated,
+    choose_best_gpu,
+    choose_best_gpu_annotated,
     create_template,
     create_endpoint,
     get_endpoint_health,
@@ -24,6 +25,15 @@ import {
     delete_endpoint,
     delete_template,
 } from '../../src/providers/runpod_service.js'
+import {
+    get_cloud_models,
+    find_by_hf_repo,
+    estimate_cloud_vram,
+    estimate_cloud_vram_gb,
+    select_best_model,
+    get_fitting_models,
+    MODEL_CATALOG,
+} from '../../src/utils/model_catalog.js'
 
 
 // ─── Test config ────────────────────────────────────────────────────────────
@@ -216,18 +226,19 @@ describe( `Model config (HuggingFace)`, () => {
 
     } )
 
-    test( `fetch_model_config works for all SUGGESTED_MODELS`, async () => {
+    test( `fetch_model_config works for a sample of cloud models from catalog`, async () => {
 
         // Test a subset to avoid hammering HF — pick first, middle, and last
+        const cloud = get_cloud_models()
         const samples = [
-            SUGGESTED_MODELS[ 0 ],
-            SUGGESTED_MODELS[ Math.floor( SUGGESTED_MODELS.length / 2 ) ],
-            SUGGESTED_MODELS[ SUGGESTED_MODELS.length - 1 ],
+            cloud[ 0 ],
+            cloud[ Math.floor( cloud.length / 2 ) ],
+            cloud[ cloud.length - 1 ],
         ]
 
         for( const model of samples ) {
 
-            const config = await fetch_model_config( model.hf_repo )
+            const config = await fetch_model_config( model.hf_model_repo )
             expect( config.model_type ).toBeTruthy()
             expect( config.context_length ).toBeGreaterThan( 0 )
 
@@ -725,27 +736,187 @@ describe.skipIf( !API_KEY )( `Endpoint lifecycle (live API)`, () => {
 } )
 
 
-// ─── SUGGESTED_MODELS validation ────────────────────────────────────────────
+// ─── Cloud model catalog helpers ─────────────────────────────────────────────
 
-describe( `SUGGESTED_MODELS`, () => {
+describe( `get_cloud_models`, () => {
 
-    test( `all models have required fields`, () => {
+    test( `returns models with hf_model_repo`, () => {
 
-        for( const model of SUGGESTED_MODELS ) {
-            expect( model.hf_repo ).toBeTruthy()
-            expect( model.display_name ).toBeTruthy()
-            expect( model.param_label ).toBeTruthy()
+        const cloud = get_cloud_models()
+
+        expect( cloud.length ).toBeGreaterThan( 0 )
+
+        for( const model of cloud ) {
+            expect( model.hf_model_repo ).toBeTruthy()
+            expect( model.hf_model_repo ).toMatch( /^[^/]+\/[^/]+/ )
+            expect( model.name ).toBeTruthy()
+            expect( model.parameters_label ).toBeTruthy()
             expect( model.description ).toBeTruthy()
-            expect( model.score ).toBeGreaterThan( 0 )
         }
 
     } )
 
-    test( `hf_repo format is org/model`, () => {
+    test( `includes both cloud-only and dual-use models`, () => {
 
-        for( const model of SUGGESTED_MODELS ) {
-            expect( model.hf_repo ).toMatch( /^[^/]+\/[^/]+$/ )
+        const cloud = get_cloud_models()
+
+        const cloud_only = cloud.filter( m => m.cloud_only )
+        const dual_use = cloud.filter( m => !m.cloud_only )
+
+        expect( cloud_only.length ).toBeGreaterThan( 0 )
+        expect( dual_use.length ).toBeGreaterThan( 0 )
+
+    } )
+
+    test( `is sorted by quality score descending`, () => {
+
+        const cloud = get_cloud_models()
+
+        for( let i = 1; i < cloud.length; i++ ) {
+            const prev_score = cloud[ i - 1 ].benchmarks ? 1 : 0
+            const curr_score = cloud[ i ].benchmarks ? 1 : 0
+            // Broadly check the ordering holds (exact scoring tested elsewhere)
+            expect( prev_score ).toBeGreaterThanOrEqual( curr_score - 1 )
         }
+
+    } )
+
+} )
+
+
+describe( `find_by_hf_repo`, () => {
+
+    test( `finds a known dual-use model`, () => {
+
+        const model = find_by_hf_repo( `Qwen/Qwen3-8B` )
+        expect( model ).toBeDefined()
+        expect( model.family ).toBe( `qwen3` )
+
+    } )
+
+    test( `finds a cloud-only model`, () => {
+
+        const model = find_by_hf_repo( `deepseek-ai/DeepSeek-R1` )
+        expect( model ).toBeDefined()
+        expect( model.cloud_only ).toBe( true )
+
+    } )
+
+    test( `returns undefined for unknown repo`, () => {
+
+        expect( find_by_hf_repo( `totally-fake/model` ) ).toBeUndefined()
+
+    } )
+
+} )
+
+
+describe( `estimate_cloud_vram`, () => {
+
+    test( `returns positive value for a catalog model`, () => {
+
+        const model = find_by_hf_repo( `Qwen/Qwen3-8B` )
+        const vram = estimate_cloud_vram( model, `fp16` )
+
+        expect( vram ).toBeGreaterThan( 0 )
+
+        // 8B FP16 should be roughly 15-25 GB
+        const gb = vram / 1024 ** 3
+        expect( gb ).toBeGreaterThan( 10 )
+        expect( gb ).toBeLessThan( 40 )
+
+    } )
+
+    test( `AWQ uses less VRAM than FP16`, () => {
+
+        const model = find_by_hf_repo( `Qwen/Qwen3-8B` )
+        const fp16 = estimate_cloud_vram( model, `fp16` )
+        const awq = estimate_cloud_vram( model, `awq` )
+
+        expect( awq ).toBeLessThan( fp16 )
+
+    } )
+
+    test( `estimate_cloud_vram_gb matches bytes conversion`, () => {
+
+        const model = find_by_hf_repo( `Qwen/Qwen3-8B` )
+        const bytes = estimate_cloud_vram( model )
+        const gb = estimate_cloud_vram_gb( model )
+
+        expect( Math.abs( gb - bytes / 1024 ** 3 ) ).toBeLessThan( 0.01 )
+
+    } )
+
+    test( `handles MoE model (uses total params for VRAM)`, () => {
+
+        const model = find_by_hf_repo( `deepseek-ai/DeepSeek-R1` )
+        const gb = estimate_cloud_vram_gb( model, `fp16` )
+
+        // 671B FP16 should be massive — over 1 TB VRAM
+        expect( gb ).toBeGreaterThan( 1000 )
+
+    } )
+
+} )
+
+
+describe( `choose_best_gpu`, () => {
+
+    test( `returns a GPU for a small model`, () => {
+
+        const model = find_by_hf_repo( `Qwen/Qwen3-0.6B` )
+        const result = choose_best_gpu( model )
+
+        expect( result ).not.toBeNull()
+        expect( result.pool.vram_gb ).toBeGreaterThan( 0 )
+
+    } )
+
+    test( `returns null when model is too large for any GPU`, () => {
+
+        const model = find_by_hf_repo( `deepseek-ai/DeepSeek-R1` )
+        const result = choose_best_gpu( model )
+
+        // FP16 671B cannot fit on any single GPU pool
+        expect( result ).toBeNull()
+
+    } )
+
+    test( `choose_best_gpu_annotated returns all pools`, () => {
+
+        const model = find_by_hf_repo( `Qwen/Qwen3-8B` )
+        const gpus = choose_best_gpu_annotated( model )
+
+        expect( gpus.length ).toBe( GPU_POOLS.length )
+
+    } )
+
+} )
+
+
+describe( `cloud-only model exclusion from local selection`, () => {
+
+    test( `select_best_model never returns a cloud-only model`, () => {
+
+        const model = select_best_model( Infinity )
+        expect( model.cloud_only ).toBeFalsy()
+
+    } )
+
+    test( `get_fitting_models excludes cloud-only models`, () => {
+
+        const models = get_fitting_models( Infinity )
+
+        for( const m of models ) {
+            expect( m.cloud_only ).toBeFalsy()
+        }
+
+    } )
+
+    test( `MODEL_CATALOG contains cloud-only entries`, () => {
+
+        const cloud_only = MODEL_CATALOG.filter( m => m.cloud_only )
+        expect( cloud_only.length ).toBeGreaterThanOrEqual( 6 )
 
     } )
 

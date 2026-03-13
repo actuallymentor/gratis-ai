@@ -11,6 +11,7 @@
  * @module runpod_service
  */
 import { log } from 'mentie'
+import { estimate_cloud_vram_gb } from '../utils/model_catalog'
 
 const MANAGEMENT_BASE = `https://rest.runpod.io/v1`
 const INFERENCE_BASE = `https://api.runpod.ai/v2`
@@ -32,32 +33,6 @@ export const GPU_POOLS = [
     { id: `80gb`,   name: `80 GB (A100, H100)`,        vram_gb: 80,  gpu_ids: [ `NVIDIA A100-SXM4-80GB`, `NVIDIA A100 80GB PCIe`, `NVIDIA H100 80GB HBM3`, `NVIDIA H100 PCIe` ] },
     { id: `141gb`,  name: `141 GB (H200)`,             vram_gb: 141, gpu_ids: [ `NVIDIA H200` ] },
     { id: `192gb`,  name: `192 GB (B200)`,             vram_gb: 192, gpu_ids: [ `NVIDIA B200` ] },
-]
-
-
-// ─── Suggested models ────────────────────────────────────────────────────────
-// Curated list mapped to base HuggingFace repos (not GGUF repos).
-// Includes large cloud-only models not available in the local catalog.
-
-export const SUGGESTED_MODELS = [
-
-    // Sorted by quality score (descending) — score is average of MMLU, GPQA, HumanEval, MATH, GSM8K
-    { hf_repo: `deepseek-ai/DeepSeek-R1`,                   display_name: `DeepSeek R1`,       param_label: `671B`,    description: `Top-tier reasoning model — MoE architecture`, score: 87 },
-    { hf_repo: `Qwen/Qwen3-235B-A22B`,                      display_name: `Qwen3 235B MoE`,   param_label: `235B`,    description: `Mixture of Experts — only 22B active params`, score: 76 },
-    { hf_repo: `meta-llama/Llama-3.3-70B-Instruct`,         display_name: `Llama 3.3 70B`,    param_label: `70B`,     description: `Strong general-purpose model`, score: 76 },
-    { hf_repo: `Qwen/Qwen3-32B`,                            display_name: `Qwen3 32B`,        param_label: `32B`,     description: `Outperforms 72B models on many benchmarks`, score: 72 },
-    { hf_repo: `cognitivecomputations/Dolphin-Mistral-24B-Venice-Edition`, display_name: `Dolphin Mistral 24B Venice`, param_label: `24B`, description: `Gold standard uncensored — 2.20% refusal rate`, score: 71, uncensored: true },
-    { hf_repo: `mistralai/Mistral-Small-24B-Instruct-2501`,  display_name: `Mistral Small 24B`, param_label: `24B`,    description: `Efficient instruction-following model from Mistral`, score: 71 },
-    { hf_repo: `Qwen/Qwen3-14B`,                            display_name: `Qwen3 14B`,        param_label: `14B`,     description: `Rivals 32B models — excellent for reasoning`, score: 70 },
-    { hf_repo: `Qwen/Qwen3-8B`,                             display_name: `Qwen3 8B`,         param_label: `8B`,      description: `Best-in-class at 8B with strong reasoning`, score: 68 },
-    { hf_repo: `Qwen/Qwen3-4B`,                             display_name: `Qwen3 4B`,         param_label: `4B`,      description: `Matches 7B model performance in a smaller package`, score: 63 },
-    { hf_repo: `cognitivecomputations/dolphin-2.9.4-llama3.1-8b`,         display_name: `Dolphin 2.9.4 Llama 3.1 8B`, param_label: `8B`, description: `Training-based uncensored, follows all instructions`, score: 62, uncensored: true },
-    { hf_repo: `meta-llama/Llama-4-Scout-17B-16E-Instruct`,  display_name: `Llama 4 Scout`,    param_label: `17B×16E`, description: `Meta's latest MoE model with 16 experts`, score: 61 },
-    { hf_repo: `meta-llama/Llama-3.2-3B-Instruct`,          display_name: `Llama 3.2 3B`,     param_label: `3B`,      description: `Meta's compact Llama 3 model`, score: 56 },
-    { hf_repo: `mlabonne/Gemma-3-12B-it-abliterated`,                     display_name: `Gemma 3 12B Abliterated`,    param_label: `12B`, description: `Abliterated Gemma 3 — quality without content restrictions`, score: 52, uncensored: true },
-    { hf_repo: `Qwen/Qwen3-0.6B`,                           display_name: `Qwen3 0.6B`,       param_label: `0.6B`,    description: `Remarkably capable for its size, with reasoning support`, score: 42 },
-    { hf_repo: `HuggingFaceTB/SmolLM2-360M-Instruct`,       display_name: `SmolLM2 360M`,     param_label: `0.36B`,   description: `Tiny instruct model — fast cold starts, great for testing`, score: 28 },
-
 ]
 
 
@@ -578,5 +553,45 @@ export function get_all_gpus_annotated( vram_needed_gb, pricing, availability ) 
         fits: pool.vram_gb >= vram_needed_gb,
         availability: availability?.get( pool.id ) ?? null,
     } ) ).sort( ( a, b ) => a.pool.vram_gb - b.pool.vram_gb )
+
+}
+
+
+// ─── Catalog-aware GPU selection ─────────────────────────────────────────────
+
+/**
+ * Choose the best GPU for a catalog model — bridges catalog VRAM estimation
+ * with the GPU suggestion engine.
+ *
+ * @param {import('../utils/model_catalog').ModelDefinition} model - Catalog model
+ * @param {Object} [opts]
+ * @param {string} [opts.quantization] - vLLM quantization method
+ * @param {number} [opts.context_length] - Override context length
+ * @param {Map<string, number>} [opts.pricing] - Pool pricing
+ * @param {Map<string, string>} [opts.availability] - Pool availability
+ * @returns {{ pool: Object, price_per_hr: number | null, availability: string | null } | null}
+ */
+export function choose_best_gpu( model, { quantization, context_length, pricing, availability } = {} ) {
+
+    const vram_gb = estimate_cloud_vram_gb( model, quantization, context_length )
+    return suggest_gpu( vram_gb, pricing, availability )
+
+}
+
+/**
+ * Get all GPUs annotated for a catalog model — convenience bridge.
+ *
+ * @param {import('../utils/model_catalog').ModelDefinition} model
+ * @param {Object} [opts]
+ * @param {string} [opts.quantization]
+ * @param {number} [opts.context_length]
+ * @param {Map<string, number>} [opts.pricing]
+ * @param {Map<string, string>} [opts.availability]
+ * @returns {Array<{ pool: Object, price_per_hr: number | null, fits: boolean, availability: string | null }>}
+ */
+export function choose_best_gpu_annotated( model, { quantization, context_length, pricing, availability } = {} ) {
+
+    const vram_gb = estimate_cloud_vram_gb( model, quantization, context_length )
+    return get_all_gpus_annotated( vram_gb, pricing, availability )
 
 }

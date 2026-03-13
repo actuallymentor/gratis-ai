@@ -43,6 +43,12 @@
  * @property {string} [system_prompt] - Model-specific system prompt (overrides the global default when no custom prompt is set)
  * @property {boolean} [uncensored] - Whether this model has had refusal behavior removed
  * @property {boolean} [vision] - Whether this model supports image/vision input (requires mmproj)
+ * @property {string} [hf_model_repo] - Base HF repo for cloud/vLLM inference (e.g. 'Qwen/Qwen3-8B') — distinct from hugging_face_repo which points to GGUF distribution
+ * @property {boolean} [cloud_only] - True for models with no GGUF — excluded from local selection
+ * @property {boolean} [moe] - True for Mixture-of-Experts architectures
+ * @property {number} [active_parameters] - Active params per forward pass (MoE only)
+ * @property {number} [num_experts] - Total expert count (MoE only)
+ * @property {number} [num_active_experts] - Experts active per token (MoE only)
  * @property {string} [category] - Legacy tier label for backward compat with cached IndexedDB data
  * @property {Benchmarks} [benchmarks] - Benchmark scores (null = unavailable for that benchmark)
  */
@@ -84,6 +90,7 @@ export const MODEL_CATALOG = [
         head_dim: 64,
         hugging_face_repo: `bartowski/SmolLM2-360M-Instruct-GGUF`,
         file_name: `SmolLM2-360M-Instruct-Q4_K_M.gguf`,
+        hf_model_repo: `HuggingFaceTB/SmolLM2-360M-Instruct`,
         reasoning: false,
         benchmarks: { mmlu: 47.96, gpqa: null, humaneval: null, math: null, gsm8k: 7.43 },
         license: `Apache-2.0`,
@@ -106,6 +113,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-0.6B-GGUF`,
         file_name: `Qwen3-0.6B-Q4_K_M.gguf`,
+        hf_model_repo: `Qwen/Qwen3-0.6B`,
         reasoning: true,
         benchmarks: { mmlu: 52.8, gpqa: 26.8, humaneval: 36.2, math: 32.4, gsm8k: 59.6 },
         license: `Apache-2.0`,
@@ -244,6 +252,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `Qwen/Qwen3-4B-GGUF`,
         file_name: `Qwen3-4B-Q4_K_M.gguf`,
+        hf_model_repo: `Qwen/Qwen3-4B`,
         reasoning: true,
         benchmarks: { mmlu: 73.0, gpqa: 36.9, humaneval: 63.5, math: 54.1, gsm8k: 87.8 },
         license: `Apache-2.0`,
@@ -268,6 +277,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `Qwen/Qwen3-8B-GGUF`,
         file_name: `Qwen3-8B-Q4_K_M.gguf`,
+        hf_model_repo: `Qwen/Qwen3-8B`,
         reasoning: true,
         benchmarks: { mmlu: 76.9, gpqa: 44.4, humaneval: 67.7, math: 60.8, gsm8k: 89.8 },
         license: `Apache-2.0`,
@@ -292,6 +302,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-14B-GGUF`,
         file_name: `Qwen3-14B-Q4_K_M.gguf`,
+        hf_model_repo: `Qwen/Qwen3-14B`,
         reasoning: true,
         benchmarks: { mmlu: 81.1, gpqa: 39.9, humaneval: 72.2, math: 62.0, gsm8k: 92.5 },
         license: `Apache-2.0`,
@@ -316,6 +327,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Qwen3-32B-GGUF`,
         file_name: `Qwen3-32B-Q4_K_M.gguf`,
+        hf_model_repo: `Qwen/Qwen3-32B`,
         reasoning: true,
         benchmarks: { mmlu: 83.6, gpqa: 49.5, humaneval: 72.1, math: 61.6, gsm8k: 93.4 },
         license: `Apache-2.0`,
@@ -340,6 +352,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `unsloth/Llama-3.3-70B-Instruct-GGUF`,
         file_name: `Llama-3.3-70B-Instruct-Q4_K_M.gguf`,
+        hf_model_repo: `meta-llama/Llama-3.3-70B-Instruct`,
         reasoning: false,
         benchmarks: { mmlu: 86.0, gpqa: 50.5, humaneval: 88.4, math: 77.0, gsm8k: null },
         license: `Llama`,
@@ -548,6 +561,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `bartowski/dolphin-2.9.4-llama3.1-8b-GGUF`,
         file_name: `dolphin-2.9.4-llama3.1-8b-Q4_K_M.gguf`,
+        hf_model_repo: `cognitivecomputations/dolphin-2.9.4-llama3.1-8b`,
         reasoning: false,
         benchmarks: { mmlu: 69.4, gpqa: 28.94, humaneval: 72.6, math: 51.9, gsm8k: 84.5 },
         license: `Llama`,
@@ -592,6 +606,7 @@ export const MODEL_CATALOG = [
         head_dim: 128,
         hugging_face_repo: `bartowski/cognitivecomputations_Dolphin-Mistral-24B-Venice-Edition-GGUF`,
         file_name: `cognitivecomputations_Dolphin-Mistral-24B-Venice-Edition-Q4_K_M.gguf`,
+        hf_model_repo: `cognitivecomputations/Dolphin-Mistral-24B-Venice-Edition`,
         reasoning: false,
         benchmarks: { mmlu: 81, gpqa: null, humaneval: null, math: null, gsm8k: null },
         license: `Apache-2.0`,
@@ -742,6 +757,140 @@ export const MODEL_CATALOG = [
         vision: true,
     },
 
+
+    // ── Cloud-only models ──────────────────────────────────────────────
+    // Large or non-GGUF models available only via cloud GPU (RunPod vLLM).
+    // No hugging_face_repo / file_name / quantization / bpw — these have
+    // no GGUF distribution. file_size_bytes: 0 ensures they never pass
+    // local memory fitness checks.
+
+    {
+        id: `deepseek-r1-671b-cloud`,
+        name: `DeepSeek R1`,
+        description: `Top-tier reasoning model — MoE architecture with 37B active parameters.`,
+        family: `deepseek`,
+        parameters: 671_000_000_000,
+        parameters_label: `671B`,
+        file_size_bytes: 0,
+        context_length: 163_840,
+        layers: 61,
+        kv_heads: 128,
+        head_dim: 128,
+        hf_model_repo: `deepseek-ai/DeepSeek-R1`,
+        cloud_only: true,
+        moe: true,
+        active_parameters: 37_000_000_000,
+        num_experts: 256,
+        num_active_experts: 8,
+        reasoning: true,
+        benchmarks: { mmlu: 90.8, gpqa: 71.5, humaneval: 97.3, math: 97.3, gsm8k: null },
+        license: `MIT`,
+    },
+
+    {
+        id: `qwen3-235b-a22b-cloud`,
+        name: `Qwen3 235B MoE`,
+        description: `Mixture of Experts — only 22B active params per token.`,
+        family: `qwen3`,
+        parameters: 235_000_000_000,
+        parameters_label: `235B`,
+        file_size_bytes: 0,
+        context_length: 40_960,
+        layers: 94,
+        kv_heads: 4,
+        head_dim: 128,
+        hf_model_repo: `Qwen/Qwen3-235B-A22B`,
+        cloud_only: true,
+        moe: true,
+        active_parameters: 22_000_000_000,
+        num_experts: 128,
+        num_active_experts: 8,
+        reasoning: true,
+        benchmarks: { mmlu: 85.2, gpqa: 52.4, humaneval: 80.9, math: 70.8, gsm8k: 89.4 },
+        license: `Apache-2.0`,
+    },
+
+    {
+        id: `mistral-small-24b-cloud`,
+        name: `Mistral Small 24B`,
+        description: `Efficient instruction-following model from Mistral.`,
+        family: `mistral`,
+        parameters: 24_000_000_000,
+        parameters_label: `24B`,
+        file_size_bytes: 0,
+        context_length: 32_768,
+        layers: 40,
+        kv_heads: 8,
+        head_dim: 128,
+        hf_model_repo: `mistralai/Mistral-Small-24B-Instruct-2501`,
+        cloud_only: true,
+        reasoning: false,
+        benchmarks: { mmlu: 81.0, gpqa: null, humaneval: 88.4, math: null, gsm8k: null },
+        license: `Apache-2.0`,
+    },
+
+    {
+        id: `llama-4-scout-17b-16e-cloud`,
+        name: `Llama 4 Scout`,
+        description: `Meta's latest MoE model with 16 experts.`,
+        family: `llama4`,
+        parameters: 109_000_000_000,
+        parameters_label: `17B×16E`,
+        file_size_bytes: 0,
+        context_length: 131_072,
+        layers: 48,
+        kv_heads: 8,
+        head_dim: 128,
+        hf_model_repo: `meta-llama/Llama-4-Scout-17B-16E-Instruct`,
+        cloud_only: true,
+        moe: true,
+        active_parameters: 17_000_000_000,
+        num_experts: 16,
+        num_active_experts: 1,
+        reasoning: false,
+        benchmarks: { mmlu: 79.6, gpqa: null, humaneval: 34.2, math: 68.8, gsm8k: null },
+        license: `Llama`,
+    },
+
+    {
+        id: `llama-3.2-3b-cloud`,
+        name: `Llama 3.2 3B`,
+        description: `Meta's compact Llama 3 model — fast cold starts on cloud.`,
+        family: `llama3`,
+        parameters: 3_213_000_000,
+        parameters_label: `3B`,
+        file_size_bytes: 0,
+        context_length: 131_072,
+        layers: 28,
+        kv_heads: 8,
+        head_dim: 128,
+        hf_model_repo: `meta-llama/Llama-3.2-3B-Instruct`,
+        cloud_only: true,
+        reasoning: false,
+        benchmarks: { mmlu: 63.4, gpqa: 32.8, humaneval: null, math: 48.0, gsm8k: null },
+        license: `Llama`,
+    },
+
+    {
+        id: `gemma-3-12b-abliterated-cloud`,
+        name: `Gemma 3 12B Abliterated`,
+        description: `Abliterated Gemma 3 — quality without content restrictions.`,
+        family: `gemma3`,
+        parameters: 12_000_000_000,
+        parameters_label: `12B`,
+        file_size_bytes: 0,
+        context_length: 131_072,
+        layers: 48,
+        kv_heads: 8,
+        head_dim: 256,
+        hf_model_repo: `mlabonne/Gemma-3-12B-it-abliterated`,
+        cloud_only: true,
+        reasoning: false,
+        benchmarks: { mmlu: null, gpqa: null, humaneval: null, math: null, gsm8k: null },
+        license: `Gemma`,
+        uncensored: true,
+    },
+
 ]
 
 
@@ -753,6 +902,76 @@ export const MODEL_CATALOG = [
  * @returns {ModelDefinition | undefined}
  */
 export const get_model_by_id = ( id ) => MODEL_CATALOG.find( m => m.id === id )
+
+
+// ─── Cloud model helpers ─────────────────────────────────────────────────────
+
+// Bytes per weight for cloud/vLLM quantization types
+const CLOUD_QUANT_BYTES = { fp16: 2, bf16: 2, fp8: 1, int8: 1, awq: 0.5, gptq: 0.5, int4: 0.5 }
+
+/**
+ * Get all models deployable on cloud GPUs, sorted by quality score descending.
+ * Includes both cloud-only models and dual-use models with `hf_model_repo`.
+ * @returns {ModelDefinition[]}
+ */
+export const get_cloud_models = () =>
+    MODEL_CATALOG
+        .filter( m => m.hf_model_repo )
+        .sort( ( a, b ) => quality_score( b ) - quality_score( a ) )
+
+/**
+ * Find a catalog entry by its base HF repo (hf_model_repo field).
+ * Returns the highest-quality match if multiple entries share the same repo.
+ * @param {string} hf_repo - Base HF repo ID (e.g. 'Qwen/Qwen3-8B')
+ * @returns {ModelDefinition | undefined}
+ */
+export const find_by_hf_repo = ( hf_repo ) => {
+
+    const matches = MODEL_CATALOG.filter( m => m.hf_model_repo === hf_repo )
+    if( matches.length === 0 ) return undefined
+    if( matches.length === 1 ) return matches[ 0 ]
+
+    // Multiple matches (e.g. Q4_K_M + Q5_K_M variants) — pick highest quality
+    return matches.sort( ( a, b ) => quality_score( b ) - quality_score( a ) )[ 0 ]
+
+}
+
+/**
+ * Estimate total GPU VRAM to serve a catalog model with vLLM.
+ *
+ * Uses `model.parameters` (total — correct for MoE since all experts live in VRAM).
+ * Formula: (params × bytes_per_weight + KV_cache) × 1.2 overhead.
+ *
+ * @param {ModelDefinition} model - Catalog model definition
+ * @param {string} [quantization='fp16'] - vLLM quantization method
+ * @param {number} [context_length] - Override context (defaults to model.context_length or 4096)
+ * @returns {number} Estimated VRAM in bytes
+ */
+export const estimate_cloud_vram = ( model, quantization = `fp16`, context_length ) => {
+
+    const ctx = context_length || model.context_length || 4096
+    const bytes_per_weight = CLOUD_QUANT_BYTES[ quantization.toLowerCase() ] || 2
+
+    // Model weights — total params (all experts loaded in VRAM)
+    const weight_bytes = model.parameters * bytes_per_weight
+
+    // KV cache (FP16 in vLLM by default)
+    const kv_cache = 2 * ( model.layers || 0 ) * ( model.kv_heads || 0 ) * ( model.head_dim || 0 ) * ctx * 2
+
+    // 20% overhead for activations, CUDA kernels, vLLM page tables
+    return Math.ceil( ( weight_bytes + kv_cache ) * 1.2 )
+
+}
+
+/**
+ * Estimate cloud VRAM in GB (convenience wrapper).
+ * @param {ModelDefinition} model
+ * @param {string} [quantization]
+ * @param {number} [context_length]
+ * @returns {number} VRAM in GB
+ */
+export const estimate_cloud_vram_gb = ( model, quantization, context_length ) =>
+    estimate_cloud_vram( model, quantization, context_length ) / 1024 ** 3
 
 
 // ─── Memory estimation ──────────────────────────────────────────────────────────
@@ -847,9 +1066,9 @@ export const quality_score = ( model ) => {
  */
 export const select_best_model = ( available_bytes ) => {
 
-    // Exclude uncensored and vision models from auto-recommendation — they
-    // belong in their own cards, never as the default suggestion
-    const safe = MODEL_CATALOG.filter( m => !m.uncensored && !m.vision )
+    // Exclude uncensored, vision, and cloud-only models from auto-recommendation —
+    // they belong in their own cards or cloud-only flows, never as the default suggestion
+    const safe = MODEL_CATALOG.filter( m => !m.uncensored && !m.vision && !m.cloud_only )
 
     // Models that fit, sorted by quality score desc → bpw desc
     const fitting = safe
@@ -870,6 +1089,7 @@ export const select_best_model = ( available_bytes ) => {
  */
 export const get_fitting_models = ( available_bytes ) =>
     MODEL_CATALOG
+        .filter( m => !m.cloud_only )
         .filter( m => can_fit_in_memory( m, available_bytes ) )
         .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )
 
@@ -888,7 +1108,7 @@ export const get_fitting_models = ( available_bytes ) =>
 export const select_best_uncensored = ( available_bytes ) => {
 
     const fitting = MODEL_CATALOG
-        .filter( m => m.uncensored === true )
+        .filter( m => m.uncensored === true && !m.cloud_only )
         .filter( m => can_fit_in_memory( m, available_bytes ) )
         .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )
 
@@ -911,7 +1131,7 @@ export const select_best_uncensored = ( available_bytes ) => {
 export const select_best_vision = ( available_bytes ) => {
 
     const fitting = MODEL_CATALOG
-        .filter( m => m.vision === true )
+        .filter( m => m.vision === true && !m.cloud_only )
         .filter( m => can_fit_in_memory( m, available_bytes ) )
         .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )
 
@@ -945,7 +1165,7 @@ export const select_model_options = ( available_bytes ) => {
     const half_size = smarter.file_size_bytes * 0.5
 
     const faster_candidates = MODEL_CATALOG
-        .filter( m => !m.uncensored && !m.vision && m.id !== smarter.id )
+        .filter( m => !m.uncensored && !m.vision && !m.cloud_only && m.id !== smarter.id )
         .filter( m => can_fit_in_memory( m, available_bytes ) )
         .filter( m => m.file_size_bytes <= half_size )
         .sort( ( a, b ) => quality_score( b ) - quality_score( a ) || b.bpw - a.bpw )

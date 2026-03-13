@@ -22,11 +22,13 @@ See `RESEARCH.md` "Vision Model GGUF Research" section. Load when adding vision 
 
 See `RUNPOD_API_RESEARCH.md` for comprehensive API research. Load when working on RunPod/Nerd Mode features. Covers: REST management API (`rest.runpod.io/v1`), GraphQL legacy API (`api.runpod.io/graphql`), serverless job API (`api.runpod.ai/v2/{id}/`), OpenAI-compatible vLLM endpoints, GPU pool IDs, template/endpoint CRUD, health checks, streaming SSE format, vLLM env vars. **Critical**: serverless templates require explicit `volumeInGb: 0` -- see GOTCHAS.md.
 
-## Nerd Mode — RunPod Cloud GPU Inference (v0.26.0, updated v0.30.0)
+## Nerd Mode — RunPod Cloud GPU Inference (v0.26.0, updated v0.33.0)
 
 Cloud GPU inference via RunPod serverless endpoints. Two-step deployment: create vLLM template (`rest.runpod.io/v1/templates`), then create endpoint referencing it (`rest.runpod.io/v1/endpoints`). Key files: `runpod_service.js` (API client), `runpod_provider.js` (LLMProvider), `runpod_store.js` (Zustand, localStorage-persisted), `NerdSetupPage.jsx` (setup wizard), `SuggestedModelsModal.jsx` (model browser). Model IDs prefixed with `runpod:` — `llm_store.js` switches provider type based on prefix. E2E tests in `nerd_mode.spec.js` require `VITE_RUNPOD_API_KEY_CI`.
 
 **v0.30.0**: Endpoints use deterministic names via `endpoint_name_for_model()` (`gratisai-{org}-{model}` lowercase). Deploy flow checks `find_existing_endpoint()` first — recycles if found, creates new only if not. `has_endpoint()` on store guards against duplicate local entries. Templates keep timestamp suffix (only endpoints are deterministic).
+
+**v0.33.0 — Unified model list**: `SUGGESTED_MODELS` deleted from `runpod_service.js`. `MODEL_CATALOG` in `model_catalog.js` is now the single source of truth for both local GGUF and cloud vLLM models. Cloud-eligible models have `hf_model_repo` field. Cloud-only models (no GGUF) have `cloud_only: true`, `file_size_bytes: 0`. New helpers: `get_cloud_models()`, `find_by_hf_repo()`, `estimate_cloud_vram()`. `NerdSetupPage` uses catalog-first path (skips HF fetch for known models). `SuggestedModelsModal` reads from `get_cloud_models()`. MoE models have `moe`, `active_parameters`, `num_experts`, `num_active_experts`.
 
 ## Logging
 
