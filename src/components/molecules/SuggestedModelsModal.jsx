@@ -113,6 +113,18 @@ const ParamTag = styled.span`
     margin-left: 6px;
 `
 
+const UncensoredTag = styled.span`
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.error };
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-left: 6px;
+    padding: 1px 5px;
+    border: 1px solid ${ ( { theme } ) => theme.colors.error };
+    border-radius: ${ ( { theme } ) => theme.border_radius.sm };
+`
+
 const ModelMeta = styled.div`
     font-size: 0.8rem;
     color: ${ ( { theme } ) => theme.colors.text_muted };
@@ -124,12 +136,13 @@ const CheckIcon = styled.div`
     margin-left: ${ ( { theme } ) => theme.spacing.sm };
 `
 
-// Group labels in display order
+// Group labels in display order — largest first
 const GROUPS = [
-    { key: `small`,  label_key: `group_small` },
-    { key: `medium`, label_key: `group_medium` },
-    { key: `large`,  label_key: `group_large` },
-    { key: `xl`,     label_key: `group_xl` },
+    { key: `xl`,          label_key: `group_xl` },
+    { key: `large`,       label_key: `group_large` },
+    { key: `medium`,      label_key: `group_medium` },
+    { key: `small`,       label_key: `group_small` },
+    { key: `uncensored`,  label_key: `group_uncensored` },
 ]
 
 
@@ -208,6 +221,7 @@ export default function SuggestedModelsModal( { is_open, on_close, on_select, cu
                                     <ModelName>
                                         { model.display_name }
                                         <ParamTag>{ model.param_label }</ParamTag>
+                                        { model.uncensored && <UncensoredTag>{ t( `uncensored_tag` ) }</UncensoredTag> }
                                     </ModelName>
                                     <ModelMeta>{ model.description }</ModelMeta>
                                 </ModelInfo>
