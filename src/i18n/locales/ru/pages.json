@@ -70,6 +70,9 @@
     "voice_download_failed": "Загрузка не удалась. Проверьте подключение и попробуйте снова.",
     "voice_downloading": "Скачивание...",
 
+    "cloud": "Облако",
+    "local": "Локально",
+
     "device_gpu": "GPU",
     "device_vram": "VRAM",
     "device_ram": "RAM",

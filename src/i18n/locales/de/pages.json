@@ -70,6 +70,9 @@
     "voice_download_failed": "Download fehlgeschlagen. Bitte prüfe deine Verbindung und versuche es erneut.",
     "voice_downloading": "Wird heruntergeladen…",
 
+    "cloud": "Cloud",
+    "local": "Lokal",
+
     "device_gpu": "GPU",
     "device_vram": "VRAM",
     "device_ram": "RAM",

@@ -10,7 +10,7 @@ const pulse = keyframes`
 const Wrapper = styled.div`
     display: flex;
     flex-direction: column;
-    align-items: ${ ( { $centered } ) => $centered ? `center` : `flex-start` };
+    align-items: flex-start;
     gap: 4px;
 `
 
@@ -50,7 +50,7 @@ export default function WakingUpIndicator( { show_hint = false } = {} ) {
 
     const { t } = useTranslation( `chat` )
 
-    return <Wrapper $centered={ show_hint }>
+    return <Wrapper>
 
         <Indicator>
             { t( `waking_up` ) }

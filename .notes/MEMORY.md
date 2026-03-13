@@ -30,6 +30,8 @@ Cloud GPU inference via RunPod serverless endpoints. Two-step deployment: create
 
 **v0.33.0 — Unified model list**: `SUGGESTED_MODELS` deleted from `runpod_service.js`. `MODEL_CATALOG` in `model_catalog.js` is now the single source of truth for both local GGUF and cloud vLLM models. Cloud-eligible models have `hf_model_repo` field. Cloud-only models (no GGUF) have `cloud_only: true`, `file_size_bytes: 0`. New helpers: `get_cloud_models()`, `find_by_hf_repo()`, `estimate_cloud_vram()`. `NerdSetupPage` uses catalog-first path (skips HF fetch for known models). `SuggestedModelsModal` reads from `get_cloud_models()`. MoE models have `moe`, `active_parameters`, `num_experts`, `num_active_experts`.
 
+**v0.34.0 — GPU VRAM in endpoint name**: `endpoint_name_for_model(model, gpu_vram_gb)` now appends `-{vram}gb` suffix (e.g. `gratisai-qwen-qwen3-8b-24gb`). Changing GPU tier creates a new endpoint instead of recycling the old one. `find_existing_endpoint()` also accepts `gpu_vram_gb`. Omitting the param falls back to the legacy name (backward compatible).
+
 ## Logging
 
 All `console.*` calls in `src/` (except `nodejs_console.js`) have been replaced with mentie's `log` utility. `electron/inference_worker.js` is excluded — it uses CJS and has its own console-forwarding relay.

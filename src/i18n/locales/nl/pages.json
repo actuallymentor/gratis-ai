@@ -70,6 +70,9 @@
     "voice_download_failed": "Download mislukt. Controleer je verbinding en probeer het opnieuw.",
     "voice_downloading": "Downloaden…",
 
+    "cloud": "Cloud",
+    "local": "Lokaal",
+
     "device_gpu": "GPU",
     "device_vram": "VRAM",
     "device_ram": "RAM",

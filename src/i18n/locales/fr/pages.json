@@ -70,6 +70,9 @@
     "voice_download_failed": "Échec du téléchargement. Vérifiez votre connexion et réessayez.",
     "voice_downloading": "Téléchargement...",
 
+    "cloud": "Cloud",
+    "local": "Local",
+
     "device_gpu": "GPU",
     "device_vram": "VRAM",
     "device_ram": "RAM",

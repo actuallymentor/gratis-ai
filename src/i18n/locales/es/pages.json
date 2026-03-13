@@ -70,6 +70,9 @@
     "voice_download_failed": "Error en la descarga. Revisa tu conexión e inténtalo de nuevo.",
     "voice_downloading": "Descargando...",
 
+    "cloud": "Nube",
+    "local": "Local",
+
     "device_gpu": "GPU",
     "device_vram": "VRAM",
     "device_ram": "RAM",

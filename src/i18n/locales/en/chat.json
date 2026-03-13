@@ -24,6 +24,9 @@
     "transcribing": "Transcribing",
     "loading_voice_model": "Loading voice model",
 
+    "offline_cloud_message": "You're offline — cloud models need an internet connection",
+    "offline_switch_model": "Switch model",
+
     "image_requires_vision": "Image input requires vision model support (coming soon)",
     "unsupported_file_type": "This file type is not supported",
     "file_too_large": "File is too large (max 100 KB)"

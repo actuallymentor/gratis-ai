@@ -70,6 +70,9 @@
     "voice_download_failed": "ダウンロードに失敗しました。接続を確認して再度お試しください。",
     "voice_downloading": "ダウンロード中...",
 
+    "cloud": "クラウド",
+    "local": "ローカル",
+
     "device_gpu": "GPU",
     "device_vram": "VRAM",
     "device_ram": "RAM",

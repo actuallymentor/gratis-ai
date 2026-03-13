@@ -1,5 +1,20 @@
 # Timeline
 
+## 2026-03-13 — Cloud/Local tags, offline banner, WakingUp fix (v0.35.0)
+
+- Cloud/Local tag on HomePage ModelRow — `ModelTag` styled component with `$cloud` prop
+- Offline banner on ChatPage — `use_online` hook + `OfflineBanner` + disabled input
+- WakingUpIndicator always left-aligns — removed `$centered` prop
+- Translations propagated to all 11 locales (also synced missing waking_up keys)
+
+## 2026-03-13 — GPU VRAM in endpoint cache name (v0.34.0)
+
+- `endpoint_name_for_model(model, gpu_vram_gb)` now appends `-{vram}gb` suffix
+- `find_existing_endpoint()` passes `gpu_vram_gb` through to endpoint naming
+- `NerdSetupPage` passes `gpu_pool.vram_gb` at both call sites (find + create)
+- Changing GPU tier now creates a new endpoint instead of recycling the old one
+- Tests: added GPU VRAM suffix + falsy edge case assertions
+
 ## 2026-03-13 — Unify RunPod model list with MODEL_CATALOG
 
 - Deleted `SUGGESTED_MODELS` from `runpod_service.js` — MODEL_CATALOG is now the single source of truth

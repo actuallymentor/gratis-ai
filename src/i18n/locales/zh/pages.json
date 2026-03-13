@@ -70,6 +70,9 @@
     "voice_download_failed": "下载失败。请检查网络连接后重试。",
     "voice_downloading": "下载中...",
 
+    "cloud": "云端",
+    "local": "本地",
+
     "device_gpu": "GPU",
     "device_vram": "VRAM",
     "device_ram": "RAM",

@@ -70,6 +70,9 @@
     "voice_download_failed": "Download failed. Please check your connection and try again.",
     "voice_downloading": "Downloading...",
 
+    "cloud": "Cloud",
+    "local": "Local",
+
     "device_gpu": "GPU",
     "device_vram": "VRAM",
     "device_ram": "RAM",

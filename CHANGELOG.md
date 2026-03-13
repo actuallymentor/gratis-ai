@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.35.0] - 2026-03-13
+
+### Added
+- Cloud/Local tag on HomePage model row — shows source indicator with icon
+- Offline banner on ChatPage when using cloud models without internet
+- `use_online` hook — reactive wrapper around `navigator.onLine`
+
+### Fixed
+- WakingUpIndicator left-aligns in message bubbles instead of centering awkwardly
+
 ## [0.34.0] - 2026-03-13
 
 ### Changed

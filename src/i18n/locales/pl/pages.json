@@ -70,6 +70,9 @@
     "voice_download_failed": "Pobieranie nie powiodło się. Sprawdź połączenie i spróbuj ponownie.",
     "voice_downloading": "Pobieranie…",
 
+    "cloud": "Chmura",
+    "local": "Lokalne",
+
     "device_gpu": "GPU",
     "device_vram": "VRAM",
     "device_ram": "RAM",

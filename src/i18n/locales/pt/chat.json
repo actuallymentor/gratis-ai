@@ -19,6 +19,14 @@
     "transcribing": "Transcrevendo",
     "loading_voice_model": "Carregando modelo de voz",
 
+    "waking_up": "Despertando a IA",
+    "waking_up_hint": "IAs na nuvem podem levar 1–5 minutos para iniciar. Elas também adormecem após 5 minutos de inatividade.",
+    "slow_device_warning": "Seu dispositivo parece bem lento. Recomendamos baixar o app desktop para melhor desempenho.",
+    "get_the_desktop_app": "Baixar o app desktop",
+
+    "offline_cloud_message": "Você está offline — modelos na nuvem precisam de conexão com a internet",
+    "offline_switch_model": "Trocar modelo",
+
     "image_requires_vision": "A entrada de imagens requer suporte a modelo de visão (em breve)",
     "unsupported_file_type": "Este tipo de arquivo não é suportado",
     "file_too_large": "O arquivo é muito grande (máx. 100 KB)"

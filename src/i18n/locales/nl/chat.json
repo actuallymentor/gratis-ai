@@ -19,6 +19,14 @@
     "transcribing": "Transcriberen",
     "loading_voice_model": "Spraakmodel laden",
 
+    "waking_up": "AI wordt wakker",
+    "waking_up_hint": "Cloud-AI's kunnen 1–5 minuten nodig hebben om op te starten. Ze gaan ook in slaapstand na 5 minuten inactiviteit.",
+    "slow_device_warning": "Je apparaat lijkt vrij traag. We raden de desktop-app aan voor betere prestaties.",
+    "get_the_desktop_app": "Download de desktop-app",
+
+    "offline_cloud_message": "Je bent offline — cloudmodellen vereisen een internetverbinding",
+    "offline_switch_model": "Model wisselen",
+
     "image_requires_vision": "Afbeeldingsinvoer vereist ondersteuning voor een visiemodel (binnenkort beschikbaar)",
     "unsupported_file_type": "Dit bestandstype wordt niet ondersteund",
     "file_too_large": "Bestand is te groot (max 100 KB)"

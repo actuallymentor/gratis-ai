@@ -19,6 +19,14 @@
     "transcribing": "Trascrizione in corso",
     "loading_voice_model": "Caricamento modello vocale",
 
+    "waking_up": "Risveglio dell'IA",
+    "waking_up_hint": "Le IA cloud possono impiegare 1–5 minuti per avviarsi. Si addormentano anche dopo 5 minuti di inattività.",
+    "slow_device_warning": "Il tuo dispositivo sembra piuttosto lento. Ti consigliamo l'app desktop per prestazioni migliori.",
+    "get_the_desktop_app": "Scarica l'app desktop",
+
+    "offline_cloud_message": "Sei offline — i modelli cloud richiedono una connessione internet",
+    "offline_switch_model": "Cambia modello",
+
     "image_requires_vision": "L'input di immagini richiede il supporto del modello visivo (in arrivo)",
     "unsupported_file_type": "Questo tipo di file non è supportato",
     "file_too_large": "Il file è troppo grande (max 100 KB)"

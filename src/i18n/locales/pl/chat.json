@@ -19,6 +19,14 @@
     "transcribing": "Transkrybowanie",
     "loading_voice_model": "Ładowanie modelu głosowego",
 
+    "waking_up": "Budzenie AI",
+    "waking_up_hint": "AI w chmurze może potrzebować 1–5 minut na uruchomienie. Usypia też po 5 minutach bezczynności.",
+    "slow_device_warning": "Twoje urządzenie wydaje się dość wolne. Zalecamy pobranie aplikacji desktopowej dla lepszej wydajności.",
+    "get_the_desktop_app": "Pobierz aplikację desktopową",
+
+    "offline_cloud_message": "Jesteś offline — modele w chmurze wymagają połączenia z internetem",
+    "offline_switch_model": "Zmień model",
+
     "image_requires_vision": "Wprowadzanie obrazów wymaga obsługi modelu wizyjnego (wkrótce)",
     "unsupported_file_type": "Ten typ pliku nie jest obsługiwany",
     "file_too_large": "Plik jest za duży (maks. 100 KB)"
