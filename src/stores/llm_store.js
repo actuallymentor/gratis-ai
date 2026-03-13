@@ -16,6 +16,7 @@ const use_llm_store = create( ( set, get ) => ( {
 
     is_loading: false,
     is_generating: false,
+    is_endpoint_warming: false,
     loaded_model_id: null,
     stats: null,
     error: null,
@@ -53,9 +54,9 @@ const use_llm_store = create( ( set, get ) => ( {
         if( state._provider ) {
             log.info( `[use_llm] Switching provider type: ${ current_type } → ${ needs_runpod ? `runpod` : `local` }` )
             try {
-                await state._provider.unload_model() 
+                await state._provider.unload_model()
             } catch { /* best effort */ }
-            set( { _provider: null, _provider_promise: null, loaded_model_id: null } )
+            set( { _provider: null, _provider_promise: null, loaded_model_id: null, is_endpoint_warming: false } )
         }
 
         if( needs_runpod ) {
@@ -77,6 +78,7 @@ const use_llm_store = create( ( set, get ) => ( {
                 model_name: endpoint?.model_name || ``,
                 daily_limit: runpod_config.daily_spend_limit ?? 2,
                 price_per_hr: endpoint?.price_per_hr ?? 0,
+                on_warming_change: ( warming ) => set( { is_endpoint_warming: warming } ),
             } )
 
             set( { _provider: provider, _provider_type: `runpod` } )

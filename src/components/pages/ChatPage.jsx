@@ -9,6 +9,7 @@ import AppLayout from '../molecules/AppLayout'
 import MessageList from '../molecules/MessageList'
 import ChatInput from '../molecules/ChatInput'
 import VoiceModelDialog from '../molecules/VoiceModelDialog'
+import WakingUpIndicator from '../atoms/WakingUpIndicator'
 import use_llm from '../../hooks/use_llm'
 import use_chat_history from '../../hooks/use_chat_history'
 import use_model_manager from '../../hooks/use_model_manager'
@@ -169,7 +170,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const is_generating_ref = useRef( false )
     const query_processed_ref = useRef( false )
 
-    const { load_model, chat_stream, abort, is_generating, is_loading: is_model_loading, loaded_model_id } = use_llm()
+    const { load_model, chat_stream, abort, is_generating, is_endpoint_warming, is_loading: is_model_loading, loaded_model_id } = use_llm()
     const {
         conversations,
         create_conversation,
@@ -794,6 +795,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
                 <WelcomeContent $visible={ should_center }>
                     <WelcomeTitle>{ t( 'what_can_i_help_with' ) }</WelcomeTitle>
+                    { is_endpoint_warming && <WakingUpIndicator /> }
                 </WelcomeContent>
 
                 <ChatInput

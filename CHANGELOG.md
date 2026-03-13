@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.29.0] - 2026-03-13
+
+### Added
+- "Waking up the AI" indicator on chat page while RunPod endpoint has no live workers
+- Endpoint health polling — detects when workers are live and hides the warming indicator
+- Probe job always fires on model load to trigger worker spin-up
+
 ## [0.28.0] - 2026-03-13
 
 ### Added

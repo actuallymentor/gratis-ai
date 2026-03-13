@@ -7,7 +7,7 @@
  * @module runpod_provider
  */
 import { log } from 'mentie'
-import { submit_job } from './runpod_service'
+import { submit_job, get_endpoint_health } from './runpod_service'
 import { record_spend, is_over_limit, get_daily_spend } from './runpod_spend_tracker'
 
 const INFERENCE_BASE = `https://api.runpod.ai/v2`
@@ -24,27 +24,31 @@ export default class RunPodProvider {
      * @param {string} config.model_name - HuggingFace model name (for the request body)
      * @param {number} [config.daily_limit=2] - Max daily spend in USD
      * @param {number} [config.price_per_hr=0] - GPU cost for spend tracking
+     * @param {Function} [config.on_warming_change] - Called with (boolean) when warming state changes
      */
-    constructor( { api_key, endpoint_id, model_name, daily_limit = 2, price_per_hr = 0 } ) {
+    constructor( { api_key, endpoint_id, model_name, daily_limit = 2, price_per_hr = 0, on_warming_change } ) {
 
         this._api_key = api_key
         this._endpoint_id = endpoint_id
         this._model_name = model_name
         this._daily_limit = daily_limit
         this._price_per_hr = price_per_hr
+        this._on_warming_change = on_warming_change || ( () => {} )
 
         this._ready = false
+        this._warming = false
+        this._warming_interval = null
         this._abort_controller = null
 
     }
 
     /**
-     * "Load" the model — fires a background probe job to trigger worker spin-up,
-     * then marks as ready immediately so the chat UI is interactive.
+     * "Load" the model — fires a probe job to trigger worker spin-up,
+     * then polls health until a worker is live.
      *
-     * The user's first message (or the probe) is what actually wakes the endpoint.
-     * During the cold-start TTFT gap, the existing "Waking up the AI" indicator
-     * in the chat bubble provides feedback.
+     * Marks ready immediately so the user can start typing — their messages
+     * queue on RunPod's side and get picked up once a worker spins up.
+     * The warming indicator shows in the chat UI until a worker is live.
      *
      * @param {string} _model_id - Unused (endpoint already knows its model)
      */
@@ -61,13 +65,24 @@ export default class RunPodProvider {
         } ).then( job => {
             log.info( `[runpod] Probe job submitted: ${ job.id } (${ job.status })` )
         } ).catch( err => {
-            log.debug( `[runpod] Probe failed (non-critical): ${ err.message }` )
+            log.warn( `[runpod] Probe failed: ${ err.message }` )
         } )
 
-        // Mark ready immediately — inference requests will queue until a worker
-        // picks them up, and the chat UI's TTFT indicator handles the wait
+        // Mark ready immediately — inference requests queue on RunPod's side
         this._ready = true
 
+        // Start warming poll — checks health until a worker is live
+        this._set_warming( true )
+        this._start_warming_poll()
+
+    }
+
+    /**
+     * Whether the endpoint is still warming up (no live workers yet).
+     * @returns {boolean}
+     */
+    is_warming() {
+        return this._warming
     }
 
     /**
@@ -202,10 +217,11 @@ export default class RunPodProvider {
     }
 
     /**
-     * Unload — no-op for cloud endpoints (they scale to zero automatically).
+     * Unload — clears warming poll. Cloud endpoints scale to zero automatically.
      */
     async unload_model() {
         this._ready = false
+        this._stop_warming_poll()
     }
 
     /**
@@ -230,6 +246,47 @@ export default class RunPodProvider {
     _check_limits() {
         if( is_over_limit( this._daily_limit ) ) {
             throw new Error( `Daily spend limit reached ($${ get_daily_spend().toFixed( 2 ) } / $${ this._daily_limit })` )
+        }
+    }
+
+    _set_warming( value ) {
+        if( this._warming === value ) return
+        this._warming = value
+        this._on_warming_change( value )
+    }
+
+    _start_warming_poll() {
+
+        this._stop_warming_poll()
+
+        const check = async () => {
+
+            try {
+                const health = await get_endpoint_health( this._api_key, this._endpoint_id )
+                const { idle = 0, running = 0, initializing = 0, ready = 0 } = health?.workers || {}
+                const live = idle + running + initializing + ready
+
+                if( live > 0 ) {
+                    log.info( `[runpod] Endpoint warm — ${ live } worker(s) live` )
+                    this._set_warming( false )
+                    this._stop_warming_poll()
+                }
+            } catch {
+                // Health check can fail on brand-new endpoints — keep polling
+            }
+
+        }
+
+        // Check immediately, then every 3 seconds
+        check()
+        this._warming_interval = setInterval( check, 3000 )
+
+    }
+
+    _stop_warming_poll() {
+        if( this._warming_interval ) {
+            clearInterval( this._warming_interval )
+            this._warming_interval = null
         }
     }
 
