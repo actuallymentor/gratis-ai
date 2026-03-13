@@ -306,6 +306,7 @@ const CodeBlock = ( { children, ...props } ) => {
 const MessageBubble = memo( ( {
     message,
     is_streaming,
+    is_endpoint_warming,
     is_last_assistant,
     on_regenerate,
     on_edit,
@@ -436,7 +437,7 @@ const MessageBubble = memo( ( {
 
                 { /* Streaming indicator — waking up before first token, cursor after */ }
                 { is_streaming && !is_thinking && (
-                    response ? <StreamingIndicator /> : <WakingUpIndicator />
+                    response ? <StreamingIndicator /> : <WakingUpIndicator show_hint={ is_endpoint_warming } />
                 ) }
 
             </Bubble> }

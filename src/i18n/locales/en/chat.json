@@ -16,6 +16,7 @@
     "set_up_a_model": "Set up a model",
 
     "waking_up": "Waking up the AI",
+    "waking_up_hint": "Cloud AIs can take 1–5 minutes to start. They also fall asleep after 5 minutes of inactivity.",
     "slow_device_warning": "Your device appears quite slow. We recommend downloading the Desktop app for better performance.",
     "get_the_desktop_app": "Get the Desktop app",
 

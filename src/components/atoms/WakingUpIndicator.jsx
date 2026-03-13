@@ -7,12 +7,25 @@ const pulse = keyframes`
     40% { opacity: 1; }
 `
 
-const Container = styled.span`
+const Wrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: ${ ( { $centered } ) => $centered ? `center` : `flex-start` };
+    gap: 4px;
+`
+
+const Indicator = styled.span`
     display: inline-flex;
     align-items: center;
     gap: 4px;
     font-size: 0.82rem;
     color: ${ ( { theme } ) => theme.colors.text_muted };
+`
+
+const Hint = styled.span`
+    font-size: 0.72rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    opacity: 0.7;
 `
 
 const Dot = styled.span`
@@ -29,16 +42,25 @@ const Dot = styled.span`
 /**
  * Animated "Waking up the AI" indicator shown between
  * pressing send and the first token arriving (TTFT gap).
+ *
+ * @param {Object} [props]
+ * @param {boolean} [props.show_hint] - Show cold-start explanation below the indicator
  */
-export default function WakingUpIndicator() {
+export default function WakingUpIndicator( { show_hint = false } = {} ) {
 
     const { t } = useTranslation( `chat` )
 
-    return <Container>
-        { t( `waking_up` ) }
-        <Dot $delay={ 0 } />
-        <Dot $delay={ 0.2 } />
-        <Dot $delay={ 0.4 } />
-    </Container>
+    return <Wrapper $centered={ show_hint }>
+
+        <Indicator>
+            { t( `waking_up` ) }
+            <Dot $delay={ 0 } />
+            <Dot $delay={ 0.2 } />
+            <Dot $delay={ 0.4 } />
+        </Indicator>
+
+        { show_hint && <Hint>{ t( `waking_up_hint` ) }</Hint> }
+
+    </Wrapper>
 
 }

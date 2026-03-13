@@ -765,6 +765,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         return <MessageList
             messages={ messages }
             is_streaming={ is_generating }
+            is_endpoint_warming={ is_endpoint_warming }
             on_regenerate={ handle_regenerate }
             on_edit={ handle_edit }
         />
@@ -799,7 +800,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
                 </WelcomeContent>
 
                 { /* Warming indicator persists above the input after the welcome area collapses */ }
-                { is_endpoint_warming && has_messages && <WakingUpIndicator /> }
+                { is_endpoint_warming && has_messages && <WakingUpIndicator show_hint /> }
 
                 <ChatInput
                     ref={ chat_input_ref }

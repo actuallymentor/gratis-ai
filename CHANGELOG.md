@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.32.0] - 2026-03-13
+
+### Added
+- Cold-start hint under "Waking up the AI" indicator explaining cloud startup times and idle timeout
+
 ## [0.31.0] - 2026-03-13
 
 ### Changed
