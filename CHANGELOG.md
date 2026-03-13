@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.31.0] - 2026-03-13
+
+### Changed
+- Flatten suggested cloud models into a single score-sorted list (remove size group sections)
+- Add benchmark quality score (0–100) to each suggested model
+
+### Removed
+- Size group headings (XL, Large, Medium, Small, Uncensored) from suggested models modal
+
 ## [0.30.2] - 2026-03-13
 
 ### Fixed

@@ -1,8 +1,8 @@
 /**
  * Modal for browsing suggested HuggingFace models for RunPod deployment.
  *
- * Groups models by size category (Small, Medium, Large, Cloud-only XL)
- * with the same visual language as the alternatives list in ModelSelectPage.
+ * Flat list sorted by quality score, with the same visual language
+ * as the alternatives list in ModelSelectPage.
  */
 import styled from 'styled-components'
 import { X, Check } from 'lucide-react'
@@ -66,17 +66,6 @@ const Body = styled.div`
     padding: ${ ( { theme } ) => theme.spacing.md };
 `
 
-const GroupHeading = styled.h3`
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: ${ ( { theme } ) => theme.colors.text_muted };
-    margin: ${ ( { theme } ) => `${ theme.spacing.md } 0 ${ theme.spacing.xs }` };
-
-    &:first-child { margin-top: 0; }
-`
-
 const ModelRow = styled.button`
     display: flex;
     align-items: center;
@@ -130,20 +119,16 @@ const ModelMeta = styled.div`
     color: ${ ( { theme } ) => theme.colors.text_muted };
 `
 
+const ScoreBadge = styled.span`
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.accent };
+`
+
 const CheckIcon = styled.div`
     color: ${ ( { theme } ) => theme.colors.accent };
     flex-shrink: 0;
     margin-left: ${ ( { theme } ) => theme.spacing.sm };
 `
-
-// Group labels in display order — largest first
-const GROUPS = [
-    { key: `xl`,          label_key: `group_xl` },
-    { key: `large`,       label_key: `group_large` },
-    { key: `medium`,      label_key: `group_medium` },
-    { key: `small`,       label_key: `group_small` },
-    { key: `uncensored`,  label_key: `group_uncensored` },
-]
 
 
 /**
@@ -198,39 +183,29 @@ export default function SuggestedModelsModal( { is_open, on_close, on_select, cu
             </Header>
 
             <Body>
-                { GROUPS.map( ( { key, label_key } ) => {
+                { SUGGESTED_MODELS.map( ( model ) => {
 
-                    const models = SUGGESTED_MODELS.filter( m => m.group === key )
-                    if( models.length === 0 ) return null
+                    const is_active = current_model === model.hf_repo
 
-                    return <div key={ key }>
-
-                        <GroupHeading>{ t( label_key ) }</GroupHeading>
-
-                        { models.map( ( model ) => {
-
-                            const is_active = current_model === model.hf_repo
-
-                            return <ModelRow
-                                key={ model.hf_repo }
-                                $active={ is_active }
-                                onClick={ () => handle_select( model.hf_repo ) }
-                                data-testid={ `suggested-model-${ model.hf_repo }` }
-                            >
-                                <ModelInfo>
-                                    <ModelName>
-                                        { model.display_name }
-                                        <ParamTag>{ model.param_label }</ParamTag>
-                                        { model.uncensored && <UncensoredTag>{ t( `uncensored_tag` ) }</UncensoredTag> }
-                                    </ModelName>
-                                    <ModelMeta>{ model.description }</ModelMeta>
-                                </ModelInfo>
-                                { is_active && <CheckIcon><Check size={ 16 } /></CheckIcon> }
-                            </ModelRow>
-
-                        } ) }
-
-                    </div>
+                    return <ModelRow
+                        key={ model.hf_repo }
+                        $active={ is_active }
+                        onClick={ () => handle_select( model.hf_repo ) }
+                        data-testid={ `suggested-model-${ model.hf_repo }` }
+                    >
+                        <ModelInfo>
+                            <ModelName>
+                                { model.display_name }
+                                <ParamTag>{ model.param_label }</ParamTag>
+                                { model.uncensored && <UncensoredTag>{ t( `uncensored_tag` ) }</UncensoredTag> }
+                            </ModelName>
+                            <ModelMeta>
+                                { model.description }
+                                { model.score != null && <> — <ScoreBadge>Score { model.score }/100</ScoreBadge></> }
+                            </ModelMeta>
+                        </ModelInfo>
+                        { is_active && <CheckIcon><Check size={ 16 } /></CheckIcon> }
+                    </ModelRow>
 
                 } ) }
             </Body>

@@ -41,30 +41,22 @@ export const GPU_POOLS = [
 
 export const SUGGESTED_MODELS = [
 
-    // Cloud-only XL — sorted largest first
-    { hf_repo: `deepseek-ai/DeepSeek-R1`,                   display_name: `DeepSeek R1`,       param_label: `671B`,    description: `Top-tier reasoning model — MoE architecture`, group: `xl` },
-    { hf_repo: `Qwen/Qwen3-235B-A22B`,                      display_name: `Qwen3 235B MoE`,   param_label: `235B`,    description: `Mixture of Experts — only 22B active params`, group: `xl` },
-    { hf_repo: `meta-llama/Llama-4-Scout-17B-16E-Instruct`,  display_name: `Llama 4 Scout`,    param_label: `17B×16E`, description: `Meta's latest MoE model with 16 experts`, group: `xl` },
-    { hf_repo: `mistralai/Mistral-Small-24B-Instruct-2501`,  display_name: `Mistral Small 24B`, param_label: `24B`,    description: `Efficient instruction-following model from Mistral`, group: `xl` },
-
-    // Large
-    { hf_repo: `meta-llama/Llama-3.3-70B-Instruct`,         display_name: `Llama 3.3 70B`,    param_label: `70B`,  description: `Strong general-purpose model`, group: `large` },
-    { hf_repo: `Qwen/Qwen3-32B`,                            display_name: `Qwen3 32B`,        param_label: `32B`,  description: `Outperforms 72B models on many benchmarks`, group: `large` },
-    { hf_repo: `Qwen/Qwen3-14B`,                            display_name: `Qwen3 14B`,        param_label: `14B`,  description: `Rivals 32B models — excellent for reasoning`, group: `large` },
-
-    // Medium
-    { hf_repo: `Qwen/Qwen3-8B`,                             display_name: `Qwen3 8B`,         param_label: `8B`,   description: `Best-in-class at 8B with strong reasoning`, group: `medium` },
-    { hf_repo: `Qwen/Qwen3-4B`,                             display_name: `Qwen3 4B`,         param_label: `4B`,   description: `Matches 7B model performance in a smaller package`, group: `medium` },
-    { hf_repo: `meta-llama/Llama-3.2-3B-Instruct`,          display_name: `Llama 3.2 3B`,     param_label: `3B`,   description: `Meta's compact Llama 3 model`, group: `medium` },
-
-    // Small
-    { hf_repo: `Qwen/Qwen3-0.6B`,                           display_name: `Qwen3 0.6B`,   param_label: `0.6B`,  description: `Remarkably capable for its size, with reasoning support`, group: `small` },
-    { hf_repo: `HuggingFaceTB/SmolLM2-360M-Instruct`,       display_name: `SmolLM2 360M`, param_label: `0.36B`, description: `Tiny instruct model — fast cold starts, great for testing`, group: `small` },
-
-    // Uncensored — refusal behavior removed via training or abliteration
-    { hf_repo: `cognitivecomputations/Dolphin-Mistral-24B-Venice-Edition`, display_name: `Dolphin Mistral 24B Venice`, param_label: `24B`, description: `Gold standard uncensored — 2.20% refusal rate`, group: `uncensored`, uncensored: true },
-    { hf_repo: `mlabonne/Gemma-3-12B-it-abliterated`,                     display_name: `Gemma 3 12B Abliterated`,    param_label: `12B`, description: `Abliterated Gemma 3 — quality without content restrictions`, group: `uncensored`, uncensored: true },
-    { hf_repo: `cognitivecomputations/dolphin-2.9.4-llama3.1-8b`,         display_name: `Dolphin 2.9.4 Llama 3.1 8B`, param_label: `8B`,  description: `Training-based uncensored, follows all instructions`, group: `uncensored`, uncensored: true },
+    // Sorted by quality score (descending) — score is average of MMLU, GPQA, HumanEval, MATH, GSM8K
+    { hf_repo: `deepseek-ai/DeepSeek-R1`,                   display_name: `DeepSeek R1`,       param_label: `671B`,    description: `Top-tier reasoning model — MoE architecture`, score: 87 },
+    { hf_repo: `Qwen/Qwen3-235B-A22B`,                      display_name: `Qwen3 235B MoE`,   param_label: `235B`,    description: `Mixture of Experts — only 22B active params`, score: 76 },
+    { hf_repo: `meta-llama/Llama-3.3-70B-Instruct`,         display_name: `Llama 3.3 70B`,    param_label: `70B`,     description: `Strong general-purpose model`, score: 76 },
+    { hf_repo: `Qwen/Qwen3-32B`,                            display_name: `Qwen3 32B`,        param_label: `32B`,     description: `Outperforms 72B models on many benchmarks`, score: 72 },
+    { hf_repo: `cognitivecomputations/Dolphin-Mistral-24B-Venice-Edition`, display_name: `Dolphin Mistral 24B Venice`, param_label: `24B`, description: `Gold standard uncensored — 2.20% refusal rate`, score: 71, uncensored: true },
+    { hf_repo: `mistralai/Mistral-Small-24B-Instruct-2501`,  display_name: `Mistral Small 24B`, param_label: `24B`,    description: `Efficient instruction-following model from Mistral`, score: 71 },
+    { hf_repo: `Qwen/Qwen3-14B`,                            display_name: `Qwen3 14B`,        param_label: `14B`,     description: `Rivals 32B models — excellent for reasoning`, score: 70 },
+    { hf_repo: `Qwen/Qwen3-8B`,                             display_name: `Qwen3 8B`,         param_label: `8B`,      description: `Best-in-class at 8B with strong reasoning`, score: 68 },
+    { hf_repo: `Qwen/Qwen3-4B`,                             display_name: `Qwen3 4B`,         param_label: `4B`,      description: `Matches 7B model performance in a smaller package`, score: 63 },
+    { hf_repo: `cognitivecomputations/dolphin-2.9.4-llama3.1-8b`,         display_name: `Dolphin 2.9.4 Llama 3.1 8B`, param_label: `8B`, description: `Training-based uncensored, follows all instructions`, score: 62, uncensored: true },
+    { hf_repo: `meta-llama/Llama-4-Scout-17B-16E-Instruct`,  display_name: `Llama 4 Scout`,    param_label: `17B×16E`, description: `Meta's latest MoE model with 16 experts`, score: 61 },
+    { hf_repo: `meta-llama/Llama-3.2-3B-Instruct`,          display_name: `Llama 3.2 3B`,     param_label: `3B`,      description: `Meta's compact Llama 3 model`, score: 56 },
+    { hf_repo: `mlabonne/Gemma-3-12B-it-abliterated`,                     display_name: `Gemma 3 12B Abliterated`,    param_label: `12B`, description: `Abliterated Gemma 3 — quality without content restrictions`, score: 52, uncensored: true },
+    { hf_repo: `Qwen/Qwen3-0.6B`,                           display_name: `Qwen3 0.6B`,       param_label: `0.6B`,    description: `Remarkably capable for its size, with reasoning support`, score: 42 },
+    { hf_repo: `HuggingFaceTB/SmolLM2-360M-Instruct`,       display_name: `SmolLM2 360M`,     param_label: `0.36B`,   description: `Tiny instruct model — fast cold starts, great for testing`, score: 28 },
 
 ]
 
