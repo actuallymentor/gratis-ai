@@ -904,76 +904,6 @@ export const MODEL_CATALOG = [
 export const get_model_by_id = ( id ) => MODEL_CATALOG.find( m => m.id === id )
 
 
-// ─── Cloud model helpers ─────────────────────────────────────────────────────
-
-// Bytes per weight for cloud/vLLM quantization types
-const CLOUD_QUANT_BYTES = { fp16: 2, bf16: 2, fp8: 1, int8: 1, awq: 0.5, gptq: 0.5, int4: 0.5 }
-
-/**
- * Get all models deployable on cloud GPUs, sorted by quality score descending.
- * Includes both cloud-only models and dual-use models with `hf_model_repo`.
- * @returns {ModelDefinition[]}
- */
-export const get_cloud_models = () =>
-    MODEL_CATALOG
-        .filter( m => m.hf_model_repo )
-        .sort( ( a, b ) => quality_score( b ) - quality_score( a ) )
-
-/**
- * Find a catalog entry by its base HF repo (hf_model_repo field).
- * Returns the highest-quality match if multiple entries share the same repo.
- * @param {string} hf_repo - Base HF repo ID (e.g. 'Qwen/Qwen3-8B')
- * @returns {ModelDefinition | undefined}
- */
-export const find_by_hf_repo = ( hf_repo ) => {
-
-    const matches = MODEL_CATALOG.filter( m => m.hf_model_repo === hf_repo )
-    if( matches.length === 0 ) return undefined
-    if( matches.length === 1 ) return matches[ 0 ]
-
-    // Multiple matches (e.g. Q4_K_M + Q5_K_M variants) — pick highest quality
-    return matches.sort( ( a, b ) => quality_score( b ) - quality_score( a ) )[ 0 ]
-
-}
-
-/**
- * Estimate total GPU VRAM to serve a catalog model with vLLM.
- *
- * Uses `model.parameters` (total — correct for MoE since all experts live in VRAM).
- * Formula: (params × bytes_per_weight + KV_cache) × 1.2 overhead.
- *
- * @param {ModelDefinition} model - Catalog model definition
- * @param {string} [quantization='fp16'] - vLLM quantization method
- * @param {number} [context_length] - Override context (defaults to model.context_length or 4096)
- * @returns {number} Estimated VRAM in bytes
- */
-export const estimate_cloud_vram = ( model, quantization = `fp16`, context_length ) => {
-
-    const ctx = context_length || model.context_length || 4096
-    const bytes_per_weight = CLOUD_QUANT_BYTES[ quantization.toLowerCase() ] || 2
-
-    // Model weights — total params (all experts loaded in VRAM)
-    const weight_bytes = model.parameters * bytes_per_weight
-
-    // KV cache (FP16 in vLLM by default)
-    const kv_cache = 2 * ( model.layers || 0 ) * ( model.kv_heads || 0 ) * ( model.head_dim || 0 ) * ctx * 2
-
-    // 20% overhead for activations, CUDA kernels, vLLM page tables
-    return Math.ceil( ( weight_bytes + kv_cache ) * 1.2 )
-
-}
-
-/**
- * Estimate cloud VRAM in GB (convenience wrapper).
- * @param {ModelDefinition} model
- * @param {string} [quantization]
- * @param {number} [context_length]
- * @returns {number} VRAM in GB
- */
-export const estimate_cloud_vram_gb = ( model, quantization, context_length ) =>
-    estimate_cloud_vram( model, quantization, context_length ) / 1024 ** 3
-
-
 // ─── Memory estimation ──────────────────────────────────────────────────────────
 
 // Fixed overhead for llama.cpp runtime (scratch buffers, compute graph, etc.)
@@ -1051,6 +981,76 @@ export const quality_score = ( model ) => {
     return scores.reduce( ( sum, v ) => sum + v, 0 ) / scores.length
 
 }
+
+
+// ─── Cloud model helpers ─────────────────────────────────────────────────────
+
+// Bytes per weight for cloud/vLLM quantization types
+const CLOUD_QUANT_BYTES = { fp16: 2, bf16: 2, fp8: 1, int8: 1, awq: 0.5, gptq: 0.5, int4: 0.5 }
+
+/**
+ * Get all models deployable on cloud GPUs, sorted by quality score descending.
+ * Includes both cloud-only models and dual-use models with `hf_model_repo`.
+ * @returns {ModelDefinition[]}
+ */
+export const get_cloud_models = () =>
+    MODEL_CATALOG
+        .filter( m => m.hf_model_repo )
+        .sort( ( a, b ) => quality_score( b ) - quality_score( a ) )
+
+/**
+ * Find a catalog entry by its base HF repo (hf_model_repo field).
+ * Returns the highest-quality match if multiple entries share the same repo.
+ * @param {string} hf_repo - Base HF repo ID (e.g. 'Qwen/Qwen3-8B')
+ * @returns {ModelDefinition | undefined}
+ */
+export const find_by_hf_repo = ( hf_repo ) => {
+
+    const matches = MODEL_CATALOG.filter( m => m.hf_model_repo === hf_repo )
+    if( matches.length === 0 ) return undefined
+    if( matches.length === 1 ) return matches[ 0 ]
+
+    // Multiple matches (e.g. Q4_K_M + Q5_K_M variants) — pick highest quality
+    return matches.sort( ( a, b ) => quality_score( b ) - quality_score( a ) )[ 0 ]
+
+}
+
+/**
+ * Estimate total GPU VRAM to serve a catalog model with vLLM.
+ *
+ * Uses `model.parameters` (total — correct for MoE since all experts live in VRAM).
+ * Formula: (params × bytes_per_weight + KV_cache) × 1.2 overhead.
+ *
+ * @param {ModelDefinition} model - Catalog model definition
+ * @param {string} [quantization='fp16'] - vLLM quantization method
+ * @param {number} [context_length] - Override context (defaults to model.context_length or 4096)
+ * @returns {number} Estimated VRAM in bytes
+ */
+export const estimate_cloud_vram = ( model, quantization = `fp16`, context_length ) => {
+
+    const ctx = context_length || model.context_length || 4096
+    const bytes_per_weight = CLOUD_QUANT_BYTES[ quantization.toLowerCase() ] || 2
+
+    // Model weights — total params (all experts loaded in VRAM)
+    const weight_bytes = model.parameters * bytes_per_weight
+
+    // KV cache (FP16 in vLLM by default)
+    const kv_cache = 2 * ( model.layers || 0 ) * ( model.kv_heads || 0 ) * ( model.head_dim || 0 ) * ctx * 2
+
+    // 20% overhead for activations, CUDA kernels, vLLM page tables
+    return Math.ceil( ( weight_bytes + kv_cache ) * 1.2 )
+
+}
+
+/**
+ * Estimate cloud VRAM in GB (convenience wrapper).
+ * @param {ModelDefinition} model
+ * @param {string} [quantization]
+ * @param {number} [context_length]
+ * @returns {number} VRAM in GB
+ */
+export const estimate_cloud_vram_gb = ( model, quantization, context_length ) =>
+    estimate_cloud_vram( model, quantization, context_length ) / 1024 ** 3
 
 
 // ─── Selection & filtering ──────────────────────────────────────────────────────
