@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.36.1] - 2026-03-13
+
+### Fixed
+- Remove invalid `cloudType: 'SECURE'` from RunPod endpoint creation — field does not exist in RunPod's API and causes 400 errors (reverts broken v0.35.1 change)
+
 ## [0.36.0] - 2026-03-13
 
 ### Added
@@ -7,10 +12,10 @@
 - `get_endpoint()` and `ensure_endpoint()` in runpod_service for endpoint verification and recovery
 - `update_endpoint_id()` action in runpod_store for persisting recreated endpoint IDs
 
-## [0.35.1] - 2026-03-13
+## [0.35.1] - 2026-03-13 [YANKED]
 
 ### Changed
-- RunPod endpoints now deploy on Secure Cloud by default
+- RunPod endpoints now deploy on Secure Cloud by default — **broken**, `cloudType` is not a valid API field
 
 ## [0.35.0] - 2026-03-13
 
