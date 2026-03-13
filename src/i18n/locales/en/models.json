@@ -4,6 +4,10 @@
     "may_not_fit": "may not fit",
     "add_model": "Add Model",
     "manage_models": "Manage Models",
+    "purge_models": "Purge All Models",
+    "purge_confirm": "Delete all local models and tear down all RunPod endpoints? This cannot be undone.",
+    "purge_success": "All models purged",
+    "purge_error": "Purge failed: {{error}}",
 
     "pick_a_model": "Pick a model",
     "subtitle_two_cards": "We picked two options based on your device. Choose the balance that works for you.",

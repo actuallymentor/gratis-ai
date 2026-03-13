@@ -4,6 +4,10 @@
     "may_not_fit": "może nie zmieścić się",
     "add_model": "Dodaj model",
     "manage_models": "Zarządzaj modelami",
+    "purge_models": "Usuń wszystkie modele",
+    "purge_confirm": "Usunąć wszystkie lokalne modele i zlikwidować wszystkie endpointy RunPod? Tej operacji nie można cofnąć.",
+    "purge_success": "Wszystkie modele usunięte",
+    "purge_error": "Usuwanie nie powiodło się: {{error}}",
 
     "pick_a_model": "Wybierz model",
     "subtitle_two_cards": "Wybraliśmy dwie opcje dopasowane do Twojego urządzenia. Wybierz równowagę, która Ci odpowiada.",

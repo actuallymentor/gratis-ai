@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.38.0] - 2026-03-13
+
+### Added
+- "Purge All Models" button in model selector dropdown — deletes all local models and tears down RunPod endpoints + templates via API
+
 ## [0.37.0] - 2026-03-13
 
 ### Added

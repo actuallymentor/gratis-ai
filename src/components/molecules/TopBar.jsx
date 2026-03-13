@@ -115,6 +115,7 @@ export default function TopBar( {
     active_model_id,
     is_model_switching,
     on_model_switch,
+    on_models_purged,
 } ) {
 
     const navigate = useNavigate()
@@ -144,6 +145,7 @@ export default function TopBar( {
                     is_switching={ is_model_switching }
                     on_switch={ on_model_switch }
                     on_open_settings={ on_settings_open }
+                    on_models_purged={ on_models_purged }
                 />
             </DesktopOnly>
             <ChangeModelButton

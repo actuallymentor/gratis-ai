@@ -52,6 +52,7 @@ export default function AppLayout( {
     children, theme_preference, theme_mode, on_theme_toggle, on_new_chat,
     conversations, on_export, on_delete, on_delete_all,
     cached_models, active_model_id, is_model_switching, on_model_switch,
+    on_models_purged,
 } ) {
 
     const updater = use_auto_updater()
@@ -104,6 +105,7 @@ export default function AppLayout( {
             active_model_id={ active_model_id }
             is_model_switching={ is_model_switching }
             on_model_switch={ on_model_switch }
+            on_models_purged={ on_models_purged }
         />
 
         <UpdateBanner
@@ -134,6 +136,7 @@ export default function AppLayout( {
                 is_model_switching={ is_model_switching }
                 on_model_switch={ on_model_switch }
                 on_settings_open={ () => set_settings_open( true ) }
+                on_models_purged={ on_models_purged }
             />
             <ContentArea>
                 { children }

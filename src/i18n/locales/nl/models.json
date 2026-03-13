@@ -4,6 +4,10 @@
     "may_not_fit": "past mogelijk niet",
     "add_model": "Model toevoegen",
     "manage_models": "Modellen beheren",
+    "purge_models": "Alle modellen wissen",
+    "purge_confirm": "Alle lokale modellen verwijderen en alle RunPod-endpoints afbreken? Dit kan niet ongedaan worden gemaakt.",
+    "purge_success": "Alle modellen gewist",
+    "purge_error": "Wissen mislukt: {{error}}",
 
     "pick_a_model": "Kies een model",
     "subtitle_two_cards": "We hebben twee opties gekozen op basis van je apparaat. Kies de balans die bij je past.",

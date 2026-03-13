@@ -4,6 +4,10 @@
     "may_not_fit": "可能无法装入",
     "add_model": "添加模型",
     "manage_models": "管理模型",
+    "purge_models": "清除所有模型",
+    "purge_confirm": "删除所有本地模型并拆除所有 RunPod 端点？此操作无法撤销。",
+    "purge_success": "所有模型已清除",
+    "purge_error": "清除失败: {{error}}",
 
     "pick_a_model": "选择模型",
     "subtitle_two_cards": "我们根据你的设备选出了两个方案，请选择适合你的平衡点。",

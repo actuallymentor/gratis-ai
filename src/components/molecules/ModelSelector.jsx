@@ -1,10 +1,15 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import styled, { useTheme } from 'styled-components'
-import { ChevronDown, Check, Plus, Settings, LoaderCircle, AlertTriangle, Cloud } from 'lucide-react'
+import { ChevronDown, Check, Plus, Settings, LoaderCircle, AlertTriangle, Cloud, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import toast from 'react-hot-toast'
+import { log } from 'mentie'
 import { format_file_size, can_fit_in_memory } from '../../utils/model_catalog'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
+import use_runpod_store from '../../stores/runpod_store'
+import use_llm_store from '../../stores/llm_store'
+import { delete_endpoint, delete_template } from '../../providers/runpod_service'
 
 const Container = styled.div`
     position: relative;
@@ -92,6 +97,11 @@ const ActionOption = styled( ModelOption )`
     font-size: 0.8rem;
 `
 
+const DangerOption = styled( ActionOption )`
+    color: ${ ( { theme } ) => theme.colors.error };
+    &:hover { background: ${ ( { theme } ) => theme.colors.error }10; }
+`
+
 const NoModelHint = styled.div`
     padding: ${ ( { theme } ) => `${ theme.spacing.sm } ${ theme.spacing.md }` };
     font-size: 0.8rem;
@@ -125,10 +135,11 @@ const CloudTag = styled.span`
  * @param {Function} [props.on_after_select] - Optional callback fired after a model is selected (e.g. to close sidebar)
  * @returns {JSX.Element}
  */
-export default function ModelSelector( { cached_models = [], active_model_id, is_switching, on_switch, on_open_settings, on_after_select } ) {
+export default function ModelSelector( { cached_models = [], active_model_id, is_switching, on_switch, on_open_settings, on_after_select, on_models_purged } ) {
 
     const [ is_open, set_is_open ] = useState( false )
     const [ dropdown_max_height, set_dropdown_max_height ] = useState( undefined )
+    const [ is_purging, set_is_purging ] = useState( false )
     const container_ref = useRef( null )
     const dropdown_ref = useRef( null )
     const navigate = useNavigate()
@@ -203,6 +214,98 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
         if( on_open_settings ) on_open_settings()
     }
 
+    /**
+     * Purge all models — delete local cached models and tear down RunPod
+     * endpoints + templates. Requires confirmation via browser confirm().
+     */
+    const handle_purge = useCallback( async () => {
+
+        if( !confirm( t( `purge_confirm` ) ) ) return
+
+        set_is_purging( true )
+        set_is_open( false )
+
+        try {
+
+            // 1. Unload the active model
+            const llm = use_llm_store.getState()
+            if( llm.loaded_model_id ) {
+                await llm.unload_model()
+            }
+
+            // 2. Tear down all RunPod endpoints + templates
+            const runpod = use_runpod_store.getState()
+            const api_key = runpod.api_key
+
+            if( api_key && runpod.endpoints.length > 0 ) {
+
+                for( const ep of [ ...runpod.endpoints ] ) {
+
+                    try {
+                        await delete_endpoint( api_key, ep.endpoint_id )
+                        log.info( `[purge] Deleted RunPod endpoint ${ ep.endpoint_id }` )
+                    } catch ( err ) {
+                        log.warn( `[purge] Failed to delete endpoint ${ ep.endpoint_id }: ${ err.message }` )
+                    }
+
+                    if( ep.template_id ) {
+                        try {
+                            await delete_template( api_key, ep.template_id )
+                            log.info( `[purge] Deleted RunPod template ${ ep.template_id }` )
+                        } catch ( err ) {
+                            log.warn( `[purge] Failed to delete template ${ ep.template_id }: ${ err.message }` )
+                        }
+                    }
+
+                    runpod.remove_endpoint( ep.endpoint_id )
+
+                }
+
+            }
+
+            // 3. Delete all local cached models
+            const is_electron = !!window.electronAPI?.native_inference
+
+            if( is_electron ) {
+
+                // Electron: delete each model via IPC
+                const all = await window.electronAPI.list_models()
+                for( const m of all ) {
+                    try {
+                        await window.electronAPI.delete_model( m.id )
+                    } catch ( err ) {
+                        log.warn( `[purge] Failed to delete local model ${ m.id }: ${ err.message }` )
+                    }
+                }
+
+            } else {
+
+                // Browser: clear the models IndexedDB store
+                const { get_db } = await import( `../../stores/db.js` )
+                const db = await get_db()
+                await db.clear( `models` )
+
+            }
+
+            // 4. Clear active model from localStorage
+            const { storage_key } = await import( `../../utils/branding.js` )
+            localStorage.removeItem( storage_key( `active_model_id` ) )
+
+            log.info( `[purge] All models purged` )
+            toast.success( t( `purge_success` ) )
+
+            // Notify parent so it can refresh the model list
+            if( on_models_purged ) on_models_purged()
+
+        } catch ( err ) {
+            log.error( `[purge] Error:`, err.message )
+            toast.error( t( `purge_error`, { error: err.message } ) )
+        } finally {
+            set_is_purging( false )
+        }
+
+    }, [ t, on_models_purged ] )
+
     return <Container ref={ container_ref }>
 
         <Trigger
@@ -261,6 +364,18 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                     <Settings size={ 14 } />
                     { t( `manage_models` ) }
                 </ActionOption>
+
+                { cached_models.length > 0 && <>
+                    <Divider />
+                    <DangerOption
+                        data-testid="purge-models-btn"
+                        onClick={ handle_purge }
+                        disabled={ is_purging }
+                    >
+                        { is_purging ? <LoaderCircle size={ 14 } /> : <Trash2 size={ 14 } /> }
+                        { t( `purge_models` ) }
+                    </DangerOption>
+                </> }
 
             </Dropdown> }
 

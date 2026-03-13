@@ -4,6 +4,10 @@
     "may_not_fit": "risque de ne pas tenir",
     "add_model": "Ajouter un modèle",
     "manage_models": "Gérer les modèles",
+    "purge_models": "Purger tous les modèles",
+    "purge_confirm": "Supprimer tous les modèles locaux et démonter tous les endpoints RunPod ? Cette action est irréversible.",
+    "purge_success": "Tous les modèles purgés",
+    "purge_error": "Échec de la purge : {{error}}",
 
     "pick_a_model": "Choisissez un modèle",
     "subtitle_two_cards": "Nous avons sélectionné deux options selon votre appareil. Choisissez l'équilibre qui vous convient.",

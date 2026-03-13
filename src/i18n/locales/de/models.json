@@ -4,6 +4,10 @@
     "may_not_fit": "passt evtl. nicht",
     "add_model": "Modell hinzufügen",
     "manage_models": "Modelle verwalten",
+    "purge_models": "Alle Modelle löschen",
+    "purge_confirm": "Alle lokalen Modelle löschen und alle RunPod-Endpoints entfernen? Dies kann nicht rückgängig gemacht werden.",
+    "purge_success": "Alle Modelle gelöscht",
+    "purge_error": "Löschen fehlgeschlagen: {{error}}",
 
     "pick_a_model": "Wähle ein Modell",
     "subtitle_two_cards": "Wir haben zwei Optionen basierend auf deinem Gerät ausgewählt. Wähle die Balance, die für dich passt.",

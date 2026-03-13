@@ -1,5 +1,14 @@
 # Timeline
 
+## 2026-03-13 — Purge All Models button in model selector (v0.38.0)
+
+- "Purge All Models" button in ModelSelector dropdown (both TopBar desktop + Sidebar mobile)
+- Unloads active model, tears down all RunPod endpoints + templates via API, deletes all local cached models
+- `DangerOption` styled component (red text, red hover tint)
+- `handle_purge` callback with confirm() gate, best-effort endpoint/template deletion, toast feedback
+- Prop threaded: ChatPage → AppLayout → TopBar/Sidebar → ModelSelector via `on_models_purged`
+- 4 new i18n keys in models namespace (`purge_models`, `purge_confirm`, `purge_success`, `purge_error`)
+
 ## 2026-03-13 — Multi-GPU pools + cross-tier GPU fallbacks (v0.37.0)
 
 - Added 4 multi-GPU pools: 2×24 GB, 2×48 GB, 4×24 GB, 2×80 GB with `gpu_count` field on all pools

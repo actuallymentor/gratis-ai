@@ -36,6 +36,8 @@ Cloud GPU inference via RunPod serverless endpoints. Two-step deployment: create
 
 **v0.37.0 — Multi-GPU pools + cross-tier fallbacks**: `GPU_POOLS` expanded with `gpu_count` field on all pools + 4 new multi-GPU pools (2×24, 2×48, 4×24, 2×80). `build_fallback_gpu_ids(pool)` appends higher-VRAM GPUs with same `gpu_count` as fallbacks. `create_template()` accepts `tensor_parallel_size` (sets `TENSOR_PARALLEL_SIZE` env for vLLM). `create_endpoint()` accepts `gpu_count` (passes `gpuCount` to API). `endpoint_name_for_model()` produces multi-GPU names (e.g. `2x24gb`). `fetch_gpu_pricing()` queries per-gpu_count pricing. All callers (`NerdSetupPage`, `ensure_endpoint`) updated to pass gpu_count and use fallback IDs.
 
+**v0.38.0 — Purge all models**: `ModelSelector` has a "Purge All Models" button (red, destructive) in the dropdown. `handle_purge` tears down all RunPod endpoints+templates via API, deletes local models (Electron IPC `models:delete-all` or IndexedDB `model-cache` store), clears active model from localStorage, shows toast feedback. `on_models_purged` callback threaded through `ChatPage → AppLayout → TopBar/Sidebar → ModelSelector` to refresh model lists after purge. Translation keys: `purge_models`, `purge_confirm`, `purge_success`, `purge_error`.
+
 ## Logging
 
 All `console.*` calls in `src/` (except `nodejs_console.js`) have been replaced with mentie's `log` utility. `electron/inference_worker.js` is excluded — it uses CJS and has its own console-forwarding relay.

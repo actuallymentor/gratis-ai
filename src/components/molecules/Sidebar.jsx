@@ -269,6 +269,7 @@ const is_electron = () => !!window.electronAPI?.native_inference
 export default function Sidebar( {
     collapsed, on_toggle, on_new_chat, conversations = [], on_export, on_delete, on_delete_all,
     cached_models, active_model_id, is_model_switching, on_model_switch, on_settings_open,
+    on_models_purged,
 } ) {
 
     const { t } = useTranslation( 'pages' )
@@ -418,6 +419,7 @@ export default function Sidebar( {
                     on_switch={ on_model_switch }
                     on_open_settings={ on_settings_open }
                     on_after_select={ close_on_mobile }
+                    on_models_purged={ on_models_purged }
                 />
             </MobileModelSection>
 

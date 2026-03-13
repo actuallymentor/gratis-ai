@@ -4,6 +4,10 @@
     "may_not_fit": "容量不足の可能性",
     "add_model": "モデルを追加",
     "manage_models": "モデルを管理",
+    "purge_models": "すべてのモデルを削除",
+    "purge_confirm": "すべてのローカルモデルを削除し、すべてのRunPodエンドポイントを解体しますか？この操作は元に戻せません。",
+    "purge_success": "すべてのモデルを削除しました",
+    "purge_error": "削除に失敗しました: {{error}}",
 
     "pick_a_model": "モデルを選ぶ",
     "subtitle_two_cards": "お使いのデバイスに合わせて2つの選択肢を用意しました。バランスの良い方をお選びください。",

@@ -818,6 +818,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
         active_model_id={ loaded_model_id }
         is_model_switching={ is_model_switching }
         on_model_switch={ handle_model_switch }
+        on_models_purged={ refresh_models }
     >
         <Container>
 
