@@ -49,5 +49,7 @@
     "group_small": "Small",
     "group_medium": "Medium",
     "group_large": "Large",
-    "group_xl": "Cloud-only XL"
+    "group_xl": "Cloud-only XL",
+    "group_uncensored": "Uncensored",
+    "uncensored_tag": "uncensored"
 }

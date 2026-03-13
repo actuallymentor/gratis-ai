@@ -743,7 +743,7 @@ describe( `SUGGESTED_MODELS`, () => {
 
     test( `model groups are valid`, () => {
 
-        const valid_groups = new Set( [ `small`, `medium`, `large`, `xl` ] )
+        const valid_groups = new Set( [ `small`, `medium`, `large`, `xl`, `uncensored` ] )
 
         for( const model of SUGGESTED_MODELS ) {
             expect( valid_groups.has( model.group ) ).toBe( true )

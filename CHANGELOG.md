@@ -14,6 +14,15 @@
 - "Waking up the AI" indicator on chat page while RunPod endpoint has no live workers
 - Endpoint health polling — detects when workers are live and hides the warming indicator
 - Probe job always fires on model load to trigger worker spin-up
+## [0.29.0] - 2026-03-13
+
+### Added
+- Uncensored cloud models in suggested models — Dolphin Mistral 24B Venice, Gemma 3 12B Abliterated, Dolphin 2.9.4 Llama 3.1 8B
+- Visual "uncensored" tag badge on uncensored model rows in suggested models modal
+
+### Changed
+- Suggested cloud models sorted large-to-small within each size group
+- Size groups displayed largest-first (XL → Large → Medium → Small → Uncensored)
 
 ## [0.28.0] - 2026-03-13
 
