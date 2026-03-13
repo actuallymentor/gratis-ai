@@ -312,6 +312,7 @@ export default function NerdSetupPage() {
     const [ quantization, set_quantization ] = useState( `fp16` )
     const [ max_model_len, set_max_model_len ] = useState( `` )
     const [ gpu_utilization, set_gpu_utilization ] = useState( 0.95 )
+    const [ max_workers, set_max_workers ] = useState( 5 )
     const [ idle_timeout, set_idle_timeout ] = useState( store.idle_timeout )
     const [ daily_limit, set_daily_limit ] = useState( store.daily_spend_limit )
     const [ system_prompt, set_system_prompt ] = useState(
@@ -440,6 +441,7 @@ export default function NerdSetupPage() {
                 name: `gratisai-${ display_name }`,
                 gpu_ids: gpu_pool.gpu_ids,
                 idle_timeout,
+                max_workers,
             } )
 
             // 3. Save to store
@@ -631,6 +633,23 @@ export default function NerdSetupPage() {
                         />
                         <SliderValue>{ ( gpu_utilization * 100 ).toFixed( 0 ) }%</SliderValue>
                     </SliderRow>
+                </FieldGroup>
+
+                { /* Max workers */ }
+                <FieldGroup>
+                    <Label>{ t( `max_workers_label` ) }</Label>
+                    <SliderRow>
+                        <RangeInput
+                            type="range"
+                            min="1"
+                            max="10"
+                            step="1"
+                            value={ max_workers }
+                            onChange={ ( e ) => set_max_workers( parseInt( e.target.value ) ) }
+                        />
+                        <SliderValue>{ max_workers }</SliderValue>
+                    </SliderRow>
+                    <Hint>{ t( `max_workers_hint` ) }</Hint>
                 </FieldGroup>
 
                 { /* Idle timeout */ }

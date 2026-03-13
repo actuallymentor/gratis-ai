@@ -25,6 +25,8 @@
     "advanced_title": "Advanced",
     "gpu_override_label": "GPU Override",
     "gpu_insufficient_vram": "insufficient VRAM",
+    "max_workers_label": "Max Workers",
+    "max_workers_hint": "Maximum concurrent GPU workers. Higher = more parallel requests, but higher cost.",
     "idle_timeout_label": "Idle Timeout",
     "idle_timeout_value": "{{minutes}} min",
     "system_prompt_label": "System Prompt",

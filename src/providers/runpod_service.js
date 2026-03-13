@@ -179,9 +179,10 @@ export async function create_template( api_key, { model_name, quantization, max_
  * @param {string} opts.name - Human-readable endpoint name
  * @param {string[]} opts.gpu_ids - GPU type names (e.g. `['NVIDIA GeForce RTX 4090', 'NVIDIA L4']`)
  * @param {number} [opts.idle_timeout] - Minutes before scaling to zero (default 5)
+ * @param {number} [opts.max_workers] - Maximum concurrent workers (default 5)
  * @returns {Promise<{ id: string, name: string }>}
  */
-export async function create_endpoint( api_key, { template_id, name, gpu_ids, idle_timeout = 5 } ) {
+export async function create_endpoint( api_key, { template_id, name, gpu_ids, idle_timeout = 5, max_workers = 5 } ) {
 
     const result = await api_fetch( `${ MANAGEMENT_BASE }/endpoints`, api_key, {
         method: `POST`,
@@ -190,7 +191,7 @@ export async function create_endpoint( api_key, { template_id, name, gpu_ids, id
             name,
             gpuTypeIds: gpu_ids,
             workersMin: 0,
-            workersMax: 1,
+            workersMax: max_workers,
             idleTimeout: idle_timeout,
             scalerType: `QUEUE_DELAY`,
             scalerValue: 4,

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.28.0] - 2026-03-13
+
+### Added
+- Max Workers advanced setting in Nerd Mode — configurable 1–10 concurrent GPU workers (default 5)
+
+### Changed
+- RunPod endpoint default max workers raised from 1 to 5 to prevent single-worker init failures
+
 ## [0.27.1] - 2026-03-13
 
 ### Fixed
