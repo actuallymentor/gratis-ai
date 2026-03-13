@@ -235,7 +235,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
 
             // 2. Tear down all RunPod endpoints + templates
             const runpod = use_runpod_store.getState()
-            const api_key = runpod.api_key
+            const { api_key } = runpod
 
             if( api_key && runpod.endpoints.length > 0 ) {
 

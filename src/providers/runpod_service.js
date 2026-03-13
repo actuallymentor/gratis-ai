@@ -18,8 +18,8 @@ const INFERENCE_BASE = `https://api.runpod.ai/v2`
 const GRAPHQL_BASE = `https://api.runpod.io/graphql`
 const HF_API = `https://huggingface.co`
 
-// Official vLLM serverless worker image — pinned to a stable CUDA 12.1 release
-const VLLM_IMAGE = `runpod/worker-v1-vllm:v2.4.0stable-cuda12.1.0`
+// Official vLLM serverless worker image (vLLM 0.16.0, CUDA 12.9.1)
+const VLLM_IMAGE = `runpod/worker-v1-vllm:v2.14.0`
 
 
 // ─── Serverless GPU pools ────────────────────────────────────────────────────
