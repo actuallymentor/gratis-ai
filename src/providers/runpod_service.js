@@ -110,6 +110,51 @@ async function graphql( api_key, query, variables = {} ) {
 }
 
 
+// ─── Endpoint naming ─────────────────────────────────────────────────────────
+
+/**
+ * Deterministic endpoint name for a model — includes org and repo.
+ *
+ * `meta-llama/Llama-3.3-70B-Instruct` → `gratisai-meta-llama-llama-3.3-70b-instruct`
+ *
+ * @param {string} model_name - HuggingFace model ID (e.g. `meta-llama/Llama-3.3-70B-Instruct`)
+ * @returns {string}
+ */
+export function endpoint_name_for_model( model_name ) {
+    return `gratisai-${ model_name.replace( /\//g, `-` ).toLowerCase() }`
+}
+
+
+// ─── Endpoint lookup ─────────────────────────────────────────────────────────
+
+/**
+ * List all serverless endpoints on the account.
+ *
+ * @param {string} api_key
+ * @returns {Promise<Array<{ id: string, name: string, templateId: string }>>}
+ */
+export async function list_endpoints( api_key ) {
+    return api_fetch( `${ MANAGEMENT_BASE }/endpoints`, api_key )
+}
+
+/**
+ * Find an existing endpoint whose name matches the deterministic name
+ * for the given model. Returns the endpoint object or `null`.
+ *
+ * @param {string} api_key
+ * @param {string} model_name - HuggingFace model ID
+ * @returns {Promise<Object | null>}
+ */
+export async function find_existing_endpoint( api_key, model_name ) {
+
+    const target_name = endpoint_name_for_model( model_name )
+    const endpoints = await list_endpoints( api_key )
+
+    return endpoints.find( ep => ep.name === target_name ) || null
+
+}
+
+
 // ─── Template management ─────────────────────────────────────────────────────
 
 /**

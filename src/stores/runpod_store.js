@@ -97,6 +97,13 @@ const use_runpod_store = create( ( set, get ) => ( {
     },
 
     /**
+     * Check if an endpoint is already tracked by its RunPod endpoint ID.
+     * @param {string} endpoint_id
+     * @returns {boolean}
+     */
+    has_endpoint: ( endpoint_id ) => get().endpoints.some( e => e.endpoint_id === endpoint_id ),
+
+    /**
      * Add a newly created endpoint to the store.
      * @param {RunPodEndpoint} endpoint
      */

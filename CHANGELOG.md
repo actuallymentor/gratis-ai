@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.30.0] - 2026-03-13
+
+### Added
+- Deterministic RunPod endpoint naming with full org/repo (`gratisai-meta-llama-llama-3.3-70b-instruct`)
+- Endpoint recycling — reuses existing endpoints instead of creating duplicates on redeploy
+- `list_endpoints` and `find_existing_endpoint` API helpers for endpoint lookup
+- `has_endpoint` store helper to prevent duplicate local store entries
+
 ## [0.29.0] - 2026-03-13
 
 ### Added

@@ -17,6 +17,8 @@ import use_runpod_store from '../../stores/runpod_store'
 import {
     create_template,
     create_endpoint,
+    find_existing_endpoint,
+    endpoint_name_for_model,
     fetch_model_config,
     fetch_gpu_pricing,
     estimate_vram_gb,
@@ -411,7 +413,8 @@ export default function NerdSetupPage() {
 
 
     /**
-     * Deploy: create template + endpoint → save to store → navigate to /chat.
+     * Deploy: recycle an existing endpoint if one matches, otherwise
+     * create template + endpoint → save to store → navigate to /chat.
      */
     const handle_deploy = async () => {
 
@@ -422,48 +425,76 @@ export default function NerdSetupPage() {
 
         try {
 
+            const trimmed_key = api_key.trim()
+            const trimmed_model = model_name.trim()
+
             // Determine which GPU to use
             const gpu_id = gpu_override || suggested_gpu?.pool?.id || GPU_POOLS[ 0 ].id
             const gpu_pool = GPU_POOLS.find( p => p.id === gpu_id ) || GPU_POOLS[ 0 ]
 
-            // 1. Create template with model config
-            const template = await create_template( api_key.trim(), {
-                model_name: model_name.trim(),
-                quantization: quantization !== `fp16` ? quantization : undefined,
-                max_model_len: max_model_len ? parseInt( max_model_len ) : undefined,
-                gpu_memory_utilization: gpu_utilization,
-            } )
+            // 1. Check for an existing endpoint with the same deterministic name
+            const existing = await find_existing_endpoint( trimmed_key, trimmed_model )
 
-            // 2. Create endpoint referencing the template
-            const display_name = model_name.split( `/` ).pop().toLowerCase()
-            const endpoint = await create_endpoint( api_key.trim(), {
-                template_id: template.id,
-                name: `gratisai-${ display_name }`,
-                gpu_ids: gpu_pool.gpu_ids,
-                idle_timeout,
-                max_workers,
-            } )
+            let endpoint_id
+            let template_id = null
 
-            // 3. Save to store
-            store.set_api_key( api_key.trim() )
+            if( existing ) {
+
+                // Recycle — reuse the endpoint as-is (even if GPU/config differs)
+                endpoint_id = existing.id
+
+            } else {
+
+                // 2a. Create template with model config
+                const template = await create_template( trimmed_key, {
+                    model_name: trimmed_model,
+                    quantization: quantization !== `fp16` ? quantization : undefined,
+                    max_model_len: max_model_len ? parseInt( max_model_len ) : undefined,
+                    gpu_memory_utilization: gpu_utilization,
+                } )
+
+                template_id = template.id
+
+                // 2b. Create endpoint with deterministic name
+                const endpoint = await create_endpoint( trimmed_key, {
+                    template_id: template.id,
+                    name: endpoint_name_for_model( trimmed_model ),
+                    gpu_ids: gpu_pool.gpu_ids,
+                    idle_timeout,
+                    max_workers,
+                } )
+
+                endpoint_id = endpoint.id
+
+            }
+
+            // 3. Save settings to store
+            store.set_api_key( trimmed_key )
             store.set_idle_timeout( idle_timeout )
             store.set_daily_spend_limit( daily_limit )
             store.set_system_prompt( system_prompt )
 
-            store.add_endpoint( {
-                id: `runpod-${ endpoint.id }`,
-                endpoint_id: endpoint.id,
-                template_id: template.id,
-                model_name: model_name.trim(),
-                gpu_id,
-                gpu_name: gpu_pool.name,
-                price_per_hr: suggested_gpu?.price_per_hr || 0,
-                name: display_name,
-                created_at: Date.now(),
-            } )
+            // Only add to local store if not already tracked
+            if( !store.has_endpoint( endpoint_id ) ) {
+
+                const display_name = trimmed_model.split( `/` ).pop().toLowerCase()
+
+                store.add_endpoint( {
+                    id: `runpod-${ endpoint_id }`,
+                    endpoint_id,
+                    template_id: template_id || existing?.templateId || null,
+                    model_name: trimmed_model,
+                    gpu_id,
+                    gpu_name: gpu_pool.name,
+                    price_per_hr: suggested_gpu?.price_per_hr || 0,
+                    name: display_name,
+                    created_at: Date.now(),
+                } )
+
+            }
 
             // 4. Set as active model and navigate to chat
-            const model_id = `runpod:${ endpoint.id }`
+            const model_id = `runpod:${ endpoint_id }`
             localStorage.setItem( storage_key( `active_model_id` ), model_id )
             navigate( `/chat` )
 

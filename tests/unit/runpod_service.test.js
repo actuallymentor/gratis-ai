@@ -10,6 +10,7 @@ import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import {
     GPU_POOLS,
     SUGGESTED_MODELS,
+    endpoint_name_for_model,
     fetch_gpu_pricing,
     fetch_model_config,
     estimate_vram_bytes,
@@ -76,6 +77,48 @@ describe( `GPU info`, () => {
                 expect( gpu_id ).toMatch( /NVIDIA/ )
             }
         }
+
+    } )
+
+} )
+
+
+// ─── Endpoint naming ─────────────────────────────────────────────────────────
+
+describe( `endpoint_name_for_model`, () => {
+
+    test( `includes org and model, lowercased, slash replaced with dash`, () => {
+
+        expect( endpoint_name_for_model( `meta-llama/Llama-3.3-70B-Instruct` ) )
+            .toBe( `gratisai-meta-llama-llama-3.3-70b-instruct` )
+
+    } )
+
+    test( `handles single-segment names (no slash)`, () => {
+
+        expect( endpoint_name_for_model( `SomeModel` ) )
+            .toBe( `gratisai-somemodel` )
+
+    } )
+
+    test( `preserves dashes and dots`, () => {
+
+        expect( endpoint_name_for_model( `Qwen/Qwen3-0.6B` ) )
+            .toBe( `gratisai-qwen-qwen3-0.6b` )
+
+    } )
+
+    test( `handles deeply nested paths`, () => {
+
+        expect( endpoint_name_for_model( `org/sub/model` ) )
+            .toBe( `gratisai-org-sub-model` )
+
+    } )
+
+    test( `already-lowercase input is unchanged`, () => {
+
+        expect( endpoint_name_for_model( `deepseek-ai/deepseek-r1` ) )
+            .toBe( `gratisai-deepseek-ai-deepseek-r1` )
 
     } )
 
