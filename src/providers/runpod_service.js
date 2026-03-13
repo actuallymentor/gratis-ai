@@ -104,6 +104,105 @@ export function endpoint_name_for_model( model_name, gpu_vram_gb ) {
 }
 
 
+// ─── Single-endpoint fetch ──────────────────────────────────────────────────
+
+/**
+ * Fetch a single endpoint by ID. Returns the endpoint object on success,
+ * `null` if 404 (deleted/non-existent). Throws on auth or network errors.
+ *
+ * Cannot use `api_fetch` because it throws on all non-OK — we need to
+ * distinguish 404 (deleted) from other failures.
+ *
+ * @param {string} api_key
+ * @param {string} endpoint_id
+ * @returns {Promise<Object | null>}
+ */
+export async function get_endpoint( api_key, endpoint_id ) {
+
+    const res = await fetch( `${ MANAGEMENT_BASE }/endpoints/${ endpoint_id }`, {
+        headers: headers( api_key ),
+    } )
+
+    if( res.status === 404 ) return null
+
+    if( !res.ok ) {
+        const body = await res.text().catch( () => `` )
+        throw new Error( `RunPod API error (${ res.status }): ${ body || res.statusText }` )
+    }
+
+    return res.json()
+
+}
+
+
+// ─── Endpoint auto-recreation ───────────────────────────────────────────────
+
+/**
+ * Verify that an endpoint exists, recreating it if it was deleted.
+ *
+ * Flow:
+ * 1. GET the endpoint — if it exists, return immediately.
+ * 2. If 404 and `gpu_id` is missing, throw a helpful error.
+ * 3. Otherwise, look for an existing endpoint with the deterministic name
+ *    (another tab or prior recreation may have already created one).
+ * 4. If none found, create a new template + endpoint from scratch.
+ *
+ * @param {string} api_key
+ * @param {Object} opts
+ * @param {string} opts.endpoint_id - Stored endpoint ID to verify
+ * @param {string} opts.model_name - HuggingFace model ID
+ * @param {string} [opts.gpu_id] - GPU pool ID (e.g. `24gb`)
+ * @returns {Promise<{ endpoint_id: string, template_id: string | null, changed: boolean }>}
+ */
+export async function ensure_endpoint( api_key, { endpoint_id, model_name, gpu_id } ) {
+
+    // 1. Quick existence check
+    const existing = await get_endpoint( api_key, endpoint_id )
+
+    if( existing ) {
+        return { endpoint_id, template_id: null, changed: false }
+    }
+
+    // 2. Endpoint is gone — need gpu_id to recreate
+    if( !gpu_id ) {
+        throw new Error( `Endpoint deleted, cannot auto-recreate (missing GPU tier). Redeploy from Nerd Setup.` )
+    }
+
+    log.info( `[runpod] Endpoint ${ endpoint_id } not found — attempting recreation for ${ model_name }` )
+
+    const pool = GPU_POOLS.find( p => p.id === gpu_id )
+    if( !pool ) {
+        throw new Error( `Unknown GPU pool "${ gpu_id }". Redeploy from Nerd Setup.` )
+    }
+
+    // 3. Maybe another tab already recreated it under the deterministic name
+    const found = await find_existing_endpoint( api_key, model_name, pool.vram_gb )
+
+    if( found ) {
+        log.info( `[runpod] Found existing endpoint ${ found.id } (${ found.name })` )
+        return { endpoint_id: found.id, template_id: found.templateId, changed: true }
+    }
+
+    // 4. Create from scratch — defaults match NerdSetupPage behaviour
+    const template = await create_template( api_key, {
+        model_name,
+        gpu_memory_utilization: 0.95,
+    } )
+
+    const name = endpoint_name_for_model( model_name, pool.vram_gb )
+
+    const ep = await create_endpoint( api_key, {
+        template_id: template.id,
+        name,
+        gpu_ids: pool.gpu_ids,
+    } )
+
+    log.info( `[runpod] Recreated endpoint ${ ep.id } (${ name })` )
+    return { endpoint_id: ep.id, template_id: template.id, changed: true }
+
+}
+
+
 // ─── Endpoint lookup ─────────────────────────────────────────────────────────
 
 /**

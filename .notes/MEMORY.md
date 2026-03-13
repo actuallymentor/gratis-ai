@@ -32,6 +32,8 @@ Cloud GPU inference via RunPod serverless endpoints. Two-step deployment: create
 
 **v0.34.0 — GPU VRAM in endpoint name**: `endpoint_name_for_model(model, gpu_vram_gb)` now appends `-{vram}gb` suffix (e.g. `gratisai-qwen-qwen3-8b-24gb`). Changing GPU tier creates a new endpoint instead of recycling the old one. `find_existing_endpoint()` also accepts `gpu_vram_gb`. Omitting the param falls back to the legacy name (backward compatible).
 
+**v0.36.0 — Auto-recreate missing endpoints**: `load_model()` in `runpod_provider.js` calls `ensure_endpoint()` before probing — verifies endpoint exists via `get_endpoint()` (404-safe), recreates if deleted using `find_existing_endpoint()` → `create_template()` → `create_endpoint()`. `RunPodProvider` constructor accepts `gpu_id` and `on_endpoint_recreated` callback. `runpod_store.js` has `update_endpoint_id()` action. `llm_store.js` wires the callback to update store + localStorage. Falls back gracefully if `gpu_id` missing (directs user to Nerd Setup).
+
 ## Logging
 
 All `console.*` calls in `src/` (except `nodejs_console.js`) have been replaced with mentie's `log` utility. `electron/inference_worker.js` is excluded — it uses CJS and has its own console-forwarding relay.

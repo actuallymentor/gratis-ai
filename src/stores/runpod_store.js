@@ -114,6 +114,26 @@ const use_runpod_store = create( ( set, get ) => ( {
     },
 
     /**
+     * Update an endpoint's ID after auto-recreation (e.g. the original was
+     * deleted from RunPod's dashboard and a new one was created in its place).
+     *
+     * @param {string} old_endpoint_id
+     * @param {string} new_endpoint_id
+     * @param {string} [template_id] - New template ID (keeps existing if null)
+     */
+    update_endpoint_id: ( old_endpoint_id, new_endpoint_id, template_id ) => {
+        set( state => ( {
+            endpoints: state.endpoints.map( e =>
+                e.endpoint_id === old_endpoint_id
+                    ? { ...e, endpoint_id: new_endpoint_id, id: `runpod-${ new_endpoint_id }`, template_id: template_id || e.template_id }
+                    : e
+            ),
+        } ) )
+        save_to_storage( get() )
+        log.info( `[runpod_store] Updated endpoint ${ old_endpoint_id } → ${ new_endpoint_id }` )
+    },
+
+    /**
      * Remove an endpoint from the store by its RunPod endpoint ID.
      * @param {string} endpoint_id
      */

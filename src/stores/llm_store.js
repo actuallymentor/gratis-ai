@@ -78,7 +78,19 @@ const use_llm_store = create( ( set, get ) => ( {
                 model_name: endpoint?.model_name || ``,
                 daily_limit: runpod_config.daily_spend_limit ?? 2,
                 price_per_hr: endpoint?.price_per_hr ?? 0,
+                gpu_id: endpoint?.gpu_id || ``,
                 on_warming_change: ( warming ) => set( { is_endpoint_warming: warming } ),
+                on_endpoint_recreated: ( new_endpoint_id, new_template_id ) => {
+
+                    // Update the RunPod store entry so localStorage stays in sync
+                    import( `../stores/runpod_store.js` ).then( ( { default: store } ) => {
+                        store.getState().update_endpoint_id( endpoint_id, new_endpoint_id, new_template_id )
+                    } )
+
+                    // Update active model ID to reflect the new endpoint
+                    localStorage.setItem( storage_key( `active_model_id` ), `runpod:${ new_endpoint_id }` )
+
+                },
             } )
 
             set( { _provider: provider, _provider_type: `runpod` } )
@@ -127,8 +139,11 @@ const use_llm_store = create( ( set, get ) => ( {
 
             try {
                 await provider.load_model( model_id, on_progress )
-                set( { loaded_model_id: model_id } )
-                log.info( `[use_llm] Model loaded successfully: ${ model_id }` )
+
+                // Use provider's canonical ID — reflects a potentially recreated endpoint
+                const final_model_id = provider.get_loaded_model() || model_id
+                set( { loaded_model_id: final_model_id } )
+                log.info( `[use_llm] Model loaded successfully: ${ final_model_id }` )
             } catch ( err ) {
                 log.error( `[use_llm] Model load failed:`, err.message )
                 set( { error: err.message } )

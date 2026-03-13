@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.36.0] - 2026-03-13
+
+### Added
+- Auto-recreate missing RunPod endpoints during model load — transparently rebuilds deleted endpoints instead of failing
+- `get_endpoint()` and `ensure_endpoint()` in runpod_service for endpoint verification and recovery
+- `update_endpoint_id()` action in runpod_store for persisting recreated endpoint IDs
+
 ## [0.35.1] - 2026-03-13
 
 ### Changed

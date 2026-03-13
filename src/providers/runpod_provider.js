@@ -7,7 +7,7 @@
  * @module runpod_provider
  */
 import { log } from 'mentie'
-import { submit_job, get_endpoint_health } from './runpod_service'
+import { submit_job, get_endpoint_health, ensure_endpoint } from './runpod_service'
 import { record_spend, is_over_limit, get_daily_spend } from './runpod_spend_tracker'
 
 const INFERENCE_BASE = `https://api.runpod.ai/v2`
@@ -24,16 +24,20 @@ export default class RunPodProvider {
      * @param {string} config.model_name - HuggingFace model name (for the request body)
      * @param {number} [config.daily_limit=2] - Max daily spend in USD
      * @param {number} [config.price_per_hr=0] - GPU cost for spend tracking
+     * @param {string} [config.gpu_id] - GPU pool ID for auto-recreation (e.g. `24gb`)
      * @param {Function} [config.on_warming_change] - Called with (boolean) when warming state changes
+     * @param {Function} [config.on_endpoint_recreated] - Called with (new_endpoint_id, template_id) if endpoint was recreated
      */
-    constructor( { api_key, endpoint_id, model_name, daily_limit = 2, price_per_hr = 0, on_warming_change } ) {
+    constructor( { api_key, endpoint_id, model_name, daily_limit = 2, price_per_hr = 0, gpu_id, on_warming_change, on_endpoint_recreated } ) {
 
         this._api_key = api_key
         this._endpoint_id = endpoint_id
         this._model_name = model_name
         this._daily_limit = daily_limit
         this._price_per_hr = price_per_hr
+        this._gpu_id = gpu_id || ``
         this._on_warming_change = on_warming_change || ( () => {} )
+        this._on_endpoint_recreated = on_endpoint_recreated || null
 
         this._ready = false
         this._warming = false
@@ -53,6 +57,19 @@ export default class RunPodProvider {
      * @param {string} _model_id - Unused (endpoint already knows its model)
      */
     async load_model( _model_id ) {
+
+        // Verify endpoint still exists — recreate if it was deleted externally
+        const result = await ensure_endpoint( this._api_key, {
+            endpoint_id: this._endpoint_id,
+            model_name: this._model_name,
+            gpu_id: this._gpu_id,
+        } )
+
+        if( result.changed ) {
+            log.info( `[runpod] Endpoint recreated: ${ this._endpoint_id } → ${ result.endpoint_id }` )
+            this._endpoint_id = result.endpoint_id
+            this._on_endpoint_recreated?.( result.endpoint_id, result.template_id )
+        }
 
         log.info( `[runpod] Activating endpoint ${ this._endpoint_id } for ${ this._model_name }` )
 
