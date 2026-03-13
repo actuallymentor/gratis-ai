@@ -171,6 +171,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const query_processed_ref = useRef( false )
 
     const { load_model, chat_stream, abort, is_generating, is_endpoint_warming, is_loading: is_model_loading, loaded_model_id } = use_llm()
+    const is_runpod_model = loaded_model_id?.startsWith( `runpod:` ) || false
     const {
         conversations,
         create_conversation,
@@ -766,6 +767,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             messages={ messages }
             is_streaming={ is_generating }
             is_endpoint_warming={ is_endpoint_warming }
+            is_runpod_model={ is_runpod_model }
             on_regenerate={ handle_regenerate }
             on_edit={ handle_edit }
         />

@@ -146,6 +146,19 @@ Required GraphQL fields: `containerDiskInGb: 20`, `dockerArgs: ""`.
 **Fix**: `create_template()` in `runpod_service.js` uses the GraphQL API instead of REST.
 Template deletion and endpoint CRUD still work via REST.
 
+## RunPod endpoint name suffix breaks deduplication (2026-03-13)
+
+RunPod appends ` -fb` (flashboot) to endpoint names. If you create an endpoint named
+`gratisai-org-model`, the API stores it as `gratisai-org-model -fb`. Exact-match lookups
+via `find_existing_endpoint()` will always miss, causing duplicate endpoints on redeploy.
+
+**Fix**: Use `ep.name.startsWith(target_name)` instead of `ep.name === target_name`.
+
+## RunPod idle timeout is in seconds (2026-03-13)
+
+The RunPod API `idleTimeout` field is in **seconds**, not minutes. The UI stores/displays
+minutes — convert with `* 60` at the API boundary in `create_endpoint()`.
+
 ## Cloudflare Pages → Workers Migration (2026-02-24)
 
 Cloudflare deprecated Pages as a separate product in April 2025, merging it into Workers

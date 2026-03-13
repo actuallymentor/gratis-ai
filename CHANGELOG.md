@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.32.3] - 2026-03-13
+
+### Fixed
+- Cold-start hint now shows during RunPod TTFT gap — gate on model type instead of warming state
+
 ## [0.32.2] - 2026-03-13
 
 ### Changed
