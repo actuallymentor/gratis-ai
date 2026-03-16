@@ -213,25 +213,30 @@ const use_llm_store = create( ( set, get ) => ( {
 
         } catch ( err ) {
 
-            if( err.name !== `AbortError` && !err.message?.includes( `abort` ) ) {
-                log.error( `[use_llm] Generation error:`, err.message )
-                set( { error: err.message } )
+            if( err.name === `AbortError` || err.message?.includes( `abort` ) ) {
+
+                // User-initiated abort — return partial result silently
+                const elapsed_ms = performance.now() - start_time
+                const ttft_ms = first_token_time ? first_token_time - start_time : 0
+                const decode_ms = elapsed_ms - ttft_ms
+
+                return {
+                    text: full_text,
+                    stats: {
+                        tokens_generated: token_count,
+                        tokens_per_second: decode_ms > 0 ? token_count / ( decode_ms / 1000 ) : 0,
+                        elapsed_ms,
+                        ttft_ms,
+                        decode_ms,
+                    },
+                }
+
             }
 
-            const elapsed_ms = performance.now() - start_time
-            const ttft_ms = first_token_time ? first_token_time - start_time : 0
-            const decode_ms = elapsed_ms - ttft_ms
-
-            return {
-                text: full_text,
-                stats: {
-                    tokens_generated: token_count,
-                    tokens_per_second: decode_ms > 0 ? token_count / ( decode_ms / 1000 ) : 0,
-                    elapsed_ms,
-                    ttft_ms,
-                    decode_ms,
-                },
-            }
+            // Real error — log, set state, and re-throw so callers can display it
+            log.error( `[use_llm] Generation error:`, err.message )
+            set( { error: err.message } )
+            throw err
 
         } finally {
             set( { is_generating: false } )

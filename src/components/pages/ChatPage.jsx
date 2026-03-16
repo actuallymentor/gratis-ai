@@ -542,14 +542,20 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
         } catch ( err ) {
             if( err.name !== `AbortError` ) {
+
+                // Show error inline as an assistant message so the user sees it in context
+                const error_content = `**Error:** ${ err.message }`
+
                 set_messages( prev => {
                     const updated = [ ...prev ]
                     updated[ updated.length - 1 ] = {
                         ...updated[ updated.length - 1 ],
-                        content: `Error: ${ err.message }`,
+                        content: error_content,
+                        is_error: true,
                     }
                     return updated
                 } )
+
             }
         }
 

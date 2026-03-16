@@ -59,7 +59,7 @@ export default class OpenRouterProvider {
 
         if( !res.ok ) {
             const text = await res.text().catch( () => `` )
-            throw new Error( `OpenRouter inference error (${ res.status }): ${ text }` )
+            throw new Error( _format_api_error( res.status, text ) )
         }
 
         const data = await res.json()
@@ -89,7 +89,7 @@ export default class OpenRouterProvider {
 
         if( !res.ok ) {
             const text = await res.text().catch( () => `` )
-            throw new Error( `OpenRouter inference error (${ res.status }): ${ text }` )
+            throw new Error( _format_api_error( res.status, text ) )
         }
 
         // Parse SSE stream
@@ -198,5 +198,28 @@ export default class OpenRouterProvider {
         return body
 
     }
+
+}
+
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Extract a human-readable error message from an OpenRouter API error response.
+ * Falls back to the raw status + body if parsing fails.
+ *
+ * @param {number} status - HTTP status code
+ * @param {string} body - Raw response body (may be JSON)
+ * @returns {string}
+ */
+function _format_api_error( status, body ) {
+
+    try {
+        const parsed = JSON.parse( body )
+        const msg = parsed?.error?.metadata?.raw || parsed?.error?.message || parsed?.error
+        if( msg ) return `${ msg }`
+    } catch { /* not JSON — use raw body */ }
+
+    return `OpenRouter error (${ status }): ${ body || `Unknown error` }`
 
 }
