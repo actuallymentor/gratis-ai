@@ -1,5 +1,5 @@
 /**
- * Modal for browsing suggested HuggingFace models for RunPod deployment.
+ * Modal for browsing suggested OpenRouter cloud models.
  *
  * Flat list sorted by quality score, with the same visual language
  * as the alternatives list in ModelSelectPage.
@@ -132,13 +132,13 @@ const CheckIcon = styled.div`
 
 
 /**
- * Modal listing suggested HuggingFace models for cloud GPU deployment.
+ * Modal listing suggested models for OpenRouter cloud inference.
  *
  * @param {Object} props
  * @param {boolean} props.is_open
  * @param {Function} props.on_close
- * @param {Function} props.on_select - Called with hf_repo string
- * @param {string} [props.current_model] - Currently selected hf_repo (for active state)
+ * @param {Function} props.on_select - Called with openrouter_id string
+ * @param {string} [props.current_model] - Currently selected openrouter_id (for active state)
  */
 export default function SuggestedModelsModal( { is_open, on_close, on_select, current_model } ) {
 
@@ -167,8 +167,8 @@ export default function SuggestedModelsModal( { is_open, on_close, on_select, cu
         if( e.target === e.currentTarget ) on_close()
     }
 
-    const handle_select = ( hf_repo ) => {
-        on_select( hf_repo )
+    const handle_select = ( openrouter_id ) => {
+        on_select( openrouter_id )
         on_close()
     }
 
@@ -185,14 +185,14 @@ export default function SuggestedModelsModal( { is_open, on_close, on_select, cu
             <Body>
                 { get_cloud_models().map( ( model ) => {
 
-                    const is_active = current_model === model.hf_model_repo
+                    const is_active = current_model === model.openrouter_id
                     const score = Math.round( quality_score( model ) )
 
                     return <ModelRow
-                        key={ model.hf_model_repo }
+                        key={ model.openrouter_id }
                         $active={ is_active }
-                        onClick={ () => handle_select( model.hf_model_repo ) }
-                        data-testid={ `suggested-model-${ model.hf_model_repo }` }
+                        onClick={ () => handle_select( model.openrouter_id ) }
+                        data-testid={ `suggested-model-${ model.openrouter_id }` }
                     >
                         <ModelInfo>
                             <ModelName>

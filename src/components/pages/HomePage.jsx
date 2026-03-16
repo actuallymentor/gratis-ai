@@ -201,7 +201,7 @@ export default function HomePage() {
     const active_id = localStorage.getItem( storage_key( `active_model_id` ) )
     const active_model = cached_models.find( ( m ) => m.id === active_id )
     const model_name = active_model?.name || active_id || `Unknown`
-    const is_cloud = active_model?.source === 'runpod'
+    const is_cloud = active_model?.source === 'openrouter'
 
     // ── Preload model on mount ──────────────────────────────────────
 

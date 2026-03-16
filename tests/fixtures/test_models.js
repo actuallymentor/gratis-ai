@@ -71,11 +71,11 @@ export const MODELS = {
         tier: `heavy`,
     },
 
-    // RunPod cloud model — tiny model for fast cold starts in E2E tests
-    runpod_smollm2: {
-        id: `runpod-smollm2-135m`,
-        name: `SmolLM2 135M Instruct`,
-        hf_repo: `HuggingFaceTB/SmolLM2-135M-Instruct`,
+    // OpenRouter cloud model — free model for zero-cost E2E tests
+    openrouter_dolphin: {
+        id: `openrouter-dolphin-mistral-24b`,
+        name: `Dolphin Mistral 24B Venice`,
+        openrouter_id: `cognitivecomputations/dolphin-mistral-24b-venice-edition:free`,
         tier: `cloud`,
     },
 

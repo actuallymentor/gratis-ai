@@ -7,9 +7,8 @@ import toast from 'react-hot-toast'
 import { log } from 'mentie'
 import { format_file_size, can_fit_in_memory } from '../../utils/model_catalog'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
-import use_runpod_store from '../../stores/runpod_store'
+import use_openrouter_store from '../../stores/openrouter_store'
 import use_llm_store from '../../stores/llm_store'
-import { delete_endpoint, delete_template } from '../../providers/runpod_service'
 
 const Container = styled.div`
     position: relative;
@@ -215,8 +214,8 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
     }
 
     /**
-     * Purge all models — delete local cached models and tear down RunPod
-     * endpoints + templates. Requires confirmation via browser confirm().
+     * Purge all models — delete local cached models and clear OpenRouter
+     * cloud model entries. Requires confirmation via browser confirm().
      */
     const handle_purge = useCallback( async () => {
 
@@ -233,34 +232,14 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                 await llm.unload_model()
             }
 
-            // 2. Tear down all RunPod endpoints + templates
-            const runpod = use_runpod_store.getState()
-            const { api_key } = runpod
+            // 2. Clear OpenRouter cloud model entries from the store
+            const openrouter = use_openrouter_store.getState()
 
-            if( api_key && runpod.endpoints.length > 0 ) {
-
-                for( const ep of [ ...runpod.endpoints ] ) {
-
-                    try {
-                        await delete_endpoint( api_key, ep.endpoint_id )
-                        log.info( `[purge] Deleted RunPod endpoint ${ ep.endpoint_id }` )
-                    } catch ( err ) {
-                        log.warn( `[purge] Failed to delete endpoint ${ ep.endpoint_id }: ${ err.message }` )
-                    }
-
-                    if( ep.template_id ) {
-                        try {
-                            await delete_template( api_key, ep.template_id )
-                            log.info( `[purge] Deleted RunPod template ${ ep.template_id }` )
-                        } catch ( err ) {
-                            log.warn( `[purge] Failed to delete template ${ ep.template_id }: ${ err.message }` )
-                        }
-                    }
-
-                    runpod.remove_endpoint( ep.endpoint_id )
-
+            if( openrouter.models.length > 0 ) {
+                for( const m of [ ...openrouter.models ] ) {
+                    openrouter.remove_model( m.openrouter_id )
                 }
-
+                log.info( `[purge] Cleared OpenRouter cloud models` )
             }
 
             // 3. Delete all local cached models
@@ -326,7 +305,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                     </NoModelHint>
                     :
                     cached_models.map( ( model ) => {
-                        const is_cloud = model.source === `runpod`
+                        const is_cloud = model.source === `openrouter`
                         const too_large = !is_cloud && !can_fit_in_memory( model, max_model_bytes )
                         return <ModelOption
                             key={ model.id }
@@ -344,7 +323,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                                 </ModelLabel>
                                 <ModelMeta>
                                     { is_cloud
-                                        ? model.price_per_hr != null ? `≈ $${ model.price_per_hr.toFixed( 2 ) }/hr` : `RunPod`
+                                        ? `OpenRouter`
                                         : format_file_size( model.file_size_bytes ) }
                                     { too_large ? ` — ${ t( `may_not_fit` ) }` : `` }
                                 </ModelMeta>

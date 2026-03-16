@@ -5,7 +5,7 @@
     "add_model": "Model toevoegen",
     "manage_models": "Modellen beheren",
     "purge_models": "Alle modellen wissen",
-    "purge_confirm": "Alle lokale modellen verwijderen en alle RunPod-endpoints afbreken? Dit kan niet ongedaan worden gemaakt.",
+    "purge_confirm": "Alle lokale modellen verwijderen en alle cloudmodelconfiguraties verwijderen? Dit kan niet ongedaan worden gemaakt.",
     "purge_success": "Alle modellen gewist",
     "purge_error": "Wissen mislukt: {{error}}",
 

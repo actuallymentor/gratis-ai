@@ -5,7 +5,7 @@
     "add_model": "Aggiungi modello",
     "manage_models": "Gestisci modelli",
     "purge_models": "Elimina tutti i modelli",
-    "purge_confirm": "Eliminare tutti i modelli locali e smantellare tutti gli endpoint RunPod? Questa azione non può essere annullata.",
+    "purge_confirm": "Eliminare tutti i modelli locali e tutte le configurazioni dei modelli cloud? Questa azione non può essere annullata.",
     "purge_success": "Tutti i modelli eliminati",
     "purge_error": "Eliminazione fallita: {{error}}",
 

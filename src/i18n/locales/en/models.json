@@ -5,7 +5,7 @@
     "add_model": "Add Model",
     "manage_models": "Manage Models",
     "purge_models": "Purge All Models",
-    "purge_confirm": "Delete all local models and tear down all RunPod endpoints? This cannot be undone.",
+    "purge_confirm": "Delete all local models and cloud model configurations? This cannot be undone.",
     "purge_success": "All models purged",
     "purge_error": "Purge failed: {{error}}",
 
@@ -35,7 +35,7 @@
     "low_memory_warning": "Only {{free}} of memory free — this model needs about {{needed}}. Try closing other apps or picking a smaller model to avoid slowdowns and potential crashes.",
 
     "nerd_option": "Cloud GPU",
-    "nerd_option_subtitle": "Run any model on RunPod cloud GPUs — pay per second",
+    "nerd_option_subtitle": "OpenRouter — free and paid models",
     "nerd_continue": "Continue",
 
     "downloading_your_model": "Downloading your model",

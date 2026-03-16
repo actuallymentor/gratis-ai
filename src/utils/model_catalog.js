@@ -44,6 +44,7 @@
  * @property {boolean} [uncensored] - Whether this model has had refusal behavior removed
  * @property {boolean} [vision] - Whether this model supports image/vision input (requires mmproj)
  * @property {string} [hf_model_repo] - Base HF repo for cloud/vLLM inference (e.g. 'Qwen/Qwen3-8B') — distinct from hugging_face_repo which points to GGUF distribution
+ * @property {string} [openrouter_id] - OpenRouter model ID for cloud inference (e.g. 'qwen/qwen3-8b')
  * @property {boolean} [cloud_only] - True for models with no GGUF — excluded from local selection
  * @property {boolean} [moe] - True for Mixture-of-Experts architectures
  * @property {number} [active_parameters] - Active params per forward pass (MoE only)
@@ -253,6 +254,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `Qwen/Qwen3-4B-GGUF`,
         file_name: `Qwen3-4B-Q4_K_M.gguf`,
         hf_model_repo: `Qwen/Qwen3-4B`,
+        openrouter_id: `qwen/qwen3-4b:free`,
         reasoning: true,
         benchmarks: { mmlu: 73.0, gpqa: 36.9, humaneval: 63.5, math: 54.1, gsm8k: 87.8 },
         license: `Apache-2.0`,
@@ -278,6 +280,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `Qwen/Qwen3-8B-GGUF`,
         file_name: `Qwen3-8B-Q4_K_M.gguf`,
         hf_model_repo: `Qwen/Qwen3-8B`,
+        openrouter_id: `qwen/qwen3-8b`,
         reasoning: true,
         benchmarks: { mmlu: 76.9, gpqa: 44.4, humaneval: 67.7, math: 60.8, gsm8k: 89.8 },
         license: `Apache-2.0`,
@@ -303,6 +306,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Qwen3-14B-GGUF`,
         file_name: `Qwen3-14B-Q4_K_M.gguf`,
         hf_model_repo: `Qwen/Qwen3-14B`,
+        openrouter_id: `qwen/qwen3-14b`,
         reasoning: true,
         benchmarks: { mmlu: 81.1, gpqa: 39.9, humaneval: 72.2, math: 62.0, gsm8k: 92.5 },
         license: `Apache-2.0`,
@@ -328,6 +332,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Qwen3-32B-GGUF`,
         file_name: `Qwen3-32B-Q4_K_M.gguf`,
         hf_model_repo: `Qwen/Qwen3-32B`,
+        openrouter_id: `qwen/qwen3-32b`,
         reasoning: true,
         benchmarks: { mmlu: 83.6, gpqa: 49.5, humaneval: 72.1, math: 61.6, gsm8k: 93.4 },
         license: `Apache-2.0`,
@@ -353,6 +358,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `unsloth/Llama-3.3-70B-Instruct-GGUF`,
         file_name: `Llama-3.3-70B-Instruct-Q4_K_M.gguf`,
         hf_model_repo: `meta-llama/Llama-3.3-70B-Instruct`,
+        openrouter_id: `meta-llama/llama-3.3-70b-instruct`,
         reasoning: false,
         benchmarks: { mmlu: 86.0, gpqa: 50.5, humaneval: 88.4, math: 77.0, gsm8k: null },
         license: `Llama`,
@@ -607,6 +613,7 @@ export const MODEL_CATALOG = [
         hugging_face_repo: `bartowski/cognitivecomputations_Dolphin-Mistral-24B-Venice-Edition-GGUF`,
         file_name: `cognitivecomputations_Dolphin-Mistral-24B-Venice-Edition-Q4_K_M.gguf`,
         hf_model_repo: `cognitivecomputations/Dolphin-Mistral-24B-Venice-Edition`,
+        openrouter_id: `cognitivecomputations/dolphin-mistral-24b-venice-edition:free`,
         reasoning: false,
         benchmarks: { mmlu: 81, gpqa: null, humaneval: null, math: null, gsm8k: null },
         license: `Apache-2.0`,
@@ -759,7 +766,7 @@ export const MODEL_CATALOG = [
 
 
     // ── Cloud-only models ──────────────────────────────────────────────
-    // Large or non-GGUF models available only via cloud GPU (RunPod vLLM).
+    // Large or non-GGUF models available only via cloud inference (OpenRouter).
     // No hugging_face_repo / file_name / quantization / bpw — these have
     // no GGUF distribution. file_size_bytes: 0 ensures they never pass
     // local memory fitness checks.
@@ -777,6 +784,7 @@ export const MODEL_CATALOG = [
         kv_heads: 128,
         head_dim: 128,
         hf_model_repo: `deepseek-ai/DeepSeek-R1`,
+        openrouter_id: `deepseek/deepseek-r1`,
         cloud_only: true,
         moe: true,
         active_parameters: 37_000_000_000,
@@ -800,6 +808,7 @@ export const MODEL_CATALOG = [
         kv_heads: 4,
         head_dim: 128,
         hf_model_repo: `Qwen/Qwen3-235B-A22B`,
+        openrouter_id: `qwen/qwen3-235b-a22b`,
         cloud_only: true,
         moe: true,
         active_parameters: 22_000_000_000,
@@ -823,6 +832,7 @@ export const MODEL_CATALOG = [
         kv_heads: 8,
         head_dim: 128,
         hf_model_repo: `mistralai/Mistral-Small-24B-Instruct-2501`,
+        openrouter_id: `mistralai/mistral-small-24b-instruct-2501`,
         cloud_only: true,
         reasoning: false,
         benchmarks: { mmlu: 81.0, gpqa: null, humaneval: 88.4, math: null, gsm8k: null },
@@ -842,6 +852,7 @@ export const MODEL_CATALOG = [
         kv_heads: 8,
         head_dim: 128,
         hf_model_repo: `meta-llama/Llama-4-Scout-17B-16E-Instruct`,
+        openrouter_id: `meta-llama/llama-4-scout`,
         cloud_only: true,
         moe: true,
         active_parameters: 17_000_000_000,
@@ -865,6 +876,7 @@ export const MODEL_CATALOG = [
         kv_heads: 8,
         head_dim: 128,
         hf_model_repo: `meta-llama/Llama-3.2-3B-Instruct`,
+        openrouter_id: `meta-llama/llama-3.2-3b-instruct:free`,
         cloud_only: true,
         reasoning: false,
         benchmarks: { mmlu: 63.4, gpqa: 32.8, humaneval: null, math: 48.0, gsm8k: null },
@@ -985,18 +997,32 @@ export const quality_score = ( model ) => {
 
 // ─── Cloud model helpers ─────────────────────────────────────────────────────
 
-// Bytes per weight for cloud/vLLM quantization types
-const CLOUD_QUANT_BYTES = { fp16: 2, bf16: 2, fp8: 1, int8: 1, awq: 0.5, gptq: 0.5, int4: 0.5 }
-
 /**
- * Get all models deployable on cloud GPUs, sorted by quality score descending.
- * Includes both cloud-only models and dual-use models with `hf_model_repo`.
+ * Get all models available on OpenRouter, sorted by quality score descending.
+ * Includes both cloud-only models and dual-use models with `openrouter_id`.
  * @returns {ModelDefinition[]}
  */
 export const get_cloud_models = () =>
     MODEL_CATALOG
-        .filter( m => m.hf_model_repo )
+        .filter( m => m.openrouter_id )
         .sort( ( a, b ) => quality_score( b ) - quality_score( a ) )
+
+/**
+ * Find a catalog entry by its OpenRouter model ID.
+ * Returns the highest-quality match if multiple entries share the same ID.
+ * @param {string} openrouter_id - OpenRouter model ID (e.g. 'qwen/qwen3-8b')
+ * @returns {ModelDefinition | undefined}
+ */
+export const find_by_openrouter_id = ( openrouter_id ) => {
+
+    const matches = MODEL_CATALOG.filter( m => m.openrouter_id === openrouter_id )
+    if( matches.length === 0 ) return undefined
+    if( matches.length === 1 ) return matches[ 0 ]
+
+    // Multiple matches — pick highest quality
+    return matches.sort( ( a, b ) => quality_score( b ) - quality_score( a ) )[ 0 ]
+
+}
 
 /**
  * Find a catalog entry by its base HF repo (hf_model_repo field).
@@ -1014,43 +1040,6 @@ export const find_by_hf_repo = ( hf_repo ) => {
     return matches.sort( ( a, b ) => quality_score( b ) - quality_score( a ) )[ 0 ]
 
 }
-
-/**
- * Estimate total GPU VRAM to serve a catalog model with vLLM.
- *
- * Uses `model.parameters` (total — correct for MoE since all experts live in VRAM).
- * Formula: (params × bytes_per_weight + KV_cache) × 1.2 overhead.
- *
- * @param {ModelDefinition} model - Catalog model definition
- * @param {string} [quantization='fp16'] - vLLM quantization method
- * @param {number} [context_length] - Override context (defaults to model.context_length or 4096)
- * @returns {number} Estimated VRAM in bytes
- */
-export const estimate_cloud_vram = ( model, quantization = `fp16`, context_length ) => {
-
-    const ctx = context_length || model.context_length || 4096
-    const bytes_per_weight = CLOUD_QUANT_BYTES[ quantization.toLowerCase() ] || 2
-
-    // Model weights — total params (all experts loaded in VRAM)
-    const weight_bytes = model.parameters * bytes_per_weight
-
-    // KV cache (FP16 in vLLM by default)
-    const kv_cache = 2 * ( model.layers || 0 ) * ( model.kv_heads || 0 ) * ( model.head_dim || 0 ) * ctx * 2
-
-    // 20% overhead for activations, CUDA kernels, vLLM page tables
-    return Math.ceil( ( weight_bytes + kv_cache ) * 1.2 )
-
-}
-
-/**
- * Estimate cloud VRAM in GB (convenience wrapper).
- * @param {ModelDefinition} model
- * @param {string} [quantization]
- * @param {number} [context_length]
- * @returns {number} VRAM in GB
- */
-export const estimate_cloud_vram_gb = ( model, quantization, context_length ) =>
-    estimate_cloud_vram( model, quantization, context_length ) / 1024 ** 3
 
 
 // ─── Selection & filtering ──────────────────────────────────────────────────────

@@ -21,12 +21,12 @@ const ListContainer = styled.div`
  * @param {Array} props.messages - Array of message objects
  * @param {boolean} props.is_streaming - Whether currently streaming
  * @param {boolean} props.is_endpoint_warming - Whether the cloud endpoint is still spinning up
- * @param {boolean} props.is_runpod_model - Whether the active model is a RunPod cloud model
+ * @param {boolean} props.is_cloud_model - Whether the active model is a cloud model
  * @param {Function} props.on_regenerate - Regenerate last response
  * @param {Function} props.on_edit - Edit and resend a message
  * @returns {JSX.Element}
  */
-export default function MessageList( { messages, is_streaming, is_endpoint_warming, is_runpod_model, on_regenerate, on_edit } ) {
+export default function MessageList( { messages, is_streaming, is_endpoint_warming, is_cloud_model, on_regenerate, on_edit } ) {
 
     const list_ref = useRef( null )
 
@@ -52,7 +52,7 @@ export default function MessageList( { messages, is_streaming, is_endpoint_warmi
                 message={ message }
                 is_streaming={ is_streaming && index === messages.length - 1 && message.role === `assistant` }
                 is_endpoint_warming={ is_endpoint_warming }
-                is_runpod_model={ is_runpod_model }
+                is_cloud_model={ is_cloud_model }
                 is_last_assistant={ index === last_assistant_index }
                 on_regenerate={ on_regenerate }
                 on_edit={ ( new_text ) => on_edit( index, new_text ) }

@@ -307,7 +307,7 @@ const MessageBubble = memo( ( {
     message,
     is_streaming,
     is_endpoint_warming,
-    is_runpod_model,
+    is_cloud_model,
     is_last_assistant,
     on_regenerate,
     on_edit,
@@ -438,7 +438,7 @@ const MessageBubble = memo( ( {
 
                 { /* Streaming indicator — waking up before first token, cursor after */ }
                 { is_streaming && !is_thinking && (
-                    response ? <StreamingIndicator /> : <WakingUpIndicator show_hint={ is_runpod_model } />
+                    response ? <StreamingIndicator /> : <WakingUpIndicator show_hint={ is_cloud_model } />
                 ) }
 
             </Bubble> }

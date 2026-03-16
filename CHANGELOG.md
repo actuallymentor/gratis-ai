@@ -1,9 +1,35 @@
 # Changelog
 
+## [0.39.0] - 2026-03-16
+
+### Added
+- OpenRouter cloud inference — replace RunPod with OpenAI-compatible proxy supporting hundreds of free and paid models
+- `openrouter_service.js` — thin API client for `/models`, `/auth/key`, `/chat/completions`
+- `openrouter_provider.js` — LLMProvider with SSE streaming, no endpoint/GPU management
+- `openrouter_store.js` — Zustand store for API key, model list, credit limit, system prompt
+- Nerd Mode now works in browser (OpenRouter supports CORS) — remove Electron-only restriction
+- OpenRouter model IDs in catalog for 12 models (Qwen3, Llama 3.3, DeepSeek R1, Dolphin, etc.)
+- Unit tests for OpenRouter service (`openrouter_service.test.js`)
+
+### Changed
+- Rewrite NerdSetupPage from 797 → 250 lines — simple API key + model ID + connect flow
+- `llm_store.js` — `openrouter:` prefix replaces `runpod:`, lazy-loads OpenRouter provider
+- `use_model_manager.js` — cloud models sourced from OpenRouter config instead of RunPod
+- Model selector purge no longer tears down cloud endpoints — just clears store entries
+- E2E nerd_mode tests use `VITE_OPENROUTER_DEV_KEY` with free Dolphin model
+- `is_runpod_model` prop renamed to `is_cloud_model` across MessageList and MessageBubble
+
+### Removed
+- `runpod_service.js` (776 lines), `runpod_provider.js` (334 lines), `runpod_spend_tracker.js` (67 lines)
+- `runpod_store.js` (164 lines)
+- `runpod_service.test.js` (1140 lines), `ensure_endpoint.test.js` (219 lines)
+- All RunPod-specific i18n keys (GPU, VRAM, quantization, workers, idle timeout, deploy)
+- Cloud VRAM estimation helpers (`estimate_cloud_vram`, `CLOUD_QUANT_BYTES`)
+
 ## [0.38.0] - 2026-03-13
 
 ### Added
-- "Purge All Models" button in model selector dropdown — deletes all local models and tears down RunPod endpoints + templates via API
+- "Purge All Models" button in model selector dropdown — deletes all local models and cloud model configurations
 
 ## [0.37.0] - 2026-03-13
 

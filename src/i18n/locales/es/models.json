@@ -5,7 +5,7 @@
     "add_model": "Añadir modelo",
     "manage_models": "Gestionar modelos",
     "purge_models": "Purgar todos los modelos",
-    "purge_confirm": "¿Eliminar todos los modelos locales y desmontar todos los endpoints de RunPod? Esta acción no se puede deshacer.",
+    "purge_confirm": "¿Eliminar todos los modelos locales y todas las configuraciones de modelos en la nube? Esta acción no se puede deshacer.",
     "purge_success": "Todos los modelos purgados",
     "purge_error": "Error al purgar: {{error}}",
 

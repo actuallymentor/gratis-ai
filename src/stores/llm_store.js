@@ -24,7 +24,7 @@ const use_llm_store = create( ( set, get ) => ( {
     // ── Internal (not consumed by UI) ────────────────────────────────
 
     _provider: null,
-    _provider_type: null,     // 'local' | 'runpod'
+    _provider_type: null,     // 'local' | 'openrouter'
     _provider_promise: null,
     _load_promise: null,
     _loading_model_id: null,
@@ -35,65 +35,54 @@ const use_llm_store = create( ( set, get ) => ( {
      * Ensure the provider is initialised (handles async creation).
      * Uses a shared promise so all concurrent callers get the same instance.
      *
-     * If the active model starts with 'runpod:', creates a RunPodProvider.
+     * If the active model starts with 'openrouter:', creates an OpenRouterProvider.
      * Otherwise, creates the standard local provider (WASM or Electron IPC).
      */
     ensure_provider: async ( model_id ) => {
 
         const state = get()
         const target_id = model_id || localStorage.getItem( storage_key( `active_model_id` ) ) || ``
-        const needs_runpod = target_id.startsWith( `runpod:` )
+        const needs_cloud = target_id.startsWith( `openrouter:` )
         const current_type = state._provider_type
 
+        // Gracefully handle stale `runpod:` prefix from previous versions
+        if( target_id.startsWith( `runpod:` ) ) {
+            log.warn( `[use_llm] Stale runpod: prefix — clearing active model` )
+            localStorage.removeItem( storage_key( `active_model_id` ) )
+            return null
+        }
+
         // If we have a provider of the correct type, reuse it
-        if( state._provider && ( needs_runpod ? current_type === `runpod` : current_type === `local` ) ) {
+        if( state._provider && ( needs_cloud ? current_type === `openrouter` : current_type === `local` ) ) {
             return state._provider
         }
 
         // Provider type changed — dispose old one if it exists
         if( state._provider ) {
-            log.info( `[use_llm] Switching provider type: ${ current_type } → ${ needs_runpod ? `runpod` : `local` }` )
+            log.info( `[use_llm] Switching provider type: ${ current_type } → ${ needs_cloud ? `openrouter` : `local` }` )
             try {
                 await state._provider.unload_model()
             } catch { /* best effort */ }
             set( { _provider: null, _provider_promise: null, loaded_model_id: null, is_endpoint_warming: false } )
         }
 
-        if( needs_runpod ) {
+        if( needs_cloud ) {
 
-            // Lazy import to keep the RunPod provider out of the main bundle
-            // when it's not used
-            const { default: RunPodProvider } = await import( `../providers/runpod_provider.js` )
+            // Lazy import to keep the OpenRouter provider out of the main bundle
+            const { default: OpenRouterProvider } = await import( `../providers/openrouter_provider.js` )
 
-            const endpoint_id = target_id.replace( `runpod:`, `` )
+            const openrouter_model_id = target_id.replace( `openrouter:`, `` )
 
-            // Read config from the RunPod store
-            const runpod_config_raw = localStorage.getItem( storage_key( `runpod_config` ) )
-            const runpod_config = runpod_config_raw ? JSON.parse( runpod_config_raw ) : {}
-            const endpoint = runpod_config.endpoints?.find( e => e.endpoint_id === endpoint_id )
+            // Read config from the OpenRouter store
+            const config_raw = localStorage.getItem( storage_key( `openrouter_config` ) )
+            const config = config_raw ? JSON.parse( config_raw ) : {}
 
-            const provider = new RunPodProvider( {
-                api_key: runpod_config.api_key || ``,
-                endpoint_id,
-                model_name: endpoint?.model_name || ``,
-                daily_limit: runpod_config.daily_spend_limit ?? 2,
-                price_per_hr: endpoint?.price_per_hr ?? 0,
-                gpu_id: endpoint?.gpu_id || ``,
-                on_warming_change: ( warming ) => set( { is_endpoint_warming: warming } ),
-                on_endpoint_recreated: ( new_endpoint_id, new_template_id ) => {
-
-                    // Update the RunPod store entry so localStorage stays in sync
-                    import( `../stores/runpod_store.js` ).then( ( { default: store } ) => {
-                        store.getState().update_endpoint_id( endpoint_id, new_endpoint_id, new_template_id )
-                    } )
-
-                    // Update active model ID to reflect the new endpoint
-                    localStorage.setItem( storage_key( `active_model_id` ), `runpod:${ new_endpoint_id }` )
-
-                },
+            const provider = new OpenRouterProvider( {
+                api_key: config.api_key || ``,
+                model_id: openrouter_model_id,
             } )
 
-            set( { _provider: provider, _provider_type: `runpod` } )
+            set( { _provider: provider, _provider_type: `openrouter` } )
             return provider
 
         }

@@ -1,33 +1,22 @@
 /**
- * Nerd Mode setup wizard — deploy a HuggingFace model on RunPod cloud GPUs.
+ * Nerd Mode setup wizard — connect to OpenRouter for cloud model inference.
  *
- * Flow:
- *   1. Enter RunPod API key
- *   2. Type a model name (or browse suggested models)
- *   3. Auto-fetches config.json from HuggingFace → calculates VRAM → suggests GPU
- *   4. (Optional) Advanced: override GPU, idle timeout, quantization, etc.
- *   5. Deploy → creates template + endpoint → navigates to /chat
+ * Simplified flow:
+ *   1. Enter OpenRouter API key (validated via /auth/key)
+ *   2. Pick a model (browse suggested or type any OpenRouter model ID)
+ *   3. Optional: set system prompt, daily credit limit
+ *   4. Click "Connect" → save to store → navigate to /chat
+ *
+ * Works in both Electron and browser — OpenRouter supports CORS.
  */
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Cloud, ChevronDown, ChevronUp, LoaderCircle, AlertTriangle, Check, ArrowRight, List } from 'lucide-react'
-import use_runpod_store from '../../stores/runpod_store'
-import {
-    create_template,
-    create_endpoint,
-    find_existing_endpoint,
-    endpoint_name_for_model,
-    build_fallback_gpu_ids,
-    fetch_model_config,
-    fetch_gpu_pricing,
-    estimate_vram_gb,
-    suggest_gpu,
-    get_all_gpus_annotated,
-    GPU_POOLS,
-} from '../../providers/runpod_service'
-import { find_by_hf_repo, estimate_cloud_vram_gb } from '../../utils/model_catalog'
+import { Cloud, LoaderCircle, AlertTriangle, Check, ArrowRight, List } from 'lucide-react'
+import use_openrouter_store from '../../stores/openrouter_store'
+import { validate_api_key } from '../../providers/openrouter_service'
+import { find_by_openrouter_id } from '../../utils/model_catalog'
 import { storage_key } from '../../utils/branding'
 import SuggestedModelsModal from '../molecules/SuggestedModelsModal'
 
@@ -116,18 +105,6 @@ const TextArea = styled.textarea`
     &:focus { outline: none; border-color: ${ ( { theme } ) => theme.colors.info }; }
 `
 
-const Select = styled.select`
-    padding: ${ ( { theme } ) => theme.spacing.sm };
-    border: 1px solid ${ ( { theme } ) => theme.colors.border };
-    border-radius: ${ ( { theme } ) => theme.border_radius.md };
-    font-size: 0.85rem;
-    background: ${ ( { theme } ) => theme.colors.input_background };
-    color: ${ ( { theme } ) => theme.colors.text };
-    width: 100%;
-
-    &:focus { outline: none; border-color: ${ ( { theme } ) => theme.colors.info }; }
-`
-
 const Hint = styled.div`
     font-size: 0.75rem;
     color: ${ ( { theme } ) => theme.colors.text_muted };
@@ -142,30 +119,6 @@ const StatusRow = styled.div`
     color: ${ ( { $error, theme } ) => $error ? theme.colors.error : theme.colors.text_muted };
 `
 
-const GpuBadge = styled.div`
-    display: flex;
-    align-items: center;
-    gap: ${ ( { theme } ) => theme.spacing.xs };
-    font-size: 0.85rem;
-    color: ${ ( { theme } ) => theme.colors.info };
-    font-weight: 500;
-    padding: ${ ( { theme } ) => theme.spacing.sm };
-    border: 1px solid ${ ( { theme } ) => theme.colors.info }40;
-    border-radius: ${ ( { theme } ) => theme.border_radius.md };
-    background: ${ ( { theme } ) => theme.colors.info }10;
-`
-
-const AVAILABILITY_COLORS = { High: `#22c55e`, Medium: `#f59e0b`, Low: `#ef4444` }
-
-const AvailabilityDot = styled.span`
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: ${ ( { theme } ) => theme.border_radius.full };
-    background: ${ ( { $status } ) => AVAILABILITY_COLORS[ $status ] || `#888` };
-    flex-shrink: 0;
-`
-
 const BrowseButton = styled.button`
     display: flex;
     align-items: center;
@@ -178,31 +131,18 @@ const BrowseButton = styled.button`
     &:hover { opacity: 0.7; }
 `
 
-const AdvancedToggle = styled.button`
+const InputRow = styled.div`
     display: flex;
-    align-items: center;
     gap: ${ ( { theme } ) => theme.spacing.xs };
-    font-size: 0.85rem;
-    color: ${ ( { theme } ) => theme.colors.text_muted };
-    transition: color 0.15s;
-    min-height: 2.75rem;
-
-    &:hover { color: ${ ( { theme } ) => theme.colors.text_secondary }; }
+    align-items: center;
 `
 
-const AdvancedPanel = styled.div`
-    overflow: hidden;
-    max-height: ${ ( { $open } ) => $open ? `800px` : `0px` };
-    opacity: ${ ( { $open } ) => $open ? 1 : 0 };
-    transition: max-height 0.3s ease, opacity 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    gap: ${ ( { theme } ) => theme.spacing.md };
-
-    @media ( prefers-reduced-motion: reduce ) { transition: none; }
+const SmallInput = styled( Input )`
+    width: 80px;
+    text-align: center;
 `
 
-const DeployButton = styled.button`
+const ConnectButton = styled.button`
     background: ${ ( { theme } ) => theme.colors.info };
     color: white;
     padding: ${ ( { theme } ) => `${ theme.spacing.md } ${ theme.spacing.xl }` };
@@ -226,60 +166,6 @@ const Spinner = styled( LoaderCircle )`
     @keyframes spin { to { transform: rotate( 360deg ); } }
 `
 
-const StepIndicator = styled.div`
-    display: flex;
-    align-items: center;
-    gap: ${ ( { theme } ) => theme.spacing.xs };
-    margin-top: ${ ( { theme } ) => theme.spacing.lg };
-    font-size: 0.8rem;
-    color: ${ ( { theme } ) => theme.colors.text_muted };
-`
-
-const StepDot = styled.div`
-    width: 8px;
-    height: 8px;
-    border-radius: ${ ( { theme } ) => theme.border_radius.full };
-    background: ${ ( { theme, $active, $done } ) =>
-        $done ? theme.colors.info
-            : $active ? theme.colors.info
-                : theme.colors.border };
-`
-
-const StepLine = styled.div`
-    width: 24px;
-    height: 2px;
-    background: ${ ( { theme, $done } ) => $done ? theme.colors.info : theme.colors.border };
-`
-
-const SliderRow = styled.div`
-    display: flex;
-    align-items: center;
-    gap: ${ ( { theme } ) => theme.spacing.sm };
-`
-
-const SliderValue = styled.span`
-    font-size: 0.8rem;
-    color: ${ ( { theme } ) => theme.colors.text_muted };
-    min-width: 48px;
-    text-align: right;
-`
-
-const RangeInput = styled.input`
-    flex: 1;
-    accent-color: ${ ( { theme } ) => theme.colors.info };
-`
-
-const InputRow = styled.div`
-    display: flex;
-    gap: ${ ( { theme } ) => theme.spacing.xs };
-    align-items: center;
-`
-
-const SmallInput = styled( Input )`
-    width: 80px;
-    text-align: center;
-`
-
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -288,257 +174,122 @@ export default function NerdSetupPage() {
     const navigate = useNavigate()
     const { t } = useTranslation( `nerd` )
 
-    // Nerd Mode requires Electron (Node.js bypasses CORS for RunPod API calls)
-    useEffect( () => {
-        if( !window.electronAPI ) navigate( `/model-select`, { replace: true } )
-    }, [ navigate ] )
-
     // Store
-    const store = use_runpod_store()
+    const store = use_openrouter_store()
 
     // Form state
     const [ api_key, set_api_key ] = useState( store.api_key )
-    const [ model_name, set_model_name ] = useState( `` )
+    const [ model_id, set_model_id ] = useState( `` )
+    const [ model_display_name, set_model_display_name ] = useState( `` )
     const [ show_suggested, set_show_suggested ] = useState( false )
-    const [ show_advanced, set_show_advanced ] = useState( false )
 
-    // Model validation state
-    const [ model_config, set_model_config ] = useState( null )
-    const [ model_loading, set_model_loading ] = useState( false )
-    const [ model_error, set_model_error ] = useState( null )
+    // API key validation state
+    const [ key_valid, set_key_valid ] = useState( null )
+    const [ key_validating, set_key_validating ] = useState( false )
 
-    // GPU state
-    const [ vram_needed, set_vram_needed ] = useState( 0 )
-    const [ suggested_gpu, set_suggested_gpu ] = useState( null )
-    const [ gpu_override, set_gpu_override ] = useState( `` )
-
-    // Advanced state
-    const [ quantization, set_quantization ] = useState( `fp16` )
-    const [ max_model_len, set_max_model_len ] = useState( `` )
-    const [ gpu_utilization, set_gpu_utilization ] = useState( 0.95 )
-    const [ max_workers, set_max_workers ] = useState( 5 )
-    const [ idle_timeout, set_idle_timeout ] = useState( store.idle_timeout )
-    const [ daily_limit, set_daily_limit ] = useState( store.daily_spend_limit )
+    // Optional settings
+    const [ daily_limit, set_daily_limit ] = useState( store.daily_credit_limit )
     const [ system_prompt, set_system_prompt ] = useState(
         store.system_prompt || import.meta.env.VITE_DEFAULT_SYSTEM_PROMPT || ``
     )
 
-    // GPU pricing & availability (fetched from RunPod API)
-    const [ gpu_pricing, set_gpu_pricing ] = useState( null )
-    const [ gpu_availability, set_gpu_availability ] = useState( null )
-
-    // Deploy state
-    const [ deploying, set_deploying ] = useState( false )
-    const [ deploy_error, set_deploy_error ] = useState( null )
+    // Connect state
+    const [ connecting, set_connecting ] = useState( false )
+    const [ connect_error, set_connect_error ] = useState( null )
 
 
-    // Fetch GPU pricing & availability when API key looks valid
-    useEffect( () => {
+    /**
+     * Validate the API key when the input loses focus.
+     */
+    const handle_key_blur = useCallback( async () => {
 
-        if( !api_key.trim() || api_key.trim().length < 20 ) return
-
-        let cancelled = false
-
-        fetch_gpu_pricing( api_key.trim() )
-            .then( ( { pricing, availability } ) => {
-                if( cancelled ) return
-                set_gpu_pricing( pricing )
-                set_gpu_availability( availability )
-            } )
-            .catch( () => {
-                // Non-critical — GPU selection still works without live data
-            } )
-
-        return () => {
-            cancelled = true 
+        const trimmed = api_key.trim()
+        if( !trimmed || trimmed.length < 20 ) {
+            set_key_valid( null )
+            return
         }
+
+        set_key_validating( true )
+        const valid = await validate_api_key( trimmed )
+        set_key_valid( valid )
+        set_key_validating( false )
 
     }, [ api_key ] )
 
 
     /**
-     * Validate a model name — fetch config.json from HuggingFace,
-     * compute VRAM estimate, and suggest a GPU.
-     */
-    const validate_model = useCallback( async ( name ) => {
-
-        if( !name.trim() || !name.includes( `/` ) ) return
-
-        set_model_loading( true )
-        set_model_error( null )
-        set_model_config( null )
-        set_suggested_gpu( null )
-
-        try {
-
-            const ctx = max_model_len ? parseInt( max_model_len ) : undefined
-
-            // Catalog-first path — skip HF fetch for known models
-            const catalog_model = find_by_hf_repo( name.trim() )
-
-            if( catalog_model ) {
-
-                // Known model — use catalog architecture data directly
-                const vram = estimate_cloud_vram_gb( catalog_model, quantization, ctx )
-                set_vram_needed( vram )
-
-                const suggestion = suggest_gpu( vram, gpu_pricing, gpu_availability )
-                set_suggested_gpu( suggestion )
-
-                // Synthetic config for display compatibility
-                set_model_config( {
-                    num_params: catalog_model.parameters,
-                    num_layers: catalog_model.layers,
-                    model_type: catalog_model.family,
-                    context_length: catalog_model.context_length,
-                } )
-
-            } else {
-
-                // Unknown model — fall back to HF fetch
-                const config = await fetch_model_config( name.trim() )
-                set_model_config( config )
-
-                const vram = estimate_vram_gb( config, quantization, ctx )
-                set_vram_needed( vram )
-
-                const suggestion = suggest_gpu( vram, gpu_pricing, gpu_availability )
-                set_suggested_gpu( suggestion )
-
-            }
-
-        } catch ( err ) {
-            set_model_error( err.message )
-        } finally {
-            set_model_loading( false )
-        }
-
-    }, [ quantization, max_model_len, gpu_pricing, gpu_availability ] )
-
-
-    /**
-     * Handle model input blur/enter — trigger validation.
-     */
-    const handle_model_blur = () => validate_model( model_name )
-
-    const handle_model_keydown = ( e ) => {
-        if( e.key === `Enter` ) {
-            e.preventDefault()
-            validate_model( model_name )
-        }
-    }
-
-
-    /**
      * Handle suggested model selection from the modal.
      */
-    const handle_suggested_select = ( hf_repo ) => {
-        set_model_name( hf_repo )
-        validate_model( hf_repo )
+    const handle_suggested_select = ( openrouter_id ) => {
+
+        set_model_id( openrouter_id )
+
+        // Try to find display name from catalog
+        const catalog = find_by_openrouter_id( openrouter_id )
+        set_model_display_name( catalog?.name || openrouter_id.split( `/` ).pop() )
+
     }
 
 
     /**
-     * Deploy: recycle an existing endpoint if one matches, otherwise
-     * create template + endpoint → save to store → navigate to /chat.
+     * Connect: save settings to store → set active model → navigate to /chat.
      */
-    const handle_deploy = async () => {
+    const handle_connect = async () => {
 
-        if( !api_key.trim() || !model_name.trim() ) return
+        if( !api_key.trim() || !model_id.trim() ) return
 
-        set_deploying( true )
-        set_deploy_error( null )
+        set_connecting( true )
+        set_connect_error( null )
 
         try {
 
             const trimmed_key = api_key.trim()
-            const trimmed_model = model_name.trim()
+            const trimmed_model = model_id.trim()
 
-            // Determine which GPU to use
-            const gpu_id = gpu_override || suggested_gpu?.pool?.id || GPU_POOLS[ 0 ].id
-            const gpu_pool = GPU_POOLS.find( p => p.id === gpu_id ) || GPU_POOLS[ 0 ]
-
-            // 1. Check for an existing endpoint with the same deterministic name + GPU tier
-            const gpu_count = gpu_pool.gpu_count || 1
-            const existing = await find_existing_endpoint( trimmed_key, trimmed_model, gpu_pool.vram_gb, gpu_count )
-
-            let endpoint_id
-            let template_id = null
-
-            if( existing ) {
-
-                // Recycle — reuse the endpoint with the same model + GPU tier
-                endpoint_id = existing.id
-
-            } else {
-
-                // 2a. Create template with model config
-                const template = await create_template( trimmed_key, {
-                    model_name: trimmed_model,
-                    quantization: quantization !== `fp16` ? quantization : undefined,
-                    max_model_len: max_model_len ? parseInt( max_model_len ) : undefined,
-                    gpu_memory_utilization: gpu_utilization,
-                    tensor_parallel_size: gpu_count,
-                } )
-
-                template_id = template.id
-
-                // 2b. Create endpoint with deterministic name + cross-tier fallback GPUs
-                const endpoint = await create_endpoint( trimmed_key, {
-                    template_id: template.id,
-                    name: endpoint_name_for_model( trimmed_model, gpu_pool.vram_gb, gpu_count ),
-                    gpu_ids: build_fallback_gpu_ids( gpu_pool ),
-                    gpu_count,
-                    idle_timeout,
-                    max_workers,
-                } )
-
-                endpoint_id = endpoint.id
-
+            // Validate API key if not already validated
+            if( key_valid !== true ) {
+                const valid = await validate_api_key( trimmed_key )
+                if( !valid ) {
+                    set_connect_error( t( `invalid_api_key` ) )
+                    set_connecting( false )
+                    return
+                }
             }
 
-            // 3. Save settings to store
+            // Save settings to store
             store.set_api_key( trimmed_key )
-            store.set_idle_timeout( idle_timeout )
-            store.set_daily_spend_limit( daily_limit )
+            store.set_daily_credit_limit( daily_limit )
             store.set_system_prompt( system_prompt )
 
-            // Only add to local store if not already tracked
-            if( !store.has_endpoint( endpoint_id ) ) {
+            // Add model to store if not already tracked
+            if( !store.has_model( trimmed_model ) ) {
 
-                const display_name = trimmed_model.split( `/` ).pop().toLowerCase()
+                const display_name = model_display_name || trimmed_model.split( `/` ).pop()
 
-                store.add_endpoint( {
-                    id: `runpod-${ endpoint_id }`,
-                    endpoint_id,
-                    template_id: template_id || existing?.templateId || null,
-                    model_name: trimmed_model,
-                    gpu_id,
-                    gpu_name: gpu_pool.name,
-                    price_per_hr: suggested_gpu?.price_per_hr || 0,
+                store.add_model( {
+                    id: `openrouter-${ trimmed_model.replace( /[/:]/g, `-` ) }`,
+                    openrouter_id: trimmed_model,
                     name: display_name,
                     created_at: Date.now(),
                 } )
 
             }
 
-            // 4. Set as active model and navigate to chat
-            const model_id = `runpod:${ endpoint_id }`
-            localStorage.setItem( storage_key( `active_model_id` ), model_id )
+            // Set as active model and navigate to chat
+            const active_id = `openrouter:${ trimmed_model }`
+            localStorage.setItem( storage_key( `active_model_id` ), active_id )
             navigate( `/chat` )
 
         } catch ( err ) {
-            set_deploy_error( err.message )
+            set_connect_error( err.message )
         } finally {
-            set_deploying( false )
+            set_connecting( false )
         }
 
     }
 
 
-    // Resolve available GPUs for the override dropdown
-    const all_gpus = get_all_gpus_annotated( vram_needed, gpu_pricing, gpu_availability )
-    const can_deploy = api_key.trim() && model_name.trim() && !deploying
+    const can_connect = api_key.trim() && model_id.trim() && !connecting
 
     return <Container>
 
@@ -552,25 +303,39 @@ export default function NerdSetupPage() {
                 <Label>{ t( `api_key_label` ) }</Label>
                 <Input
                     type="password"
-                    data-testid="runpod-api-key"
+                    data-testid="openrouter-api-key"
                     placeholder={ t( `api_key_placeholder` ) }
                     value={ api_key }
                     onChange={ ( e ) => set_api_key( e.target.value ) }
+                    onBlur={ handle_key_blur }
                 />
                 <Hint>{ t( `api_key_hint` ) }</Hint>
+
+                { key_validating && <StatusRow>
+                    <Spinner size={ 12 } /> { t( `validating_key` ) }
+                </StatusRow> }
+
+                { key_valid === true && <StatusRow>
+                    <Check size={ 12 } /> { t( `key_valid` ) }
+                </StatusRow> }
+
+                { key_valid === false && <StatusRow $error>
+                    <AlertTriangle size={ 12 } /> { t( `key_invalid` ) }
+                </StatusRow> }
             </FieldGroup>
 
-            { /* ── Model Name ── */ }
+            { /* ── Model ── */ }
             <FieldGroup>
                 <Label>{ t( `model_name_label` ) }</Label>
                 <Input
                     type="text"
-                    data-testid="runpod-model-name"
+                    data-testid="openrouter-model-id"
                     placeholder={ t( `model_name_placeholder` ) }
-                    value={ model_name }
-                    onChange={ ( e ) => set_model_name( e.target.value ) }
-                    onBlur={ handle_model_blur }
-                    onKeyDown={ handle_model_keydown }
+                    value={ model_id }
+                    onChange={ ( e ) => {
+                        set_model_id( e.target.value )
+                        set_model_display_name( `` )
+                    } }
                 />
 
                 <BrowseButton
@@ -581,207 +346,52 @@ export default function NerdSetupPage() {
                     { t( `browse_suggested` ) }
                 </BrowseButton>
 
-                { /* Model validation status */ }
-                { model_loading && <StatusRow>
-                    <Spinner size={ 12 } /> { t( `validating_model` ) }
-                </StatusRow> }
-
-                { model_error && <StatusRow $error>
-                    <AlertTriangle size={ 12 } /> { model_error }
-                </StatusRow> }
-
-                { model_config && !model_loading && <StatusRow>
-                    <Check size={ 12 } /> { t( `model_validated`, {
-                        params: model_config.num_params
-                            ? ( model_config.num_params / 1e9 ).toFixed( 1 ) + `B`
-                            : `unknown`,
-                        type: model_config.model_type,
-                    } ) }
+                { model_display_name && <StatusRow>
+                    <Check size={ 12 } /> { model_display_name }
                 </StatusRow> }
             </FieldGroup>
 
-            { /* ── Suggested GPU ── */ }
-            { suggested_gpu && <GpuBadge data-testid="suggested-gpu">
-                <Cloud size={ 14 } />
-                { t( `gpu_auto`, { name: suggested_gpu.pool.name, vram: suggested_gpu.pool.vram_gb } ) }
-                { suggested_gpu.price_per_hr != null && ` — ${ t( `gpu_cost`, { cost: suggested_gpu.price_per_hr.toFixed( 2 ) } ) }` }
-                { suggested_gpu.availability && <AvailabilityDot $status={ suggested_gpu.availability } title={ t( `availability_${ suggested_gpu.availability.toLowerCase() }` ) } /> }
-            </GpuBadge> }
-
-            { /* Warn when auto-suggestion has low availability */ }
-            { suggested_gpu?.availability === `Low` && !gpu_override && <StatusRow $error>
-                <AlertTriangle size={ 12 } /> { t( `gpu_low_availability_warning` ) }
-            </StatusRow> }
-
-            { vram_needed > 0 && <Hint>
-                { t( `estimated_vram`, { vram: vram_needed.toFixed( 1 ) } ) }
-            </Hint> }
-
-            { model_config && !suggested_gpu && vram_needed > 0 && <StatusRow $error>
-                <AlertTriangle size={ 12 } /> { t( `gpu_no_fit` ) }
-            </StatusRow> }
-
-
-            { /* ── Advanced ── */ }
-            <AdvancedToggle onClick={ () => set_show_advanced( !show_advanced ) }>
-                { t( `advanced_title` ) }
-                { show_advanced ? <ChevronUp size={ 14 } /> : <ChevronDown size={ 14 } /> }
-            </AdvancedToggle>
-
-            <AdvancedPanel $open={ show_advanced }>
-
-                { /* GPU override */ }
-                <FieldGroup>
-                    <Label>{ t( `gpu_override_label` ) }</Label>
-                    <Select
-                        data-testid="gpu-override"
-                        value={ gpu_override }
-                        onChange={ ( e ) => set_gpu_override( e.target.value ) }
-                    >
-                        <option value="">{ suggested_gpu ? `Auto (${ suggested_gpu.pool.name })` : `Auto` }</option>
-                        { all_gpus.map( ( { pool, fits, price_per_hr, availability: avail } ) =>
-                            <option key={ pool.id } value={ pool.id } disabled={ !fits }>
-                                { pool.name }
-                                { price_per_hr != null ? ` — $${ price_per_hr.toFixed( 2 ) }/hr` : `` }
-                                { avail ? ` · ${ avail } availability` : `` }
-                                { !fits ? ` (${ t( `gpu_insufficient_vram` ) })` : `` }
-                            </option>
-                        ) }
-                    </Select>
-                </FieldGroup>
-
-                { /* Quantization */ }
-                <FieldGroup>
-                    <Label>{ t( `quantization_label` ) }</Label>
-                    <Select
-                        value={ quantization }
-                        onChange={ ( e ) => {
-                            set_quantization( e.target.value )
-                            // Re-validate with new quantization
-                            if( model_config ) validate_model( model_name )
-                        } }
-                    >
-                        <option value="fp16">{ t( `quantization_default` ) }</option>
-                        <option value="fp8">FP8</option>
-                        <option value="awq">AWQ</option>
-                        <option value="gptq">GPTQ</option>
-                    </Select>
-                </FieldGroup>
-
-                { /* Max context length */ }
-                <FieldGroup>
-                    <Label>{ t( `max_model_len_label` ) }</Label>
-                    <Input
+            { /* ── Daily credit limit ── */ }
+            <FieldGroup>
+                <Label>{ t( `daily_limit_label` ) }</Label>
+                <InputRow>
+                    <SmallInput
                         type="number"
-                        placeholder={ t( `max_model_len_placeholder` ) }
-                        value={ max_model_len }
-                        onChange={ ( e ) => set_max_model_len( e.target.value ) }
+                        min="0.5"
+                        step="0.5"
+                        value={ daily_limit }
+                        onChange={ ( e ) => set_daily_limit( parseFloat( e.target.value ) || 5 ) }
                     />
-                </FieldGroup>
+                    <Hint>USD per day</Hint>
+                </InputRow>
+            </FieldGroup>
 
-                { /* GPU memory utilization */ }
-                <FieldGroup>
-                    <Label>{ t( `gpu_utilization_label` ) }</Label>
-                    <SliderRow>
-                        <RangeInput
-                            type="range"
-                            min="0.5"
-                            max="0.99"
-                            step="0.01"
-                            value={ gpu_utilization }
-                            onChange={ ( e ) => set_gpu_utilization( parseFloat( e.target.value ) ) }
-                        />
-                        <SliderValue>{ ( gpu_utilization * 100 ).toFixed( 0 ) }%</SliderValue>
-                    </SliderRow>
-                </FieldGroup>
+            { /* ── System prompt ── */ }
+            <FieldGroup>
+                <Label>{ t( `system_prompt_label` ) }</Label>
+                <TextArea
+                    placeholder={ import.meta.env.VITE_DEFAULT_SYSTEM_PROMPT || `` }
+                    value={ system_prompt }
+                    onChange={ ( e ) => set_system_prompt( e.target.value ) }
+                />
+            </FieldGroup>
 
-                { /* Max workers */ }
-                <FieldGroup>
-                    <Label>{ t( `max_workers_label` ) }</Label>
-                    <SliderRow>
-                        <RangeInput
-                            type="range"
-                            min="1"
-                            max="10"
-                            step="1"
-                            value={ max_workers }
-                            onChange={ ( e ) => set_max_workers( parseInt( e.target.value ) ) }
-                        />
-                        <SliderValue>{ max_workers }</SliderValue>
-                    </SliderRow>
-                    <Hint>{ t( `max_workers_hint` ) }</Hint>
-                </FieldGroup>
-
-                { /* Idle timeout */ }
-                <FieldGroup>
-                    <Label>{ t( `idle_timeout_label` ) }</Label>
-                    <SliderRow>
-                        <RangeInput
-                            type="range"
-                            min="1"
-                            max="30"
-                            step="1"
-                            value={ idle_timeout }
-                            onChange={ ( e ) => set_idle_timeout( parseInt( e.target.value ) ) }
-                        />
-                        <SliderValue>{ t( `idle_timeout_value`, { minutes: idle_timeout } ) }</SliderValue>
-                    </SliderRow>
-                </FieldGroup>
-
-                { /* Daily spend limit */ }
-                <FieldGroup>
-                    <Label>{ t( `daily_limit_label` ) }</Label>
-                    <InputRow>
-                        <SmallInput
-                            type="number"
-                            min="0.5"
-                            step="0.5"
-                            value={ daily_limit }
-                            onChange={ ( e ) => set_daily_limit( parseFloat( e.target.value ) || 2 ) }
-                        />
-                        <Hint>USD per day</Hint>
-                    </InputRow>
-                </FieldGroup>
-
-                { /* System prompt */ }
-                <FieldGroup>
-                    <Label>{ t( `system_prompt_label` ) }</Label>
-                    <TextArea
-                        placeholder={ import.meta.env.VITE_DEFAULT_SYSTEM_PROMPT || `` }
-                        value={ system_prompt }
-                        onChange={ ( e ) => set_system_prompt( e.target.value ) }
-                    />
-                </FieldGroup>
-
-            </AdvancedPanel>
-
-
-            { /* ── Deploy button ── */ }
-            <DeployButton
-                data-testid="deploy-endpoint-btn"
-                onClick={ handle_deploy }
-                disabled={ !can_deploy }
+            { /* ── Connect button ── */ }
+            <ConnectButton
+                data-testid="connect-btn"
+                onClick={ handle_connect }
+                disabled={ !can_connect }
             >
-                { deploying
-                    ? <><Spinner size={ 18 } /> { t( `deploying` ) }</>
-                    : <> { t( `deploy_button` ) } <ArrowRight size={ 18 } /></> }
-            </DeployButton>
+                { connecting
+                    ? <><Spinner size={ 18 } /> { t( `connecting` ) }</>
+                    : <> { t( `connect_button` ) } <ArrowRight size={ 18 } /></> }
+            </ConnectButton>
 
-            { deploy_error && <StatusRow $error>
-                <AlertTriangle size={ 12 } /> { t( `deploy_error`, { error: deploy_error } ) }
+            { connect_error && <StatusRow $error>
+                <AlertTriangle size={ 12 } /> { t( `connect_error`, { error: connect_error } ) }
             </StatusRow> }
 
         </FormCard>
-
-
-        { /* Step progress */ }
-        <StepIndicator data-testid="step-indicator">
-            <StepDot $done />
-            <StepLine $done />
-            <StepDot $active />
-            <StepLine />
-            <StepDot />
-        </StepIndicator>
 
 
         { /* Suggested models modal */ }
@@ -789,7 +399,7 @@ export default function NerdSetupPage() {
             is_open={ show_suggested }
             on_close={ () => set_show_suggested( false ) }
             on_select={ handle_suggested_select }
-            current_model={ model_name }
+            current_model={ model_id }
         />
 
     </Container>

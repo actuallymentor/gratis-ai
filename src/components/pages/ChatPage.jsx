@@ -198,9 +198,9 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const query_processed_ref = useRef( false )
 
     const { load_model, chat_stream, abort, is_generating, is_endpoint_warming, is_loading: is_model_loading, loaded_model_id } = use_llm()
-    const is_runpod_model = loaded_model_id?.startsWith( `runpod:` ) || false
+    const is_cloud_model = loaded_model_id?.startsWith( `openrouter:` ) || false
     const is_online = use_online()
-    const is_offline_cloud = is_runpod_model && !is_online
+    const is_offline_cloud = is_cloud_model && !is_online
     const {
         conversations,
         create_conversation,
@@ -239,7 +239,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const [ voice_text, set_voice_text ] = useState( null )
 
     // Whether the correct model is available for inference.
-    // If a different model is pending (e.g. RunPod after local), the stale loaded model
+    // If a different model is pending (e.g. cloud after local), the stale loaded model
     // must not count — otherwise we'd show the chat as ready with the wrong model.
     const pending_model_id = localStorage.getItem( storage_key( `active_model_id` ) )
     const has_model = ( model_loaded === true || !!loaded_model_id )
@@ -796,7 +796,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
             messages={ messages }
             is_streaming={ is_generating }
             is_endpoint_warming={ is_endpoint_warming }
-            is_runpod_model={ is_runpod_model }
+            is_cloud_model={ is_cloud_model }
             on_regenerate={ handle_regenerate }
             on_edit={ handle_edit }
         />
