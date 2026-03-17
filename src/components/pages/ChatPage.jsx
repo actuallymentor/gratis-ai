@@ -71,6 +71,12 @@ const WelcomeTitle = styled.h1`
     font-size: clamp( 1.5rem, 1.2rem + 1vw, 2rem );
     color: ${ ( { theme } ) => theme.colors.text };
     border-bottom: 3px solid ${ ( { theme } ) => theme.colors.accent };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+`
+
+const PrivacyHint = styled.p`
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
     margin-bottom: 2rem;
 `
 
@@ -834,6 +840,11 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
 
                 <WelcomeContent $visible={ should_center }>
                     <WelcomeTitle>{ t( 'what_can_i_help_with' ) }</WelcomeTitle>
+                    <PrivacyHint>{ t(
+                        loaded_model_id?.startsWith( `venice:` ) ? `privacy_venice`
+                            : loaded_model_id?.startsWith( `openrouter:` ) ? `privacy_openrouter`
+                                : `privacy_local`
+                    ) }</PrivacyHint>
                     { is_endpoint_warming && <WakingUpIndicator /> }
                 </WelcomeContent>
 
