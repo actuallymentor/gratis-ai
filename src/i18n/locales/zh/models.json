@@ -34,20 +34,24 @@
     "large_model_warning": "大型模型可能无法在浏览器中加载。请考虑使用更小的量化版本或桌面应用。",
     "low_memory_warning": "可用内存仅剩 {{free}} — 此模型大约需要 {{needed}}。试试关闭其他应用或选择较小的模型，以避免卡顿和可能的崩溃。",
 
+    "local_models_section": "本地模型",
+    "local_models_subtitle": "在你的设备上运行",
+    "cloud_models_section": "云端模型",
+    "cloud_models_subtitle": "云端模型更强大，但不在你的设备上运行。它们需要云服务商的 API 密钥。",
+    "openrouter_setup_card": "OpenRouter",
+    "openrouter_setup_subtitle": "数百种免费和付费模型",
+    "venice_setup_card": "Venice",
+    "venice_setup_subtitle": "无审查模型 — 没有内容限制",
+    "add_openrouter_model": "添加 OpenRouter 模型",
+    "add_venice_model": "添加 Venice 模型",
+
+    "nerd_option": "云端 GPU",
+    "nerd_option_subtitle": "OpenRouter — 免费和付费模型",
+    "nerd_continue": "继续",
+
     "downloading_your_model": "正在下载模型",
     "one_time_download": "{{name}} — 仅需下载一次。之后所有功能都可离线使用。",
     "ready_to_chat": "准备就绪！",
     "cancel_download": "取消下载",
-    "preparing": "准备中...",
-
-    "local_models_section": "Local Models",
-    "local_models_subtitle": "Runs on your device",
-    "cloud_models_section": "Cloud Models",
-    "cloud_models_subtitle": "Cloud models are more powerful, but don't run on your device. They require an API key from a cloud provider.",
-    "openrouter_setup_card": "OpenRouter",
-    "openrouter_setup_subtitle": "Hundreds of free and paid models",
-    "venice_setup_card": "Venice",
-    "venice_setup_subtitle": "Uncensored models — no content restrictions",
-    "add_openrouter_model": "Add OpenRouter model",
-    "add_venice_model": "Add Venice model"
+    "preparing": "准备中..."
 }

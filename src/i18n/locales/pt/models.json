@@ -34,20 +34,24 @@
     "large_model_warning": "Modelos grandes podem falhar ao carregar no navegador. Considere uma quantização menor ou o aplicativo desktop.",
     "low_memory_warning": "Apenas {{free}} de memória livre — este modelo precisa de cerca de {{needed}}. Tente fechar outros apps ou escolher um modelo menor para evitar lentidão e possíveis travamentos.",
 
+    "local_models_section": "Modelos Locais",
+    "local_models_subtitle": "Roda no seu dispositivo",
+    "cloud_models_section": "Modelos na Nuvem",
+    "cloud_models_subtitle": "Modelos na nuvem são mais potentes, mas não rodam no seu dispositivo. Eles exigem uma chave de API de um provedor de nuvem.",
+    "openrouter_setup_card": "OpenRouter",
+    "openrouter_setup_subtitle": "Centenas de modelos gratuitos e pagos",
+    "venice_setup_card": "Venice",
+    "venice_setup_subtitle": "Modelos sem censura — sem restrições de conteúdo",
+    "add_openrouter_model": "Adicionar modelo OpenRouter",
+    "add_venice_model": "Adicionar modelo Venice",
+
+    "nerd_option": "GPU na Nuvem",
+    "nerd_option_subtitle": "OpenRouter — modelos gratuitos e pagos",
+    "nerd_continue": "Continuar",
+
     "downloading_your_model": "Baixando seu modelo",
     "one_time_download": "{{name}} — este é um download único. Depois disso, tudo funciona offline.",
     "ready_to_chat": "Pronto para conversar!",
     "cancel_download": "Cancelar download",
-    "preparing": "Preparando...",
-
-    "local_models_section": "Local Models",
-    "local_models_subtitle": "Runs on your device",
-    "cloud_models_section": "Cloud Models",
-    "cloud_models_subtitle": "Cloud models are more powerful, but don't run on your device. They require an API key from a cloud provider.",
-    "openrouter_setup_card": "OpenRouter",
-    "openrouter_setup_subtitle": "Hundreds of free and paid models",
-    "venice_setup_card": "Venice",
-    "venice_setup_subtitle": "Uncensored models — no content restrictions",
-    "add_openrouter_model": "Add OpenRouter model",
-    "add_venice_model": "Add Venice model"
+    "preparing": "Preparando..."
 }

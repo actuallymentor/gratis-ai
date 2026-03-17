@@ -34,20 +34,24 @@
     "large_model_warning": "Крупные модели могут не загрузиться в браузере. Попробуйте меньшую квантизацию или десктопное приложение.",
     "low_memory_warning": "Свободно лишь {{free}} памяти — этой модели нужно около {{needed}}. Попробуйте закрыть другие приложения или выбрать модель поменьше, чтобы избежать замедлений и возможных сбоев.",
 
+    "local_models_section": "Локальные модели",
+    "local_models_subtitle": "Работает на вашем устройстве",
+    "cloud_models_section": "Облачные модели",
+    "cloud_models_subtitle": "Облачные модели мощнее, но работают не на вашем устройстве. Для них нужен API-ключ от облачного провайдера.",
+    "openrouter_setup_card": "OpenRouter",
+    "openrouter_setup_subtitle": "Сотни бесплатных и платных моделей",
+    "venice_setup_card": "Venice",
+    "venice_setup_subtitle": "Модели без цензуры — никаких ограничений контента",
+    "add_openrouter_model": "Добавить модель OpenRouter",
+    "add_venice_model": "Добавить модель Venice",
+
+    "nerd_option": "Облачный GPU",
+    "nerd_option_subtitle": "OpenRouter — бесплатные и платные модели",
+    "nerd_continue": "Продолжить",
+
     "downloading_your_model": "Скачивание модели",
     "one_time_download": "{{name}} — это разовая загрузка. После этого всё работает офлайн.",
     "ready_to_chat": "Готово к общению!",
     "cancel_download": "Отменить загрузку",
-    "preparing": "Подготовка...",
-
-    "local_models_section": "Local Models",
-    "local_models_subtitle": "Runs on your device",
-    "cloud_models_section": "Cloud Models",
-    "cloud_models_subtitle": "Cloud models are more powerful, but don't run on your device. They require an API key from a cloud provider.",
-    "openrouter_setup_card": "OpenRouter",
-    "openrouter_setup_subtitle": "Hundreds of free and paid models",
-    "venice_setup_card": "Venice",
-    "venice_setup_subtitle": "Uncensored models — no content restrictions",
-    "add_openrouter_model": "Add OpenRouter model",
-    "add_venice_model": "Add Venice model"
+    "preparing": "Подготовка..."
 }

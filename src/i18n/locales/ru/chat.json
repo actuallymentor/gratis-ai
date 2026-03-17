@@ -9,23 +9,23 @@
     "collapse": "Свернуть",
 
     "what_can_i_help_with": "Чем могу помочь?",
-    "privacy_local": "You are using a local model. Nobody can see what you do.",
-    "privacy_openrouter": "You are using an OpenRouter cloud model. OpenRouter can see what you do.",
-    "privacy_venice": "You are using a Venice cloud model. Nobody can see what you do.",
+    "privacy_local": "Вы используете локальную модель. Никто не видит, что вы делаете.",
+    "privacy_openrouter": "Вы используете облачную модель OpenRouter. OpenRouter может видеть, что вы делаете.",
+    "privacy_venice": "Вы используете облачную модель Venice. Никто не видит, что вы делаете.",
     "loading_your_model": "Загрузка модели...",
 
     "lets_get_you_set_up": "Давайте всё настроим",
     "no_model_description": "Для начала нужно скачать модель ИИ. Это займёт всего минуту.",
     "set_up_a_model": "Настроить модель",
 
-    "recording": "Запись",
-    "transcribing": "Транскрибирование",
-    "loading_voice_model": "Загрузка голосовой модели",
-
     "waking_up": "Пробуждение ИИ",
     "waking_up_hint": "Облачным ИИ может потребоваться 1–5 минут для запуска. Они также засыпают после 5 минут бездействия.",
     "slow_device_warning": "Ваше устройство, похоже, довольно медленное. Рекомендуем скачать десктопное приложение для лучшей производительности.",
     "get_the_desktop_app": "Скачать десктопное приложение",
+
+    "recording": "Запись",
+    "transcribing": "Транскрибирование",
+    "loading_voice_model": "Загрузка голосовой модели",
 
     "offline_cloud_message": "Вы не в сети — облачные модели требуют подключения к интернету",
     "offline_switch_model": "Сменить модель",

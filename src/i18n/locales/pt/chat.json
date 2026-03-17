@@ -9,23 +9,23 @@
     "collapse": "Recolher",
 
     "what_can_i_help_with": "Como posso ajudar?",
-    "privacy_local": "You are using a local model. Nobody can see what you do.",
-    "privacy_openrouter": "You are using an OpenRouter cloud model. OpenRouter can see what you do.",
-    "privacy_venice": "You are using a Venice cloud model. Nobody can see what you do.",
+    "privacy_local": "Você está usando um modelo local. Ninguém pode ver o que você faz.",
+    "privacy_openrouter": "Você está usando um modelo na nuvem do OpenRouter. O OpenRouter pode ver o que você faz.",
+    "privacy_venice": "Você está usando um modelo na nuvem do Venice. Ninguém pode ver o que você faz.",
     "loading_your_model": "Carregando seu modelo...",
 
     "lets_get_you_set_up": "Vamos configurar tudo",
     "no_model_description": "Você precisa baixar um modelo de IA antes de começar a conversar. Leva apenas um minuto.",
     "set_up_a_model": "Configurar um modelo",
 
-    "recording": "Gravando",
-    "transcribing": "Transcrevendo",
-    "loading_voice_model": "Carregando modelo de voz",
-
     "waking_up": "Despertando a IA",
     "waking_up_hint": "IAs na nuvem podem levar 1–5 minutos para iniciar. Elas também adormecem após 5 minutos de inatividade.",
     "slow_device_warning": "Seu dispositivo parece bem lento. Recomendamos baixar o app desktop para melhor desempenho.",
     "get_the_desktop_app": "Baixar o app desktop",
+
+    "recording": "Gravando",
+    "transcribing": "Transcrevendo",
+    "loading_voice_model": "Carregando modelo de voz",
 
     "offline_cloud_message": "Você está offline — modelos na nuvem precisam de conexão com a internet",
     "offline_switch_model": "Trocar modelo",
