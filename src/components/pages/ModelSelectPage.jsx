@@ -452,25 +452,7 @@ const SectionSubtitle = styled.p`
     color: ${ ( { theme } ) => theme.colors.text_muted };
 `
 
-const CloudCardRow = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: ${ ( { theme } ) => theme.spacing.md };
-    width: 100%;
-    max-width: 720px;
-    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
-
-    /* Cards don't stretch — stays centered when count is uneven */
-    & > * {
-        flex: 0 0 calc( 50% - 0.5rem );
-        min-width: 200px;
-    }
-
-    @media ( max-width: 680px ) {
-        & > * { flex: 1 1 100%; min-width: 0; }
-    }
-`
+// Cloud cards reuse the same grid sizing as local CardRow
 
 const CloudSetupCard = styled.button`
     display: flex;
@@ -506,30 +488,25 @@ const CloudSetupSubtitle = styled.p`
 
 const CloudModelCard = styled.button`
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 720px;
-    padding: ${ ( { theme } ) => theme.spacing.md };
+    padding: ${ ( { theme } ) => theme.spacing.lg };
     border: 1px solid ${ ( { theme, $active } ) => $active ? theme.colors.info : theme.colors.border };
-    border-radius: ${ ( { theme } ) => theme.border_radius.md };
-    text-align: left;
+    border-radius: ${ ( { theme } ) => theme.border_radius.lg };
+    text-align: center;
     transition: border-color 0.15s;
-    margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
+    cursor: pointer;
+    background: transparent;
 
     &:hover {
         border-color: ${ ( { theme } ) => theme.colors.text_muted };
     }
 `
 
-const CloudModelInfo = styled.div`
-    flex: 1;
-`
-
 const CloudModelName = styled.div`
     font-weight: 500;
     font-size: 0.9rem;
-    margin-bottom: 2px;
+    margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
 `
 
 const CloudModelMeta = styled.div`
@@ -971,7 +948,8 @@ export default function ModelSelectPage() {
             <SectionSubtitle>{ t( 'cloud_models_subtitle' ) }</SectionSubtitle>
         </SectionHeader>
 
-        <CloudCardRow>
+        <CardRow>
+
             <CloudSetupCard
                 data-testid="openrouter-setup-card"
                 onClick={ () => navigate( `/cloud-setup?provider=openrouter` ) }
@@ -993,29 +971,27 @@ export default function ModelSelectPage() {
                 </CloudSetupLabel>
                 <CloudSetupSubtitle>{ t( 'venice_setup_subtitle' ) }</CloudSetupSubtitle>
             </CloudSetupCard>
-        </CloudCardRow>
 
-        { /* Already-configured cloud models */ }
-        { cloud_models.map( ( model ) => {
+            { /* Already-configured cloud models */ }
+            { cloud_models.map( ( model ) => {
 
-            const provider_label = model.source === `venice` ? `Venice` : `OpenRouter`
+                const provider_label = model.source === `venice` ? `Venice` : `OpenRouter`
 
-            return <CloudModelCard
-                key={ model.id }
-                data-testid={ `cloud-model-${ model.id }` }
-                onClick={ () => handle_cloud_model_click( model.id ) }
-            >
-                <CloudModelInfo>
+                return <CloudModelCard
+                    key={ model.id }
+                    data-testid={ `cloud-model-${ model.id }` }
+                    onClick={ () => handle_cloud_model_click( model.id ) }
+                >
                     <CloudModelName>
                         { model.name }
                         <CloudTag><Cloud size={ 10 } /> { provider_label }</CloudTag>
                     </CloudModelName>
-                    <CloudModelMeta>{ provider_label } — ready to chat</CloudModelMeta>
-                </CloudModelInfo>
-                <ArrowRight size={ 14 } style={ { flexShrink: 0, opacity: 0.4 } } />
-            </CloudModelCard>
+                    <CloudModelMeta>{ t( 'common:ready' ) || `ready to chat` }</CloudModelMeta>
+                </CloudModelCard>
 
-        } ) }
+            } ) }
+
+        </CardRow>
 
         { /* ── Download action + step progress (below all model sections) ── */ }
         <DownloadButton
