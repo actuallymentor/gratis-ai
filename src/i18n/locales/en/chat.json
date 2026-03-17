@@ -10,8 +10,8 @@
 
     "what_can_i_help_with": "What can I help with?",
     "privacy_local": "You are using a local model. Nobody can see what you do.",
-    "privacy_openrouter": "You are using a cloud model. OpenRouter and your nerd friend can see what you do.",
-    "privacy_venice": "You are using a cloud model. Nobody (including your nerd friend) can see what you do.",
+    "privacy_openrouter": "You are using an OpenRouter cloud model. OpenRouter and your nerd friend can see what you do.",
+    "privacy_venice": "You are using a Venice cloud model. Nobody (including your nerd friend) can see what you do.",
     "loading_your_model": "Loading your model...",
 
     "lets_get_you_set_up": "Let's get you set up",
