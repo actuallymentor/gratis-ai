@@ -47,19 +47,20 @@ const Subtitle = styled.p`
 const CardRow = styled.div`
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: ${ ( { theme } ) => theme.spacing.md };
     width: 100%;
-    max-width: ${ ( { $count } ) => $count >= 4 ? `720px` : $count >= 3 ? `960px` : `680px` };
+    max-width: 960px;
     margin-bottom: ${ ( { theme } ) => theme.spacing.md };
 
-    /* 4+ cards → 2 per row (2×2 grid), ≤3 → single row */
+    /* Cards don't stretch — stays centered when count is uneven */
     & > * {
-        flex: ${ ( { $count } ) => $count >= 4 ? `1 1 calc( 50% - 0.5rem )` : `1` };
+        flex: 0 0 calc( 25% - 0.75rem );
+        min-width: 160px;
     }
 
     @media ( max-width: 680px ) {
-        flex-direction: column;
-        & > * { flex: 1; }
+        & > * { flex: 1 1 100%; min-width: 0; }
     }
 `
 
@@ -454,16 +455,20 @@ const SectionSubtitle = styled.p`
 const CloudCardRow = styled.div`
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: ${ ( { theme } ) => theme.spacing.md };
     width: 100%;
     max-width: 720px;
     margin-bottom: ${ ( { theme } ) => theme.spacing.md };
 
-    & > * { flex: 1 1 calc( 50% - 0.5rem ); }
+    /* Cards don't stretch — stays centered when count is uneven */
+    & > * {
+        flex: 0 0 calc( 50% - 0.5rem );
+        min-width: 200px;
+    }
 
     @media ( max-width: 680px ) {
-        flex-direction: column;
-        & > * { flex: 1; }
+        & > * { flex: 1 1 100%; min-width: 0; }
     }
 `
 
@@ -749,7 +754,7 @@ export default function ModelSelectPage() {
         </LowMemoryWarning> }
 
         { /* ── Multi-card layout ── */ }
-        { show_card_row && <CardRow $count={ card_count }>
+        { show_card_row && <CardRow>
 
             { /* Faster option */ }
             { faster && <OptionCard
@@ -876,23 +881,7 @@ export default function ModelSelectPage() {
             </MemoryWarning> }
         </RecommendedCard> }
 
-        <DownloadButton
-            data-testid="model-select-confirm-btn"
-            onClick={ handle_download }
-        >
-            { active_is_cached ? t( 'start_chatting' ) : t( 'download_and_start' ) } <ArrowRight size={ 18 } />
-        </DownloadButton>
-
-        { /* Step progress */ }
-        <StepIndicator data-testid="step-indicator">
-            <StepDot $done />
-            <StepLine $done />
-            <StepDot $active />
-            <StepLine />
-            <StepDot />
-        </StepIndicator>
-
-        { /* All alternatives in one list — oversized models get a warning label */ }
+        { /* All alternatives in one list — within the local models section */ }
         { alternative_models.length > 0 && <>
             <ToggleButton
                 data-testid="change-model-toggle"
@@ -1027,6 +1016,22 @@ export default function ModelSelectPage() {
             </CloudModelCard>
 
         } ) }
+
+        { /* ── Download action + step progress (below all model sections) ── */ }
+        <DownloadButton
+            data-testid="model-select-confirm-btn"
+            onClick={ handle_download }
+        >
+            { active_is_cached ? t( 'start_chatting' ) : t( 'download_and_start' ) } <ArrowRight size={ 18 } />
+        </DownloadButton>
+
+        <StepIndicator data-testid="step-indicator">
+            <StepDot $done />
+            <StepLine $done />
+            <StepDot $active />
+            <StepLine />
+            <StepDot />
+        </StepIndicator>
 
     </Container>
 
