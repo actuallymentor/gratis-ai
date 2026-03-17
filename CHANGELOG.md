@@ -16,9 +16,10 @@
 - `NerdSetupPage` now re-exports `CloudSetupPage` for backward compat
 - `llm_store.js` provider routing refactored from boolean to `target_type` string
 - `ModelSelector` dropdown shows provider name (OpenRouter/Venice) for cloud models
-- `SuggestedModelsModal` accepts `provider` prop to filter by provider
+- `SuggestedModelsModal` fetches models from provider API instead of local catalog, with search filter
 - Purge clears both OpenRouter and Venice cloud model entries
 - `ChatPage` offline detection extended to `venice:` prefixed models
+- Venice default model changed to `venice-uncensored`
 
 ## [0.39.0] - 2026-03-16
 

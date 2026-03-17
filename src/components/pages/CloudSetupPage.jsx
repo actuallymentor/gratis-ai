@@ -14,9 +14,8 @@ import { useTranslation } from 'react-i18next'
 import { Cloud, LoaderCircle, AlertTriangle, Check, ArrowRight, List, ChevronDown } from 'lucide-react'
 import use_openrouter_store from '../../stores/openrouter_store'
 import use_venice_store from '../../stores/venice_store'
-import { validate_api_key as validate_openrouter_key } from '../../providers/openrouter_service'
-import { validate_api_key as validate_venice_key } from '../../providers/venice_service'
-import { find_by_openrouter_id, find_by_venice_id } from '../../utils/model_catalog'
+import { validate_api_key as validate_openrouter_key, fetch_models as fetch_openrouter_models } from '../../providers/openrouter_service'
+import { validate_api_key as validate_venice_key, fetch_models as fetch_venice_models } from '../../providers/venice_service'
 import { storage_key } from '../../utils/branding'
 import SuggestedModelsModal from '../molecules/SuggestedModelsModal'
 
@@ -30,8 +29,8 @@ const PROVIDER_DEFAULTS = {
         prefix: `openrouter`,
     },
     venice: {
-        model_id: `dolphin-2.9.2-qwen2.5-72b`,
-        model_name: `Dolphin Mistral 24B Venice`,
+        model_id: `venice-uncensored`,
+        model_name: `Venice Uncensored`,
         prefix: `venice`,
     },
 }
@@ -234,6 +233,10 @@ export default function CloudSetupPage() {
     const [ key_valid, set_key_valid ] = useState( null )
     const [ key_validating, set_key_validating ] = useState( false )
 
+    // Remote model list — fetched from the provider's API after key validates
+    const [ remote_models, set_remote_models ] = useState( [] )
+    const [ models_loading, set_models_loading ] = useState( false )
+
     // Optional settings
     const [ daily_limit, set_daily_limit ] = useState( store.daily_credit_limit )
     const [ system_prompt, set_system_prompt ] = useState(
@@ -247,8 +250,30 @@ export default function CloudSetupPage() {
     // Provider-specific validation function
     const validate_key = is_venice ? validate_venice_key : validate_openrouter_key
 
+    // Provider-specific model fetcher
+    const fetch_remote = is_venice ? fetch_venice_models : fetch_openrouter_models
+
+    /**
+     * Fetch the remote model list for the current provider.
+     * Called after key validation succeeds and when user opens the Browse modal.
+     */
+    const load_remote_models = useCallback( async ( key ) => {
+
+        set_models_loading( true )
+        try {
+            const models = await fetch_remote( key )
+            set_remote_models( models )
+        } catch {
+            set_remote_models( [] )
+        } finally {
+            set_models_loading( false )
+        }
+
+    }, [ fetch_remote ] )
+
     /**
      * Validate the API key when the input loses focus.
+     * On success, also fetch the remote model list.
      */
     const handle_key_blur = useCallback( async () => {
 
@@ -263,22 +288,19 @@ export default function CloudSetupPage() {
         set_key_valid( valid )
         set_key_validating( false )
 
-    }, [ api_key, validate_key ] )
+        // Pre-fetch models on successful validation
+        if( valid ) load_remote_models( trimmed )
+
+    }, [ api_key, validate_key, load_remote_models ] )
 
 
     /**
      * Handle suggested model selection from the modal.
      */
-    const handle_suggested_select = ( selected_id ) => {
+    const handle_suggested_select = ( selected_id, display_name ) => {
 
         set_model_id( selected_id )
-
-        // Try to find display name from catalog
-        const catalog = is_venice
-            ? find_by_venice_id( selected_id )
-            : find_by_openrouter_id( selected_id )
-
-        set_model_display_name( catalog?.name || selected_id.split( `/` ).pop() )
+        set_model_display_name( display_name || selected_id.split( `/` ).pop() )
 
     }
 
@@ -403,7 +425,13 @@ export default function CloudSetupPage() {
 
                 <BrowseButton
                     data-testid="browse-suggested-models"
-                    onClick={ () => set_show_suggested( true ) }
+                    onClick={ () => {
+                        set_show_suggested( true )
+                        // Fetch models on open if we have a key but haven't fetched yet
+                        if( remote_models.length === 0 && api_key.trim().length >= 10 ) {
+                            load_remote_models( api_key.trim() )
+                        }
+                    } }
                 >
                     <List size={ 14 } />
                     { t( `browse_suggested` ) }
@@ -470,13 +498,14 @@ export default function CloudSetupPage() {
         </FormCard>
 
 
-        { /* Suggested models modal */ }
+        { /* Suggested models modal — shows remote API models, not local catalog */ }
         <SuggestedModelsModal
             is_open={ show_suggested }
             on_close={ () => set_show_suggested( false ) }
             on_select={ handle_suggested_select }
             current_model={ model_id }
-            provider={ provider }
+            remote_models={ remote_models }
+            models_loading={ models_loading }
         />
 
     </Container>

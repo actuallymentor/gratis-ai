@@ -1,17 +1,14 @@
 /**
- * Modal for browsing suggested cloud models.
+ * Modal for browsing cloud models fetched from the provider's API.
  *
- * Accepts a `provider` prop ('openrouter' | 'venice') to filter models
- * by the correct catalog field. Falls back to OpenRouter for backward compat.
- *
- * Flat list sorted by quality score, with the same visual language
- * as the alternatives list in ModelSelectPage.
+ * Receives `remote_models` (from the provider's /models endpoint) and
+ * `models_loading` as props. Falls back to an empty list with a hint
+ * to enter an API key first.
  */
 import styled from 'styled-components'
-import { X, Check } from 'lucide-react'
+import { X, Check, LoaderCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useEffect } from 'react'
-import { get_cloud_models, get_venice_cloud_models, quality_score } from '../../utils/model_catalog'
+import { useEffect, useState } from 'react'
 
 const Overlay = styled.div`
     position: fixed;
@@ -96,35 +93,12 @@ const ModelName = styled.div`
     margin-bottom: 2px;
 `
 
-const ParamTag = styled.span`
-    font-size: 0.65rem;
-    font-weight: 600;
-    color: ${ ( { theme } ) => theme.colors.accent };
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin-left: 6px;
-`
-
-const UncensoredTag = styled.span`
-    font-size: 0.6rem;
-    font-weight: 600;
-    color: ${ ( { theme } ) => theme.colors.error };
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin-left: 6px;
-    padding: 1px 5px;
-    border: 1px solid ${ ( { theme } ) => theme.colors.error };
-    border-radius: ${ ( { theme } ) => theme.border_radius.sm };
-`
-
 const ModelMeta = styled.div`
     font-size: 0.8rem;
     color: ${ ( { theme } ) => theme.colors.text_muted };
-`
-
-const ScoreBadge = styled.span`
-    font-weight: 600;
-    color: ${ ( { theme } ) => theme.colors.accent };
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 `
 
 const CheckIcon = styled.div`
@@ -133,21 +107,49 @@ const CheckIcon = styled.div`
     margin-left: ${ ( { theme } ) => theme.spacing.sm };
 `
 
+const Spinner = styled( LoaderCircle )`
+    animation: spin 1s linear infinite;
+    @keyframes spin { to { transform: rotate( 360deg ); } }
+`
+
+const EmptyState = styled.div`
+    text-align: center;
+    padding: ${ ( { theme } ) => theme.spacing.xl };
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    font-size: 0.85rem;
+    line-height: 1.5;
+`
+
+const SearchInput = styled.input`
+    width: 100%;
+    padding: ${ ( { theme } ) => theme.spacing.sm };
+    border: 1px solid ${ ( { theme } ) => theme.colors.border };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    font-size: 0.85rem;
+    background: ${ ( { theme } ) => theme.colors.input_background };
+    color: ${ ( { theme } ) => theme.colors.text };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.sm };
+
+    &::placeholder { color: ${ ( { theme } ) => theme.colors.text_muted }; }
+    &:focus { outline: none; border-color: ${ ( { theme } ) => theme.colors.accent }; }
+`
+
 
 /**
- * Modal listing suggested models for cloud inference.
+ * Modal listing cloud models fetched from the provider's API.
  *
  * @param {Object} props
  * @param {boolean} props.is_open
  * @param {Function} props.on_close
- * @param {Function} props.on_select - Called with model ID string (openrouter_id or venice_id)
+ * @param {Function} props.on_select - Called with (model_id, display_name)
  * @param {string} [props.current_model] - Currently selected model ID (for active state)
- * @param {'openrouter' | 'venice'} [props.provider='openrouter'] - Which provider's models to show
+ * @param {Array<{ id: string, name?: string }>} [props.remote_models=[]] - Models from the API
+ * @param {boolean} [props.models_loading=false]
  */
-export default function SuggestedModelsModal( { is_open, on_close, on_select, current_model, provider = `openrouter` } ) {
+export default function SuggestedModelsModal( { is_open, on_close, on_select, current_model, remote_models = [], models_loading = false } ) {
 
     const { t } = useTranslation( `nerd` )
-    const is_venice = provider === `venice`
+    const [ search, set_search ] = useState( `` )
 
     // Close on Escape key
     useEffect( () => {
@@ -166,20 +168,29 @@ export default function SuggestedModelsModal( { is_open, on_close, on_select, cu
 
     }, [ is_open, on_close ] )
 
+    // Reset search when modal opens
+    useEffect( () => {
+        if( is_open ) set_search( `` )
+    }, [ is_open ] )
+
     if( !is_open ) return null
 
     const handle_overlay_click = ( e ) => {
         if( e.target === e.currentTarget ) on_close()
     }
 
-    const handle_select = ( model_id ) => {
-        on_select( model_id )
+    const handle_select = ( model ) => {
+        on_select( model.id, model.name || model.id )
         on_close()
     }
 
-    // Get models for the selected provider
-    const models = is_venice ? get_venice_cloud_models() : get_cloud_models()
-    const id_field = is_venice ? `venice_id` : `openrouter_id`
+    // Filter models by search query
+    const query = search.toLowerCase().trim()
+    const filtered = query
+        ? remote_models.filter( m =>
+            ( m.name || `` ).toLowerCase().includes( query ) || m.id.toLowerCase().includes( query )
+        )
+        : remote_models
 
     return <Overlay data-testid="suggested-models-modal" onClick={ handle_overlay_click }>
         <Panel>
@@ -192,33 +203,46 @@ export default function SuggestedModelsModal( { is_open, on_close, on_select, cu
             </Header>
 
             <Body>
-                { models.map( ( model ) => {
 
-                    const model_id = model[ id_field ]
-                    const is_active = current_model === model_id
-                    const score = Math.round( quality_score( model ) )
+                { /* Search filter — only show when we have models */ }
+                { remote_models.length > 0 && <SearchInput
+                    type="text"
+                    placeholder={ t( `search_models` ) || `Search models…` }
+                    value={ search }
+                    onChange={ ( e ) => set_search( e.target.value ) }
+                    autoFocus
+                /> }
+
+                { /* Loading state */ }
+                { models_loading && <EmptyState>
+                    <Spinner size={ 20 } />
+                </EmptyState> }
+
+                { /* Empty state — no API key or fetch failed */ }
+                { !models_loading && remote_models.length === 0 && <EmptyState>
+                    { t( `enter_key_to_browse` ) || `Enter your API key first to browse available models.` }
+                </EmptyState> }
+
+                { /* Model list */ }
+                { filtered.map( ( model ) => {
+
+                    const is_active = current_model === model.id
 
                     return <ModelRow
-                        key={ model_id }
+                        key={ model.id }
                         $active={ is_active }
-                        onClick={ () => handle_select( model_id ) }
-                        data-testid={ `suggested-model-${ model_id }` }
+                        onClick={ () => handle_select( model ) }
+                        data-testid={ `suggested-model-${ model.id }` }
                     >
                         <ModelInfo>
-                            <ModelName>
-                                { model.name }
-                                <ParamTag>{ model.parameters_label }</ParamTag>
-                                { model.uncensored && <UncensoredTag>{ t( `uncensored_tag` ) }</UncensoredTag> }
-                            </ModelName>
-                            <ModelMeta>
-                                { model.description }
-                                { score > 0 && <> — <ScoreBadge>Score { score }/100</ScoreBadge></> }
-                            </ModelMeta>
+                            <ModelName>{ model.name || model.id }</ModelName>
+                            <ModelMeta>{ model.id }</ModelMeta>
                         </ModelInfo>
                         { is_active && <CheckIcon><Check size={ 16 } /></CheckIcon> }
                     </ModelRow>
 
                 } ) }
+
             </Body>
 
         </Panel>
