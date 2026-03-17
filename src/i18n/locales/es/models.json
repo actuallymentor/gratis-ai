@@ -43,9 +43,11 @@
     "local_models_section": "Local Models",
     "local_models_subtitle": "Runs on your device",
     "cloud_models_section": "Cloud Models",
-    "cloud_models_subtitle": "Runs on external infrastructure",
+    "cloud_models_subtitle": "Cloud models are more powerful, but don't run on your device. They require an API key from a cloud provider.",
     "openrouter_setup_card": "OpenRouter",
     "openrouter_setup_subtitle": "Hundreds of free and paid models",
     "venice_setup_card": "Venice",
-    "venice_setup_subtitle": "Uncensored models — no content restrictions"
+    "venice_setup_subtitle": "Uncensored models — no content restrictions",
+    "add_openrouter_model": "Add OpenRouter model",
+    "add_venice_model": "Add Venice model"
 }
