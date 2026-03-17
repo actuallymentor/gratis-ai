@@ -1,11 +1,8 @@
 /**
  * Nerd Mode setup wizard — connect to OpenRouter for cloud model inference.
  *
- * Simplified flow:
- *   1. Enter OpenRouter API key (validated via /auth/key)
- *   2. Pick a model (browse suggested or type any OpenRouter model ID)
- *   3. Optional: set system prompt, daily credit limit
- *   4. Click "Connect" → save to store → navigate to /chat
+ * Simple flow: enter API key → click Connect. Default model is Dolphin Mistral 24B.
+ * Advanced settings (model override, system prompt, daily limit) are collapsed by default.
  *
  * Works in both Electron and browser — OpenRouter supports CORS.
  */
@@ -13,12 +10,16 @@ import { useState, useCallback } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Cloud, LoaderCircle, AlertTriangle, Check, ArrowRight, List } from 'lucide-react'
+import { Cloud, LoaderCircle, AlertTriangle, Check, ArrowRight, List, ChevronDown } from 'lucide-react'
 import use_openrouter_store from '../../stores/openrouter_store'
 import { validate_api_key } from '../../providers/openrouter_service'
 import { find_by_openrouter_id } from '../../utils/model_catalog'
 import { storage_key } from '../../utils/branding'
 import SuggestedModelsModal from '../molecules/SuggestedModelsModal'
+
+
+const DEFAULT_MODEL_ID = `cognitivecomputations/dolphin-mistral-24b-venice-edition:free`
+const DEFAULT_MODEL_NAME = `Dolphin Mistral 24B Venice`
 
 
 // ─── Styled components ───────────────────────────────────────────────────────
@@ -166,6 +167,28 @@ const Spinner = styled( LoaderCircle )`
     @keyframes spin { to { transform: rotate( 360deg ); } }
 `
 
+const AdvancedToggle = styled.button`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_secondary };
+    margin-top: ${ ( { theme } ) => theme.spacing.xs };
+    transition: opacity 0.15s;
+
+    &:hover { opacity: 0.7; }
+
+    svg { transition: transform 0.2s; }
+    &[aria-expanded="true"] svg { transform: rotate( 180deg ); }
+`
+
+const AdvancedPanel = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: ${ ( { theme } ) => theme.spacing.md };
+    padding-top: ${ ( { theme } ) => theme.spacing.sm };
+`
+
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -177,11 +200,12 @@ export default function NerdSetupPage() {
     // Store
     const store = use_openrouter_store()
 
-    // Form state
+    // Form state — default model pre-filled
     const [ api_key, set_api_key ] = useState( store.api_key )
-    const [ model_id, set_model_id ] = useState( `` )
-    const [ model_display_name, set_model_display_name ] = useState( `` )
+    const [ model_id, set_model_id ] = useState( DEFAULT_MODEL_ID )
+    const [ model_display_name, set_model_display_name ] = useState( DEFAULT_MODEL_NAME )
     const [ show_suggested, set_show_suggested ] = useState( false )
+    const [ show_advanced, set_show_advanced ] = useState( false )
 
     // API key validation state
     const [ key_valid, set_key_valid ] = useState( null )
@@ -236,15 +260,15 @@ export default function NerdSetupPage() {
      */
     const handle_connect = async () => {
 
-        if( !api_key.trim() || !model_id.trim() ) return
+        const trimmed_key = api_key.trim()
+        const trimmed_model = ( model_id.trim() || DEFAULT_MODEL_ID )
+
+        if( !trimmed_key ) return
 
         set_connecting( true )
         set_connect_error( null )
 
         try {
-
-            const trimmed_key = api_key.trim()
-            const trimmed_model = model_id.trim()
 
             // Validate API key if not already validated
             if( key_valid !== true ) {
@@ -289,7 +313,7 @@ export default function NerdSetupPage() {
     }
 
 
-    const can_connect = api_key.trim() && model_id.trim() && !connecting
+    const can_connect = api_key.trim() && !connecting
 
     return <Container>
 
@@ -324,58 +348,6 @@ export default function NerdSetupPage() {
                 </StatusRow> }
             </FieldGroup>
 
-            { /* ── Model ── */ }
-            <FieldGroup>
-                <Label>{ t( `model_name_label` ) }</Label>
-                <Input
-                    type="text"
-                    data-testid="openrouter-model-id"
-                    placeholder={ t( `model_name_placeholder` ) }
-                    value={ model_id }
-                    onChange={ ( e ) => {
-                        set_model_id( e.target.value )
-                        set_model_display_name( `` )
-                    } }
-                />
-
-                <BrowseButton
-                    data-testid="browse-suggested-models"
-                    onClick={ () => set_show_suggested( true ) }
-                >
-                    <List size={ 14 } />
-                    { t( `browse_suggested` ) }
-                </BrowseButton>
-
-                { model_display_name && <StatusRow>
-                    <Check size={ 12 } /> { model_display_name }
-                </StatusRow> }
-            </FieldGroup>
-
-            { /* ── Daily credit limit ── */ }
-            <FieldGroup>
-                <Label>{ t( `daily_limit_label` ) }</Label>
-                <InputRow>
-                    <SmallInput
-                        type="number"
-                        min="0.5"
-                        step="0.5"
-                        value={ daily_limit }
-                        onChange={ ( e ) => set_daily_limit( parseFloat( e.target.value ) || 5 ) }
-                    />
-                    <Hint>USD per day</Hint>
-                </InputRow>
-            </FieldGroup>
-
-            { /* ── System prompt ── */ }
-            <FieldGroup>
-                <Label>{ t( `system_prompt_label` ) }</Label>
-                <TextArea
-                    placeholder={ import.meta.env.VITE_DEFAULT_SYSTEM_PROMPT || `` }
-                    value={ system_prompt }
-                    onChange={ ( e ) => set_system_prompt( e.target.value ) }
-                />
-            </FieldGroup>
-
             { /* ── Connect button ── */ }
             <ConnectButton
                 data-testid="connect-btn"
@@ -390,6 +362,71 @@ export default function NerdSetupPage() {
             { connect_error && <StatusRow $error>
                 <AlertTriangle size={ 12 } /> { t( `connect_error`, { error: connect_error } ) }
             </StatusRow> }
+
+            { /* ── Advanced Settings toggle ── */ }
+            <AdvancedToggle
+                aria-expanded={ show_advanced }
+                onClick={ () => set_show_advanced( !show_advanced ) }
+            >
+                <ChevronDown size={ 14 } />
+                { t( `advanced_settings` ) }
+            </AdvancedToggle>
+
+            { show_advanced && <AdvancedPanel>
+
+                { /* ── Model ── */ }
+                <FieldGroup>
+                    <Label>{ t( `model_name_label` ) }</Label>
+                    <Input
+                        type="text"
+                        data-testid="openrouter-model-id"
+                        placeholder={ DEFAULT_MODEL_ID }
+                        value={ model_id }
+                        onChange={ ( e ) => {
+                            set_model_id( e.target.value )
+                            set_model_display_name( `` )
+                        } }
+                    />
+
+                    <BrowseButton
+                        data-testid="browse-suggested-models"
+                        onClick={ () => set_show_suggested( true ) }
+                    >
+                        <List size={ 14 } />
+                        { t( `browse_suggested` ) }
+                    </BrowseButton>
+
+                    { model_display_name && <StatusRow>
+                        <Check size={ 12 } /> { model_display_name }
+                    </StatusRow> }
+                </FieldGroup>
+
+                { /* ── Daily credit limit ── */ }
+                <FieldGroup>
+                    <Label>{ t( `daily_limit_label` ) }</Label>
+                    <InputRow>
+                        <SmallInput
+                            type="number"
+                            min="0.5"
+                            step="0.5"
+                            value={ daily_limit }
+                            onChange={ ( e ) => set_daily_limit( parseFloat( e.target.value ) || 5 ) }
+                        />
+                        <Hint>USD per day</Hint>
+                    </InputRow>
+                </FieldGroup>
+
+                { /* ── System prompt ── */ }
+                <FieldGroup>
+                    <Label>{ t( `system_prompt_label` ) }</Label>
+                    <TextArea
+                        placeholder={ import.meta.env.VITE_DEFAULT_SYSTEM_PROMPT || `` }
+                        value={ system_prompt }
+                        onChange={ ( e ) => set_system_prompt( e.target.value ) }
+                    />
+                </FieldGroup>
+
+            </AdvancedPanel> }
 
         </FormCard>
 

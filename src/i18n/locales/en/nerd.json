@@ -16,6 +16,7 @@
 
     "system_prompt_label": "System Prompt",
     "daily_limit_label": "Daily Credit Limit",
+    "advanced_settings": "Advanced settings",
 
     "connect_button": "Connect and start chat",
     "connecting": "Connecting...",
