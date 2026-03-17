@@ -25,7 +25,7 @@
     "custom_hf_model": "Custom HuggingFace model",
     "start_chatting": "Start Chatting",
     "download_and_start": "Download & Start",
-    "choose_different_model": "Choose a different model",
+    "choose_different_model": "Choose a different local model",
     "downloaded": "downloaded",
     "uncensored": "uncensored",
     "vision": "vision",
