@@ -34,20 +34,24 @@
     "large_model_warning": "Große Modelle können im Browser möglicherweise nicht geladen werden. Erwäge eine kleinere Quantisierung oder die Desktop-App.",
     "low_memory_warning": "Nur {{free}} Arbeitsspeicher frei — dieses Modell braucht etwa {{needed}}. Schließe andere Apps oder wähle ein kleineres Modell, um Verlangsamungen und mögliche Abstürze zu vermeiden.",
 
+    "local_models_section": "Lokale Modelle",
+    "local_models_subtitle": "Läuft auf deinem Gerät",
+    "cloud_models_section": "Cloud-Modelle",
+    "cloud_models_subtitle": "Cloud-Modelle sind leistungsstärker, laufen aber nicht auf deinem Gerät. Sie benötigen einen API-Schlüssel eines Cloud-Anbieters.",
+    "openrouter_setup_card": "OpenRouter",
+    "openrouter_setup_subtitle": "Hunderte kostenlose und kostenpflichtige Modelle",
+    "venice_setup_card": "Venice",
+    "venice_setup_subtitle": "Unzensierte Modelle — keine Inhaltsbeschränkungen",
+    "add_openrouter_model": "OpenRouter-Modell hinzufügen",
+    "add_venice_model": "Venice-Modell hinzufügen",
+
+    "nerd_option": "Cloud-GPU",
+    "nerd_option_subtitle": "OpenRouter — kostenlose und kostenpflichtige Modelle",
+    "nerd_continue": "Weiter",
+
     "downloading_your_model": "Dein Modell wird heruntergeladen",
     "one_time_download": "{{name}} — dies ist ein einmaliger Download. Danach funktioniert alles offline.",
     "ready_to_chat": "Bereit zum Chatten!",
     "cancel_download": "Download abbrechen",
-    "preparing": "Wird vorbereitet…",
-
-    "local_models_section": "Local Models",
-    "local_models_subtitle": "Runs on your device",
-    "cloud_models_section": "Cloud Models",
-    "cloud_models_subtitle": "Cloud models are more powerful, but don't run on your device. They require an API key from a cloud provider.",
-    "openrouter_setup_card": "OpenRouter",
-    "openrouter_setup_subtitle": "Hundreds of free and paid models",
-    "venice_setup_card": "Venice",
-    "venice_setup_subtitle": "Uncensored models — no content restrictions",
-    "add_openrouter_model": "Add OpenRouter model",
-    "add_venice_model": "Add Venice model"
+    "preparing": "Wird vorbereitet…"
 }

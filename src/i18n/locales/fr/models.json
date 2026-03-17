@@ -34,20 +34,24 @@
     "large_model_warning": "Les modèles volumineux peuvent échouer au chargement dans le navigateur. Envisagez une quantification plus petite ou l'application de bureau.",
     "low_memory_warning": "Seulement {{free}} de mémoire libre — ce modèle a besoin d'environ {{needed}}. Essayez de fermer d'autres apps ou de choisir un modèle plus petit pour éviter les ralentissements et plantages éventuels.",
 
+    "local_models_section": "Modèles locaux",
+    "local_models_subtitle": "S'exécutent sur votre appareil",
+    "cloud_models_section": "Modèles cloud",
+    "cloud_models_subtitle": "Les modèles cloud sont plus puissants, mais ne s'exécutent pas sur votre appareil. Ils nécessitent une clé API d'un fournisseur cloud.",
+    "openrouter_setup_card": "OpenRouter",
+    "openrouter_setup_subtitle": "Des centaines de modèles gratuits et payants",
+    "venice_setup_card": "Venice",
+    "venice_setup_subtitle": "Modèles non censurés — aucune restriction de contenu",
+    "add_openrouter_model": "Ajouter un modèle OpenRouter",
+    "add_venice_model": "Ajouter un modèle Venice",
+
+    "nerd_option": "GPU cloud",
+    "nerd_option_subtitle": "OpenRouter — modèles gratuits et payants",
+    "nerd_continue": "Continuer",
+
     "downloading_your_model": "Téléchargement de votre modèle",
     "one_time_download": "{{name}} — c'est un téléchargement unique. Ensuite, tout fonctionne hors ligne.",
     "ready_to_chat": "Prêt à discuter !",
     "cancel_download": "Annuler le téléchargement",
-    "preparing": "Préparation...",
-
-    "local_models_section": "Local Models",
-    "local_models_subtitle": "Runs on your device",
-    "cloud_models_section": "Cloud Models",
-    "cloud_models_subtitle": "Cloud models are more powerful, but don't run on your device. They require an API key from a cloud provider.",
-    "openrouter_setup_card": "OpenRouter",
-    "openrouter_setup_subtitle": "Hundreds of free and paid models",
-    "venice_setup_card": "Venice",
-    "venice_setup_subtitle": "Uncensored models — no content restrictions",
-    "add_openrouter_model": "Add OpenRouter model",
-    "add_venice_model": "Add Venice model"
+    "preparing": "Préparation..."
 }
