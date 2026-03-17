@@ -9,6 +9,9 @@
     "collapse": "Zwiń",
 
     "what_can_i_help_with": "W czym mogę pomóc?",
+    "privacy_local": "You are using a local model. Nobody can see what you do.",
+    "privacy_openrouter": "You are using an OpenRouter cloud model. OpenRouter can see what you do.",
+    "privacy_venice": "You are using a Venice cloud model. Nobody can see what you do.",
     "loading_your_model": "Ładowanie modelu…",
 
     "lets_get_you_set_up": "Przygotujmy wszystko",

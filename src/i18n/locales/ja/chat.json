@@ -9,6 +9,9 @@
     "collapse": "折りたたむ",
 
     "what_can_i_help_with": "何かお手伝いできますか？",
+    "privacy_local": "You are using a local model. Nobody can see what you do.",
+    "privacy_openrouter": "You are using an OpenRouter cloud model. OpenRouter can see what you do.",
+    "privacy_venice": "You are using a Venice cloud model. Nobody can see what you do.",
     "loading_your_model": "モデルを読み込み中...",
 
     "lets_get_you_set_up": "セットアップを始めましょう",
