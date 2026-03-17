@@ -452,7 +452,25 @@ const SectionSubtitle = styled.p`
     color: ${ ( { theme } ) => theme.colors.text_muted };
 `
 
-// Cloud cards reuse the same grid sizing as local CardRow
+// Subtle links for adding cloud providers when models already exist
+const AddProviderLinks = styled.div`
+    display: flex;
+    justify-content: center;
+    gap: ${ ( { theme } ) => theme.spacing.lg };
+    margin-top: ${ ( { theme } ) => theme.spacing.sm };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+`
+
+const AddProviderLink = styled.button`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+    transition: color 0.15s;
+
+    &:hover { color: ${ ( { theme } ) => theme.colors.info }; }
+`
 
 const CloudSetupCard = styled.button`
     display: flex;
@@ -948,7 +966,8 @@ export default function ModelSelectPage() {
             <SectionSubtitle>{ t( 'cloud_models_subtitle' ) }</SectionSubtitle>
         </SectionHeader>
 
-        <CardRow>
+        { /* No existing cloud models → show setup cards */ }
+        { cloud_models.length === 0 && <CardRow>
 
             <CloudSetupCard
                 data-testid="openrouter-setup-card"
@@ -972,26 +991,41 @@ export default function ModelSelectPage() {
                 <CloudSetupSubtitle>{ t( 'venice_setup_subtitle' ) }</CloudSetupSubtitle>
             </CloudSetupCard>
 
-            { /* Already-configured cloud models */ }
-            { cloud_models.map( ( model ) => {
+        </CardRow> }
 
-                const provider_label = model.source === `venice` ? `Venice` : `OpenRouter`
+        { /* Existing cloud models → show model cards + subtle add links */ }
+        { cloud_models.length > 0 && <>
 
-                return <CloudModelCard
-                    key={ model.id }
-                    data-testid={ `cloud-model-${ model.id }` }
-                    onClick={ () => handle_cloud_model_click( model.id ) }
-                >
-                    <CloudModelName>
-                        { model.name }
-                        <CloudTag><Cloud size={ 10 } /> { provider_label }</CloudTag>
-                    </CloudModelName>
-                    <CloudModelMeta>{ t( 'common:ready' ) || `ready to chat` }</CloudModelMeta>
-                </CloudModelCard>
+            <CardRow>
+                { cloud_models.map( ( model ) => {
 
-            } ) }
+                    const provider_label = model.source === `venice` ? `Venice` : `OpenRouter`
 
-        </CardRow>
+                    return <CloudModelCard
+                        key={ model.id }
+                        data-testid={ `cloud-model-${ model.id }` }
+                        onClick={ () => handle_cloud_model_click( model.id ) }
+                    >
+                        <CloudModelName>
+                            { model.name }
+                            <CloudTag><Cloud size={ 10 } /> { provider_label }</CloudTag>
+                        </CloudModelName>
+                        <CloudModelMeta>{ t( 'common:ready' ) || `ready to chat` }</CloudModelMeta>
+                    </CloudModelCard>
+
+                } ) }
+            </CardRow>
+
+            <AddProviderLinks>
+                <AddProviderLink onClick={ () => navigate( `/cloud-setup?provider=openrouter` ) }>
+                    <Plus size={ 12 } /> { t( 'add_openrouter_model' ) }
+                </AddProviderLink>
+                <AddProviderLink onClick={ () => navigate( `/cloud-setup?provider=venice` ) }>
+                    <Plus size={ 12 } /> { t( 'add_venice_model' ) }
+                </AddProviderLink>
+            </AddProviderLinks>
+
+        </> }
 
         { /* ── Download action + step progress (below all model sections) ── */ }
         <DownloadButton
