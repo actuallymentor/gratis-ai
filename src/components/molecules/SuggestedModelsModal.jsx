@@ -1,5 +1,8 @@
 /**
- * Modal for browsing suggested OpenRouter cloud models.
+ * Modal for browsing suggested cloud models.
+ *
+ * Accepts a `provider` prop ('openrouter' | 'venice') to filter models
+ * by the correct catalog field. Falls back to OpenRouter for backward compat.
  *
  * Flat list sorted by quality score, with the same visual language
  * as the alternatives list in ModelSelectPage.
@@ -8,7 +11,7 @@ import styled from 'styled-components'
 import { X, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useEffect } from 'react'
-import { get_cloud_models, quality_score } from '../../utils/model_catalog'
+import { get_cloud_models, get_venice_cloud_models, quality_score } from '../../utils/model_catalog'
 
 const Overlay = styled.div`
     position: fixed;
@@ -132,17 +135,19 @@ const CheckIcon = styled.div`
 
 
 /**
- * Modal listing suggested models for OpenRouter cloud inference.
+ * Modal listing suggested models for cloud inference.
  *
  * @param {Object} props
  * @param {boolean} props.is_open
  * @param {Function} props.on_close
- * @param {Function} props.on_select - Called with openrouter_id string
- * @param {string} [props.current_model] - Currently selected openrouter_id (for active state)
+ * @param {Function} props.on_select - Called with model ID string (openrouter_id or venice_id)
+ * @param {string} [props.current_model] - Currently selected model ID (for active state)
+ * @param {'openrouter' | 'venice'} [props.provider='openrouter'] - Which provider's models to show
  */
-export default function SuggestedModelsModal( { is_open, on_close, on_select, current_model } ) {
+export default function SuggestedModelsModal( { is_open, on_close, on_select, current_model, provider = `openrouter` } ) {
 
     const { t } = useTranslation( `nerd` )
+    const is_venice = provider === `venice`
 
     // Close on Escape key
     useEffect( () => {
@@ -167,10 +172,14 @@ export default function SuggestedModelsModal( { is_open, on_close, on_select, cu
         if( e.target === e.currentTarget ) on_close()
     }
 
-    const handle_select = ( openrouter_id ) => {
-        on_select( openrouter_id )
+    const handle_select = ( model_id ) => {
+        on_select( model_id )
         on_close()
     }
+
+    // Get models for the selected provider
+    const models = is_venice ? get_venice_cloud_models() : get_cloud_models()
+    const id_field = is_venice ? `venice_id` : `openrouter_id`
 
     return <Overlay data-testid="suggested-models-modal" onClick={ handle_overlay_click }>
         <Panel>
@@ -183,16 +192,17 @@ export default function SuggestedModelsModal( { is_open, on_close, on_select, cu
             </Header>
 
             <Body>
-                { get_cloud_models().map( ( model ) => {
+                { models.map( ( model ) => {
 
-                    const is_active = current_model === model.openrouter_id
+                    const model_id = model[ id_field ]
+                    const is_active = current_model === model_id
                     const score = Math.round( quality_score( model ) )
 
                     return <ModelRow
-                        key={ model.openrouter_id }
+                        key={ model_id }
                         $active={ is_active }
-                        onClick={ () => handle_select( model.openrouter_id ) }
-                        data-testid={ `suggested-model-${ model.openrouter_id }` }
+                        onClick={ () => handle_select( model_id ) }
+                        data-testid={ `suggested-model-${ model_id }` }
                     >
                         <ModelInfo>
                             <ModelName>

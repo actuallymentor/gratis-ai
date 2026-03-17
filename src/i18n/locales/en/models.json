@@ -34,6 +34,15 @@
     "large_model_warning": "Large models may fail to load in the browser. Consider a smaller quantization or the desktop app.",
     "low_memory_warning": "Only {{free}} of memory free — this model needs about {{needed}}. Try closing other apps or picking a smaller model to avoid slowdowns and potential crashes.",
 
+    "local_models_section": "Local Models",
+    "local_models_subtitle": "Runs on your device",
+    "cloud_models_section": "Cloud Models",
+    "cloud_models_subtitle": "Runs on external infrastructure",
+    "openrouter_setup_card": "OpenRouter",
+    "openrouter_setup_subtitle": "Hundreds of free and paid models",
+    "venice_setup_card": "Venice",
+    "venice_setup_subtitle": "Uncensored models — no content restrictions",
+
     "nerd_option": "Cloud GPU",
     "nerd_option_subtitle": "OpenRouter — free and paid models",
     "nerd_continue": "Continue",

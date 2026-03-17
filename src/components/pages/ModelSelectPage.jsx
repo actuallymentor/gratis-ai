@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, LoaderCircle, Link, Zap, ShieldOff, Eye, Cloud } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, ArrowRight, Sparkles, AlertTriangle, LoaderCircle, Link, Zap, ShieldOff, Eye, Cloud, Plus } from 'lucide-react'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import use_model_manager from '../../hooks/use_model_manager'
 import use_speed_estimate from '../../hooks/use_speed_estimate'
@@ -427,6 +427,123 @@ const Spinner = styled( LoaderCircle )`
     @keyframes spin { to { transform: rotate( 360deg ); } }
 `
 
+// ─── Section headers for local / cloud split ──────────────────────────────────
+
+const SectionHeader = styled.div`
+    text-align: center;
+    margin-top: ${ ( { theme } ) => theme.spacing.xl };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+    width: 100%;
+    max-width: 720px;
+
+    &:first-of-type { margin-top: 0; }
+`
+
+const SectionTitle = styled.h2`
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.text };
+    margin-bottom: 2px;
+`
+
+const SectionSubtitle = styled.p`
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+`
+
+const CloudCardRow = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: ${ ( { theme } ) => theme.spacing.md };
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: ${ ( { theme } ) => theme.spacing.md };
+
+    & > * { flex: 1 1 calc( 50% - 0.5rem ); }
+
+    @media ( max-width: 680px ) {
+        flex-direction: column;
+        & > * { flex: 1; }
+    }
+`
+
+const CloudSetupCard = styled.button`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: ${ ( { theme } ) => theme.spacing.lg };
+    border: 2px dashed ${ ( { theme } ) => theme.colors.border };
+    border-radius: ${ ( { theme } ) => theme.border_radius.lg };
+    text-align: center;
+    transition: border-color 0.15s;
+    cursor: pointer;
+    background: transparent;
+
+    &:hover {
+        border-color: ${ ( { theme } ) => theme.colors.info };
+    }
+`
+
+const CloudSetupLabel = styled.h3`
+    display: flex;
+    align-items: center;
+    gap: ${ ( { theme } ) => theme.spacing.xs };
+    font-size: 1rem;
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.info };
+    margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
+`
+
+const CloudSetupSubtitle = styled.p`
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+`
+
+const CloudModelCard = styled.button`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 720px;
+    padding: ${ ( { theme } ) => theme.spacing.md };
+    border: 1px solid ${ ( { theme, $active } ) => $active ? theme.colors.info : theme.colors.border };
+    border-radius: ${ ( { theme } ) => theme.border_radius.md };
+    text-align: left;
+    transition: border-color 0.15s;
+    margin-bottom: ${ ( { theme } ) => theme.spacing.xs };
+
+    &:hover {
+        border-color: ${ ( { theme } ) => theme.colors.text_muted };
+    }
+`
+
+const CloudModelInfo = styled.div`
+    flex: 1;
+`
+
+const CloudModelName = styled.div`
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+`
+
+const CloudModelMeta = styled.div`
+    font-size: 0.8rem;
+    color: ${ ( { theme } ) => theme.colors.text_muted };
+`
+
+const CloudTag = styled.span`
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: ${ ( { theme } ) => theme.colors.info };
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-left: 6px;
+`
+
 
 // ─── Benchmark display ────────────────────────────────────────────────────────
 
@@ -519,11 +636,10 @@ export default function ModelSelectPage() {
     const [ custom_error, set_custom_error ] = useState( null )
 
     // Resolve the active model — custom > user pick > smarter default
-    // The "__nerd__" sentinel is not a real catalog model — skip fallback for it
     const active_model = custom_model
         ? custom_model
         : selected_model_id
-            ? selected_model_id === `__nerd__` ? null : catalog_models.find( m => m.id === selected_model_id ) ?? smarter
+            ? catalog_models.find( m => m.id === selected_model_id ) ?? smarter
             : smarter
 
     const active_is_cached = active_model && is_cached( active_model.id )
@@ -536,12 +652,6 @@ export default function ModelSelectPage() {
 
     const handle_download = () => {
 
-        // Nerd Mode sentinel — navigate to cloud GPU setup
-        if( selected_model_id === `__nerd__` ) {
-            navigate( `/nerd-setup` )
-            return
-        }
-
         if( !active_model ) return
 
         // Cached models can skip the download page entirely
@@ -553,6 +663,14 @@ export default function ModelSelectPage() {
 
         navigate( `/download`, { state: { model: active_model } } )
 
+    }
+
+    /**
+     * Handle clicking on an already-configured cloud model — activate and go to chat.
+     */
+    const handle_cloud_model_click = ( cloud_model_id ) => {
+        localStorage.setItem( storage_key( `active_model_id` ), cloud_model_id )
+        navigate( `/chat` )
     }
 
     const handle_select = ( model_id ) => {
@@ -594,13 +712,23 @@ export default function ModelSelectPage() {
         !shown_ids.has( m.id ) && can_fit_in_memory( m, max_model_bytes )
     )
 
-    // Card row when we have at least 2 options to compare (+1 for Nerd Mode cloud card)
-    const card_count = 1 + ( faster ? 1 : 0 ) + ( uncensored ? 1 : 0 ) + ( vision ? 1 : 0 ) + 1
+    // Card row when we have at least 2 options to compare
+    const card_count = 1 + ( faster ? 1 : 0 ) + ( uncensored ? 1 : 0 ) + ( vision ? 1 : 0 )
     const show_card_row = card_count >= 2
+
+    // Cloud models already configured by the user (from both providers)
+    const cloud_models = cached_models.filter( m => m.source === `openrouter` || m.source === `venice` )
 
     return <Container>
 
         <Title>{ t( 'pick_a_model' ) }</Title>
+
+        { /* ── Local Models section ── */ }
+        <SectionHeader>
+            <SectionTitle>{ t( 'local_models_section' ) }</SectionTitle>
+            <SectionSubtitle>{ t( 'local_models_subtitle' ) }</SectionSubtitle>
+        </SectionHeader>
+
         <Subtitle>
             { card_count >= 4
                 ? t( 'subtitle_four_cards' )
@@ -723,24 +851,6 @@ export default function ModelSelectPage() {
                 </CardDetails>
             </OptionCard> }
 
-            { /* Cloud models via OpenRouter — works in both Electron and browser */ }
-            <OptionCard
-                data-testid="nerd-mode-card"
-                $active={ selected_model_id === `__nerd__` }
-                $variant="nerd"
-                onClick={ () => {
-                    set_custom_model( null )
-                    set_custom_error( null )
-                    set_selected_model_id( `__nerd__` )
-                } }
-            >
-                <CardLabel $variant="nerd">
-                    <Cloud size={ 18 } />
-                    { t( 'nerd_option' ) }
-                </CardLabel>
-                <DownloadEstimate>{ t( 'nerd_option_subtitle' ) }</DownloadEstimate>
-            </OptionCard>
-
         </CardRow> }
 
         { /* ── Single-card fallback (no meaningfully smaller model available) ── */ }
@@ -770,7 +880,7 @@ export default function ModelSelectPage() {
             data-testid="model-select-confirm-btn"
             onClick={ handle_download }
         >
-            { selected_model_id === `__nerd__` ? t( 'nerd_continue' ) : active_is_cached ? t( 'start_chatting' ) : t( 'download_and_start' ) } <ArrowRight size={ 18 } />
+            { active_is_cached ? t( 'start_chatting' ) : t( 'download_and_start' ) } <ArrowRight size={ 18 } />
         </DownloadButton>
 
         { /* Step progress */ }
@@ -865,6 +975,58 @@ export default function ModelSelectPage() {
 
             </ExpandPanel>
         </> }
+
+        { /* ── Cloud Models section ── */ }
+        <SectionHeader>
+            <SectionTitle>{ t( 'cloud_models_section' ) }</SectionTitle>
+            <SectionSubtitle>{ t( 'cloud_models_subtitle' ) }</SectionSubtitle>
+        </SectionHeader>
+
+        <CloudCardRow>
+            <CloudSetupCard
+                data-testid="openrouter-setup-card"
+                onClick={ () => navigate( `/cloud-setup?provider=openrouter` ) }
+            >
+                <CloudSetupLabel>
+                    <Plus size={ 16 } />
+                    { t( 'openrouter_setup_card' ) }
+                </CloudSetupLabel>
+                <CloudSetupSubtitle>{ t( 'openrouter_setup_subtitle' ) }</CloudSetupSubtitle>
+            </CloudSetupCard>
+
+            <CloudSetupCard
+                data-testid="venice-setup-card"
+                onClick={ () => navigate( `/cloud-setup?provider=venice` ) }
+            >
+                <CloudSetupLabel>
+                    <Plus size={ 16 } />
+                    { t( 'venice_setup_card' ) }
+                </CloudSetupLabel>
+                <CloudSetupSubtitle>{ t( 'venice_setup_subtitle' ) }</CloudSetupSubtitle>
+            </CloudSetupCard>
+        </CloudCardRow>
+
+        { /* Already-configured cloud models */ }
+        { cloud_models.map( ( model ) => {
+
+            const provider_label = model.source === `venice` ? `Venice` : `OpenRouter`
+
+            return <CloudModelCard
+                key={ model.id }
+                data-testid={ `cloud-model-${ model.id }` }
+                onClick={ () => handle_cloud_model_click( model.id ) }
+            >
+                <CloudModelInfo>
+                    <CloudModelName>
+                        { model.name }
+                        <CloudTag><Cloud size={ 10 } /> { provider_label }</CloudTag>
+                    </CloudModelName>
+                    <CloudModelMeta>{ provider_label } — ready to chat</CloudModelMeta>
+                </CloudModelInfo>
+                <ArrowRight size={ 14 } style={ { flexShrink: 0, opacity: 0.4 } } />
+            </CloudModelCard>
+
+        } ) }
 
     </Container>
 

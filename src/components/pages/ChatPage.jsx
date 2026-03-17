@@ -198,7 +198,7 @@ export default function ChatPage( { theme_preference, theme_mode, on_theme_toggl
     const query_processed_ref = useRef( false )
 
     const { load_model, chat_stream, abort, is_generating, is_endpoint_warming, is_loading: is_model_loading, loaded_model_id } = use_llm()
-    const is_cloud_model = loaded_model_id?.startsWith( `openrouter:` ) || false
+    const is_cloud_model = loaded_model_id?.startsWith( `openrouter:` ) || loaded_model_id?.startsWith( `venice:` ) || false
     const is_online = use_online()
     const is_offline_cloud = is_cloud_model && !is_online
     const {

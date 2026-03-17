@@ -5,6 +5,7 @@ import { storage_key } from '../utils/branding'
 
 const active_model_key = storage_key( `active_model_id` )
 const openrouter_config_key = storage_key( `openrouter_config` )
+const venice_config_key = storage_key( `venice_config` )
 
 // Runtime check — true when running inside Electron
 const is_electron = !!window.electronAPI?.native_inference
@@ -99,6 +100,35 @@ export default function use_model_manager() {
 
     }, [] )
 
+    /**
+     * Read Venice models from localStorage and merge into cached_models.
+     * Returns model-shaped objects with source: 'venice'.
+     */
+    const get_venice_models = useCallback( () => {
+
+        try {
+
+            const raw = localStorage.getItem( venice_config_key )
+            if( !raw ) return []
+
+            const config = JSON.parse( raw )
+            if( !config.models?.length ) return []
+
+            return config.models.map( m => ( {
+                id: `venice:${ m.venice_id }`,
+                name: m.name,
+                source: `venice`,
+                created_at: m.created_at,
+                file_size_bytes: 0,
+                category: `cloud`,
+            } ) )
+
+        } catch {
+            return []
+        }
+
+    }, [] )
+
     // Load on mount
     useEffect( () => {
         refresh_models()
@@ -137,8 +167,8 @@ export default function use_model_manager() {
 
     }, [ refresh_models ] )
 
-    // Merge OpenRouter cloud models into the cached models list
-    const cloud_models = get_openrouter_models()
+    // Merge cloud models from both providers into the cached models list
+    const cloud_models = [ ...get_openrouter_models(), ...get_venice_models() ]
     const all_models = [ ...cached_models, ...cloud_models ]
 
     return {

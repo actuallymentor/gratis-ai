@@ -24,7 +24,7 @@ const use_llm_store = create( ( set, get ) => ( {
     // ── Internal (not consumed by UI) ────────────────────────────────
 
     _provider: null,
-    _provider_type: null,     // 'local' | 'openrouter'
+    _provider_type: null,     // 'local' | 'openrouter' | 'venice'
     _provider_promise: null,
     _load_promise: null,
     _loading_model_id: null,
@@ -35,14 +35,19 @@ const use_llm_store = create( ( set, get ) => ( {
      * Ensure the provider is initialised (handles async creation).
      * Uses a shared promise so all concurrent callers get the same instance.
      *
-     * If the active model starts with 'openrouter:', creates an OpenRouterProvider.
-     * Otherwise, creates the standard local provider (WASM or Electron IPC).
+     * If the active model starts with 'openrouter:' or 'venice:', creates the
+     * corresponding cloud provider. Otherwise, creates the standard local provider.
      */
     ensure_provider: async ( model_id ) => {
 
         const state = get()
         const target_id = model_id || localStorage.getItem( storage_key( `active_model_id` ) ) || ``
-        const needs_cloud = target_id.startsWith( `openrouter:` )
+
+        // Determine the target provider type from the model ID prefix
+        const target_type = target_id.startsWith( `openrouter:` ) ? `openrouter`
+            : target_id.startsWith( `venice:` ) ? `venice`
+                : `local`
+
         const current_type = state._provider_type
 
         // Gracefully handle stale `runpod:` prefix from previous versions
@@ -53,20 +58,20 @@ const use_llm_store = create( ( set, get ) => ( {
         }
 
         // If we have a provider of the correct type, reuse it
-        if( state._provider && ( needs_cloud ? current_type === `openrouter` : current_type === `local` ) ) {
+        if( state._provider && current_type === target_type ) {
             return state._provider
         }
 
         // Provider type changed — dispose old one if it exists
         if( state._provider ) {
-            log.info( `[use_llm] Switching provider type: ${ current_type } → ${ needs_cloud ? `openrouter` : `local` }` )
+            log.info( `[use_llm] Switching provider type: ${ current_type } → ${ target_type }` )
             try {
                 await state._provider.unload_model()
             } catch { /* best effort */ }
             set( { _provider: null, _provider_promise: null, loaded_model_id: null, is_endpoint_warming: false } )
         }
 
-        if( needs_cloud ) {
+        if( target_type === `openrouter` ) {
 
             // Lazy import to keep the OpenRouter provider out of the main bundle
             const { default: OpenRouterProvider } = await import( `../providers/openrouter_provider.js` )
@@ -83,6 +88,27 @@ const use_llm_store = create( ( set, get ) => ( {
             } )
 
             set( { _provider: provider, _provider_type: `openrouter` } )
+            return provider
+
+        }
+
+        if( target_type === `venice` ) {
+
+            // Lazy import to keep the Venice provider out of the main bundle
+            const { default: VeniceProvider } = await import( `../providers/venice_provider.js` )
+
+            const venice_model_id = target_id.replace( `venice:`, `` )
+
+            // Read config from the Venice store
+            const config_raw = localStorage.getItem( storage_key( `venice_config` ) )
+            const config = config_raw ? JSON.parse( config_raw ) : {}
+
+            const provider = new VeniceProvider( {
+                api_key: config.api_key || ``,
+                model_id: venice_model_id,
+            } )
+
+            set( { _provider: provider, _provider_type: `venice` } )
             return provider
 
         }

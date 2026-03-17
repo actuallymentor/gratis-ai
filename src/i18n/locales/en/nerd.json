@@ -1,6 +1,7 @@
 {
     "page_title": "Cloud Model Setup",
-    "page_subtitle": "Connect to OpenRouter for instant access to hundreds of AI models — free and paid. No GPU setup needed.",
+    "cloud_page_title": "Uncensored Cloud AI Setup",
+    "page_subtitle": "Connect to OpenRouter or Venice for instant access to AI models — free and paid. No GPU setup needed.",
 
     "api_key_label": "OpenRouter API Key",
     "api_key_placeholder": "sk-or-v1-...",
@@ -9,6 +10,13 @@
     "key_valid": "API key is valid",
     "key_invalid": "Invalid API key — check your key at openrouter.ai",
     "invalid_api_key": "Invalid API key",
+
+    "venice_api_key_label": "Venice API Key",
+    "venice_api_key_placeholder": "ak-...",
+    "venice_api_key_hint": "Get a key at venice.ai — uncensored models with no content restrictions.",
+    "venice_validating_key": "Validating key...",
+    "venice_key_valid": "API key is valid",
+    "venice_key_invalid": "Invalid API key — check your key at venice.ai",
 
     "model_name_label": "Model",
     "model_name_placeholder": "e.g. qwen/qwen3-8b or browse suggested models",

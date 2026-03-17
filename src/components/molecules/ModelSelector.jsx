@@ -8,6 +8,7 @@ import { log } from 'mentie'
 import { format_file_size, can_fit_in_memory } from '../../utils/model_catalog'
 import use_device_capabilities from '../../hooks/use_device_capabilities'
 import use_openrouter_store from '../../stores/openrouter_store'
+import use_venice_store from '../../stores/venice_store'
 import use_llm_store from '../../stores/llm_store'
 
 const Container = styled.div`
@@ -242,7 +243,17 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                 log.info( `[purge] Cleared OpenRouter cloud models` )
             }
 
-            // 3. Delete all local cached models
+            // 3. Clear Venice cloud model entries from the store
+            const venice = use_venice_store.getState()
+
+            if( venice.models.length > 0 ) {
+                for( const m of [ ...venice.models ] ) {
+                    venice.remove_model( m.venice_id )
+                }
+                log.info( `[purge] Cleared Venice cloud models` )
+            }
+
+            // 4. Delete all local cached models
             const is_electron = !!window.electronAPI?.native_inference
 
             if( is_electron ) {
@@ -266,7 +277,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
 
             }
 
-            // 4. Clear active model from localStorage
+            // 5. Clear active model from localStorage
             const { storage_key } = await import( `../../utils/branding.js` )
             localStorage.removeItem( storage_key( `active_model_id` ) )
 
@@ -305,7 +316,8 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                     </NoModelHint>
                     :
                     cached_models.map( ( model ) => {
-                        const is_cloud = model.source === `openrouter`
+                        const is_cloud = model.source === `openrouter` || model.source === `venice`
+                        const provider_label = model.source === `venice` ? `Venice` : model.source === `openrouter` ? `OpenRouter` : null
                         const too_large = !is_cloud && !can_fit_in_memory( model, max_model_bytes )
                         return <ModelOption
                             key={ model.id }
@@ -323,7 +335,7 @@ export default function ModelSelector( { cached_models = [], active_model_id, is
                                 </ModelLabel>
                                 <ModelMeta>
                                     { is_cloud
-                                        ? `OpenRouter`
+                                        ? provider_label
                                         : format_file_size( model.file_size_bytes ) }
                                     { too_large ? ` — ${ t( `may_not_fit` ) }` : `` }
                                 </ModelMeta>

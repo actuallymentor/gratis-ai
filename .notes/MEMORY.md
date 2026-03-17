@@ -18,21 +18,25 @@ See `RESEARCH.md` "Vision Model GGUF Research" section. Load when adding vision 
 
 `ModelDefinition` supports optional `system_prompt` field. When the active model has one, it takes priority over the global default in `ChatPage`. Currently only Dolphin Mistral 24B Venice has a model-specific prompt. `get_model_by_id()` exported from `model_catalog.js` for catalog lookups.
 
-## Nerd Mode — OpenRouter Cloud Inference (v0.39.0, migrated from RunPod)
+## Cloud Inference — OpenRouter + Venice (v0.40.0)
 
-Cloud inference via OpenRouter's OpenAI-compatible API. No endpoint/GPU/template management — just an API key and model ID. Works in both Electron and browser (OpenRouter supports CORS).
+Two cloud providers: **OpenRouter** and **Venice.ai**. Both use OpenAI-compatible APIs with CORS support, work in Electron and browser.
 
-**Key files**: `openrouter_service.js` (API client — `/models`, `/auth/key`, `/chat/completions`), `openrouter_provider.js` (LLMProvider with SSE streaming), `openrouter_store.js` (Zustand + localStorage, key `storage_key('openrouter_config')`), `NerdSetupPage.jsx` (setup wizard at `/nerd-setup`), `SuggestedModelsModal.jsx` (model browser).
+**Provider layer** (per provider): `{provider}_service.js` (API client), `{provider}_provider.js` (LLMProvider with SSE streaming), `{provider}_store.js` (Zustand + localStorage). Venice validates keys via `GET /models` (no `/auth/key` endpoint).
 
-**Model ID prefix**: `openrouter:{model_id}` — `llm_store.js` auto-switches provider type based on prefix. Cloud models from `use_model_manager.js` have `source: 'openrouter'`.
+**Model ID prefixes**: `openrouter:{id}` and `venice:{id}` — `llm_store.js` routes to the correct provider via `target_type` detection. Cloud models from `use_model_manager.js` have `source: 'openrouter'` or `source: 'venice'`.
 
-**Catalog**: 12 models have `openrouter_id` field. `get_cloud_models()` filters by `m.openrouter_id`. `find_by_openrouter_id()` for lookups.
+**Setup UI**: `CloudSetupPage.jsx` at `/cloud-setup?provider=openrouter|venice` — unified form with provider-specific labels, validation, and model browsing. `NerdSetupPage.jsx` re-exports CloudSetupPage for `/nerd-setup` backward compat.
 
-**Purge** (v0.38.0): `ModelSelector` "Purge All Models" button clears OpenRouter store entries + local models. No cloud API teardown needed.
+**ModelSelectPage**: Split into "Local Models" and "Cloud Models" sections. Cloud section has setup cards for each provider + already-configured cloud model cards that activate and navigate to chat.
 
-**E2E tests**: `nerd_mode.spec.js` uses `VITE_OPENROUTER_DEV_KEY` with free Dolphin model. No Electron guard.
+**Catalog**: `venice_id` field on `ModelDefinition`. `get_venice_cloud_models()` and `find_by_venice_id()` helpers. Dolphin Mistral 24B Venice has both `openrouter_id` and `venice_id`. Venice-only models: Llama 3.3 70B, Llama 3.1 405B, DeepSeek R1 671B, Qwen3 235B MoE.
 
-**Backwards compat**: `llm_store.js` gracefully clears stale `runpod:` prefixed active_model_id from previous versions.
+**Purge**: Clears both OpenRouter and Venice store entries + local models.
+
+**E2E tests**: `nerd_mode.spec.js` uses `VITE_OPENROUTER_DEV_KEY` with free Dolphin model. Venice E2E would need `VITE_VENICE_DEV_KEY`.
+
+**Backwards compat**: `llm_store.js` still handles stale `runpod:` prefix. Old `__nerd__` sentinel removed from ModelSelectPage.
 
 ## Logging
 

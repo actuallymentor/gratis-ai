@@ -45,6 +45,7 @@
  * @property {boolean} [vision] - Whether this model supports image/vision input (requires mmproj)
  * @property {string} [hf_model_repo] - Base HF repo for cloud/vLLM inference (e.g. 'Qwen/Qwen3-8B') — distinct from hugging_face_repo which points to GGUF distribution
  * @property {string} [openrouter_id] - OpenRouter model ID for cloud inference (e.g. 'qwen/qwen3-8b')
+ * @property {string} [venice_id] - Venice model ID for cloud inference (e.g. 'dolphin-2.9.2-qwen2.5-72b')
  * @property {boolean} [cloud_only] - True for models with no GGUF — excluded from local selection
  * @property {boolean} [moe] - True for Mixture-of-Experts architectures
  * @property {number} [active_parameters] - Active params per forward pass (MoE only)
@@ -614,6 +615,7 @@ export const MODEL_CATALOG = [
         file_name: `cognitivecomputations_Dolphin-Mistral-24B-Venice-Edition-Q4_K_M.gguf`,
         hf_model_repo: `cognitivecomputations/Dolphin-Mistral-24B-Venice-Edition`,
         openrouter_id: `cognitivecomputations/dolphin-mistral-24b-venice-edition:free`,
+        venice_id: `dolphin-2.9.2-qwen2.5-72b`,
         reasoning: false,
         benchmarks: { mmlu: 81, gpqa: null, humaneval: null, math: null, gsm8k: null },
         license: `Apache-2.0`,
@@ -903,6 +905,97 @@ export const MODEL_CATALOG = [
         uncensored: true,
     },
 
+
+    // ── Venice-only cloud models ──────────────────────────────────────────
+
+    {
+        id: `llama-3.3-70b-venice`,
+        name: `Llama 3.3 70B (Venice)`,
+        description: `Meta's flagship 70B model, hosted on Venice for uncensored inference.`,
+        family: `llama3`,
+        parameters: 70_000_000_000,
+        parameters_label: `70B`,
+        file_size_bytes: 0,
+        context_length: 131_072,
+        layers: 80,
+        kv_heads: 8,
+        head_dim: 128,
+        hf_model_repo: `meta-llama/Llama-3.3-70B-Instruct`,
+        venice_id: `llama-3.3-70b`,
+        cloud_only: true,
+        reasoning: false,
+        benchmarks: { mmlu: 86.0, gpqa: 50.7, humaneval: 88.4, math: 77.0, gsm8k: null },
+        license: `Llama`,
+    },
+
+    {
+        id: `llama-3.1-405b-venice`,
+        name: `Llama 3.1 405B (Venice)`,
+        description: `Meta's largest model — top-tier quality via Venice cloud.`,
+        family: `llama3`,
+        parameters: 405_000_000_000,
+        parameters_label: `405B`,
+        file_size_bytes: 0,
+        context_length: 131_072,
+        layers: 126,
+        kv_heads: 8,
+        head_dim: 128,
+        hf_model_repo: `meta-llama/Llama-3.1-405B-Instruct`,
+        venice_id: `llama-3.1-405b`,
+        cloud_only: true,
+        reasoning: false,
+        benchmarks: { mmlu: 88.6, gpqa: 50.7, humaneval: 89.0, math: 73.8, gsm8k: null },
+        license: `Llama`,
+    },
+
+    {
+        id: `deepseek-r1-671b-venice`,
+        name: `DeepSeek R1 (Venice)`,
+        description: `Top-tier reasoning model via Venice — MoE with 37B active params.`,
+        family: `deepseek`,
+        parameters: 671_000_000_000,
+        parameters_label: `671B`,
+        file_size_bytes: 0,
+        context_length: 163_840,
+        layers: 61,
+        kv_heads: 128,
+        head_dim: 128,
+        hf_model_repo: `deepseek-ai/DeepSeek-R1`,
+        venice_id: `deepseek-r1-671b`,
+        cloud_only: true,
+        moe: true,
+        active_parameters: 37_000_000_000,
+        num_experts: 256,
+        num_active_experts: 8,
+        reasoning: true,
+        benchmarks: { mmlu: 90.8, gpqa: 71.5, humaneval: 97.3, math: 97.3, gsm8k: null },
+        license: `MIT`,
+    },
+
+    {
+        id: `qwen3-235b-venice`,
+        name: `Qwen3 235B MoE (Venice)`,
+        description: `Mixture of Experts via Venice — only 22B active params per token.`,
+        family: `qwen3`,
+        parameters: 235_000_000_000,
+        parameters_label: `235B`,
+        file_size_bytes: 0,
+        context_length: 40_960,
+        layers: 94,
+        kv_heads: 4,
+        head_dim: 128,
+        hf_model_repo: `Qwen/Qwen3-235B-A22B`,
+        venice_id: `qwen-2.5-qwq`,
+        cloud_only: true,
+        moe: true,
+        active_parameters: 22_000_000_000,
+        num_experts: 128,
+        num_active_experts: 8,
+        reasoning: true,
+        benchmarks: { mmlu: 85.2, gpqa: 52.4, humaneval: 80.9, math: 70.8, gsm8k: 89.4 },
+        license: `Apache-2.0`,
+    },
+
 ]
 
 
@@ -1008,6 +1101,16 @@ export const get_cloud_models = () =>
         .sort( ( a, b ) => quality_score( b ) - quality_score( a ) )
 
 /**
+ * Get all models available on Venice, sorted by quality score descending.
+ * Includes both cloud-only models and dual-use models with `venice_id`.
+ * @returns {ModelDefinition[]}
+ */
+export const get_venice_cloud_models = () =>
+    MODEL_CATALOG
+        .filter( m => m.venice_id )
+        .sort( ( a, b ) => quality_score( b ) - quality_score( a ) )
+
+/**
  * Find a catalog entry by its OpenRouter model ID.
  * Returns the highest-quality match if multiple entries share the same ID.
  * @param {string} openrouter_id - OpenRouter model ID (e.g. 'qwen/qwen3-8b')
@@ -1016,6 +1119,23 @@ export const get_cloud_models = () =>
 export const find_by_openrouter_id = ( openrouter_id ) => {
 
     const matches = MODEL_CATALOG.filter( m => m.openrouter_id === openrouter_id )
+    if( matches.length === 0 ) return undefined
+    if( matches.length === 1 ) return matches[ 0 ]
+
+    // Multiple matches — pick highest quality
+    return matches.sort( ( a, b ) => quality_score( b ) - quality_score( a ) )[ 0 ]
+
+}
+
+/**
+ * Find a catalog entry by its Venice model ID.
+ * Returns the highest-quality match if multiple entries share the same ID.
+ * @param {string} venice_id - Venice model ID (e.g. 'dolphin-2.9.2-qwen2.5-72b')
+ * @returns {ModelDefinition | undefined}
+ */
+export const find_by_venice_id = ( venice_id ) => {
+
+    const matches = MODEL_CATALOG.filter( m => m.venice_id === venice_id )
     if( matches.length === 0 ) return undefined
     if( matches.length === 1 ) return matches[ 0 ]
 

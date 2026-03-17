@@ -38,5 +38,14 @@
     "one_time_download": "{{name}} — este é um download único. Depois disso, tudo funciona offline.",
     "ready_to_chat": "Pronto para conversar!",
     "cancel_download": "Cancelar download",
-    "preparing": "Preparando..."
+    "preparing": "Preparando...",
+
+    "local_models_section": "Local Models",
+    "local_models_subtitle": "Runs on your device",
+    "cloud_models_section": "Cloud Models",
+    "cloud_models_subtitle": "Runs on external infrastructure",
+    "openrouter_setup_card": "OpenRouter",
+    "openrouter_setup_subtitle": "Hundreds of free and paid models",
+    "venice_setup_card": "Venice",
+    "venice_setup_subtitle": "Uncensored models — no content restrictions"
 }

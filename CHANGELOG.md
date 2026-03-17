@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.40.0] - 2026-03-17
+
+### Added
+- Venice.ai as second cloud inference provider alongside OpenRouter
+- Venice provider layer: `venice_service.js`, `venice_provider.js`, `venice_store.js`
+- `venice_id` field on model catalog entries, with Venice-specific cloud models
+- `CloudSetupPage` at `/cloud-setup?provider=openrouter|venice` — unified setup for both providers
+- Model selection page split into Local Models and Cloud Models sections
+- Cloud section shows setup cards for OpenRouter and Venice, plus configured cloud models
+- `get_venice_cloud_models()` and `find_by_venice_id()` catalog helpers
+- i18n keys for local/cloud section headers and provider setup cards
+
+### Changed
+- `NerdSetupPage` now re-exports `CloudSetupPage` for backward compat
+- `llm_store.js` provider routing refactored from boolean to `target_type` string
+- `ModelSelector` dropdown shows provider name (OpenRouter/Venice) for cloud models
+- `SuggestedModelsModal` accepts `provider` prop to filter by provider
+- Purge clears both OpenRouter and Venice cloud model entries
+- `ChatPage` offline detection extended to `venice:` prefixed models
+
 ## [0.39.0] - 2026-03-16
 
 ### Added
